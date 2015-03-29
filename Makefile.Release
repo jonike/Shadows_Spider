@@ -627,7 +627,7 @@ release\moc_Attrs.cpp: src\MainWin.h \
 		src\PP.h \
 		src\RadPop.h \
 		src\Attrs.h
-	C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\bin\moc.exe $(DEFINES) -D_MSC_VER=1800 -D_WIN32 -D_WIN64 -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/mkspecs/win32-msvc2013 -IC:/Users/aleks/Documents/Qt/Shadows_Spider -IC:/glew-1.11.0/include -IC:/glm_961 -I/home/aleks/Desktop/glm -I/home/aleks/Desktop/glew-1.11.0/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtOpenGL -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtWidgets -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtGui -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtCore src\Attrs.h -o release\moc_Attrs.cpp
+	C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\bin\moc.exe $(DEFINES) -D_MSC_VER=1800 -D_WIN32 -D_WIN64 -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/mkspecs/win32-msvc2013 -IC:/Users/aleks/Documents/GitHub/Shadows_Spider -IC:/glew-1.11.0/include -IC:/glm_961 -I/home/aleks/Desktop/glm -I/home/aleks/Desktop/glew-1.11.0/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtOpenGL -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtWidgets -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtGui -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtCore src\Attrs.h -o release\moc_Attrs.cpp
 
 release\moc_CamCombo.cpp: src\MainWin.h \
 		C:\glew-1.11.0\include\GL\glew.h \
@@ -970,7 +970,7 @@ release\moc_CamCombo.cpp: src\MainWin.h \
 		src\PP.h \
 		src\RadPop.h \
 		src\CamCombo.h
-	C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\bin\moc.exe $(DEFINES) -D_MSC_VER=1800 -D_WIN32 -D_WIN64 -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/mkspecs/win32-msvc2013 -IC:/Users/aleks/Documents/Qt/Shadows_Spider -IC:/glew-1.11.0/include -IC:/glm_961 -I/home/aleks/Desktop/glm -I/home/aleks/Desktop/glew-1.11.0/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtOpenGL -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtWidgets -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtGui -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtCore src\CamCombo.h -o release\moc_CamCombo.cpp
+	C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\bin\moc.exe $(DEFINES) -D_MSC_VER=1800 -D_WIN32 -D_WIN64 -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/mkspecs/win32-msvc2013 -IC:/Users/aleks/Documents/GitHub/Shadows_Spider -IC:/glew-1.11.0/include -IC:/glm_961 -I/home/aleks/Desktop/glm -I/home/aleks/Desktop/glew-1.11.0/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtOpenGL -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtWidgets -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtGui -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtCore src\CamCombo.h -o release\moc_CamCombo.cpp
 
 release\moc_CPop.cpp: src\MainWin.h \
 		C:\glew-1.11.0\include\GL\glew.h \
@@ -1313,7 +1313,7 @@ release\moc_CPop.cpp: src\MainWin.h \
 		src\PP.h \
 		src\RadPop.h \
 		src\CPop.h
-	C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\bin\moc.exe $(DEFINES) -D_MSC_VER=1800 -D_WIN32 -D_WIN64 -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/mkspecs/win32-msvc2013 -IC:/Users/aleks/Documents/Qt/Shadows_Spider -IC:/glew-1.11.0/include -IC:/glm_961 -I/home/aleks/Desktop/glm -I/home/aleks/Desktop/glew-1.11.0/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtOpenGL -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtWidgets -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtGui -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtCore src\CPop.h -o release\moc_CPop.cpp
+	C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\bin\moc.exe $(DEFINES) -D_MSC_VER=1800 -D_WIN32 -D_WIN64 -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/mkspecs/win32-msvc2013 -IC:/Users/aleks/Documents/GitHub/Shadows_Spider -IC:/glew-1.11.0/include -IC:/glm_961 -I/home/aleks/Desktop/glm -I/home/aleks/Desktop/glew-1.11.0/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtOpenGL -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtWidgets -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtGui -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtCore src\CPop.h -o release\moc_CPop.cpp
 
 release\moc_CPopWin.cpp: src\MainWin.h \
 		C:\glew-1.11.0\include\GL\glew.h \
@@ -1656,7 +1656,7 @@ release\moc_CPopWin.cpp: src\MainWin.h \
 		src\PP.h \
 		src\RadPop.h \
 		src\CPopWin.h
-	C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\bin\moc.exe $(DEFINES) -D_MSC_VER=1800 -D_WIN32 -D_WIN64 -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/mkspecs/win32-msvc2013 -IC:/Users/aleks/Documents/Qt/Shadows_Spider -IC:/glew-1.11.0/include -IC:/glm_961 -I/home/aleks/Desktop/glm -I/home/aleks/Desktop/glew-1.11.0/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtOpenGL -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtWidgets -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtGui -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtCore src\CPopWin.h -o release\moc_CPopWin.cpp
+	C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\bin\moc.exe $(DEFINES) -D_MSC_VER=1800 -D_WIN32 -D_WIN64 -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/mkspecs/win32-msvc2013 -IC:/Users/aleks/Documents/GitHub/Shadows_Spider -IC:/glew-1.11.0/include -IC:/glm_961 -I/home/aleks/Desktop/glm -I/home/aleks/Desktop/glew-1.11.0/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtOpenGL -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtWidgets -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtGui -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtCore src\CPopWin.h -o release\moc_CPopWin.cpp
 
 release\moc_GLWidget.cpp: src\MainWin.h \
 		C:\glew-1.11.0\include\GL\glew.h \
@@ -1999,7 +1999,7 @@ release\moc_GLWidget.cpp: src\MainWin.h \
 		src\PP.h \
 		src\RadPop.h \
 		src\GLWidget.h
-	C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\bin\moc.exe $(DEFINES) -D_MSC_VER=1800 -D_WIN32 -D_WIN64 -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/mkspecs/win32-msvc2013 -IC:/Users/aleks/Documents/Qt/Shadows_Spider -IC:/glew-1.11.0/include -IC:/glm_961 -I/home/aleks/Desktop/glm -I/home/aleks/Desktop/glew-1.11.0/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtOpenGL -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtWidgets -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtGui -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtCore src\GLWidget.h -o release\moc_GLWidget.cpp
+	C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\bin\moc.exe $(DEFINES) -D_MSC_VER=1800 -D_WIN32 -D_WIN64 -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/mkspecs/win32-msvc2013 -IC:/Users/aleks/Documents/GitHub/Shadows_Spider -IC:/glew-1.11.0/include -IC:/glm_961 -I/home/aleks/Desktop/glm -I/home/aleks/Desktop/glew-1.11.0/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtOpenGL -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtWidgets -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtGui -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtCore src\GLWidget.h -o release\moc_GLWidget.cpp
 
 release\moc_GLWidgetSh.cpp: src\MainWin.h \
 		C:\glew-1.11.0\include\GL\glew.h \
@@ -2342,7 +2342,7 @@ release\moc_GLWidgetSh.cpp: src\MainWin.h \
 		src\PP.h \
 		src\RadPop.h \
 		src\GLWidgetSh.h
-	C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\bin\moc.exe $(DEFINES) -D_MSC_VER=1800 -D_WIN32 -D_WIN64 -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/mkspecs/win32-msvc2013 -IC:/Users/aleks/Documents/Qt/Shadows_Spider -IC:/glew-1.11.0/include -IC:/glm_961 -I/home/aleks/Desktop/glm -I/home/aleks/Desktop/glew-1.11.0/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtOpenGL -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtWidgets -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtGui -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtCore src\GLWidgetSh.h -o release\moc_GLWidgetSh.cpp
+	C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\bin\moc.exe $(DEFINES) -D_MSC_VER=1800 -D_WIN32 -D_WIN64 -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/mkspecs/win32-msvc2013 -IC:/Users/aleks/Documents/GitHub/Shadows_Spider -IC:/glew-1.11.0/include -IC:/glm_961 -I/home/aleks/Desktop/glm -I/home/aleks/Desktop/glew-1.11.0/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtOpenGL -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtWidgets -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtGui -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtCore src\GLWidgetSh.h -o release\moc_GLWidgetSh.cpp
 
 release\moc_MainWin.cpp: C:\glew-1.11.0\include\GL\glew.h \
 		C:\glm_961\glm.hpp \
@@ -2685,7 +2685,7 @@ release\moc_MainWin.cpp: C:\glew-1.11.0\include\GL\glew.h \
 		src\PP.h \
 		src\RadPop.h \
 		src\MainWin.h
-	C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\bin\moc.exe $(DEFINES) -D_MSC_VER=1800 -D_WIN32 -D_WIN64 -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/mkspecs/win32-msvc2013 -IC:/Users/aleks/Documents/Qt/Shadows_Spider -IC:/glew-1.11.0/include -IC:/glm_961 -I/home/aleks/Desktop/glm -I/home/aleks/Desktop/glew-1.11.0/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtOpenGL -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtWidgets -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtGui -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtCore src\MainWin.h -o release\moc_MainWin.cpp
+	C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\bin\moc.exe $(DEFINES) -D_MSC_VER=1800 -D_WIN32 -D_WIN64 -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/mkspecs/win32-msvc2013 -IC:/Users/aleks/Documents/GitHub/Shadows_Spider -IC:/glew-1.11.0/include -IC:/glm_961 -I/home/aleks/Desktop/glm -I/home/aleks/Desktop/glew-1.11.0/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtOpenGL -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtWidgets -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtGui -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtCore src\MainWin.h -o release\moc_MainWin.cpp
 
 release\moc_Outliner.cpp: src\MainWin.h \
 		C:\glew-1.11.0\include\GL\glew.h \
@@ -3028,7 +3028,7 @@ release\moc_Outliner.cpp: src\MainWin.h \
 		src\PP.h \
 		src\RadPop.h \
 		src\Outliner.h
-	C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\bin\moc.exe $(DEFINES) -D_MSC_VER=1800 -D_WIN32 -D_WIN64 -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/mkspecs/win32-msvc2013 -IC:/Users/aleks/Documents/Qt/Shadows_Spider -IC:/glew-1.11.0/include -IC:/glm_961 -I/home/aleks/Desktop/glm -I/home/aleks/Desktop/glew-1.11.0/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtOpenGL -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtWidgets -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtGui -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtCore src\Outliner.h -o release\moc_Outliner.cpp
+	C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\bin\moc.exe $(DEFINES) -D_MSC_VER=1800 -D_WIN32 -D_WIN64 -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/mkspecs/win32-msvc2013 -IC:/Users/aleks/Documents/GitHub/Shadows_Spider -IC:/glew-1.11.0/include -IC:/glm_961 -I/home/aleks/Desktop/glm -I/home/aleks/Desktop/glew-1.11.0/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtOpenGL -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtWidgets -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtGui -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtCore src\Outliner.h -o release\moc_Outliner.cpp
 
 release\moc_Prefs.cpp: src\MainWin.h \
 		C:\glew-1.11.0\include\GL\glew.h \
@@ -3371,7 +3371,7 @@ release\moc_Prefs.cpp: src\MainWin.h \
 		src\PP.h \
 		src\RadPop.h \
 		src\Prefs.h
-	C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\bin\moc.exe $(DEFINES) -D_MSC_VER=1800 -D_WIN32 -D_WIN64 -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/mkspecs/win32-msvc2013 -IC:/Users/aleks/Documents/Qt/Shadows_Spider -IC:/glew-1.11.0/include -IC:/glm_961 -I/home/aleks/Desktop/glm -I/home/aleks/Desktop/glew-1.11.0/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtOpenGL -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtWidgets -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtGui -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtCore src\Prefs.h -o release\moc_Prefs.cpp
+	C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\bin\moc.exe $(DEFINES) -D_MSC_VER=1800 -D_WIN32 -D_WIN64 -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/mkspecs/win32-msvc2013 -IC:/Users/aleks/Documents/GitHub/Shadows_Spider -IC:/glew-1.11.0/include -IC:/glm_961 -I/home/aleks/Desktop/glm -I/home/aleks/Desktop/glew-1.11.0/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtOpenGL -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtWidgets -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtGui -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtCore src\Prefs.h -o release\moc_Prefs.cpp
 
 release\moc_PrefWin.cpp: src\MainWin.h \
 		C:\glew-1.11.0\include\GL\glew.h \
@@ -3714,7 +3714,7 @@ release\moc_PrefWin.cpp: src\MainWin.h \
 		src\PP.h \
 		src\RadPop.h \
 		src\PrefWin.h
-	C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\bin\moc.exe $(DEFINES) -D_MSC_VER=1800 -D_WIN32 -D_WIN64 -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/mkspecs/win32-msvc2013 -IC:/Users/aleks/Documents/Qt/Shadows_Spider -IC:/glew-1.11.0/include -IC:/glm_961 -I/home/aleks/Desktop/glm -I/home/aleks/Desktop/glew-1.11.0/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtOpenGL -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtWidgets -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtGui -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtCore src\PrefWin.h -o release\moc_PrefWin.cpp
+	C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\bin\moc.exe $(DEFINES) -D_MSC_VER=1800 -D_WIN32 -D_WIN64 -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/mkspecs/win32-msvc2013 -IC:/Users/aleks/Documents/GitHub/Shadows_Spider -IC:/glew-1.11.0/include -IC:/glm_961 -I/home/aleks/Desktop/glm -I/home/aleks/Desktop/glew-1.11.0/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtOpenGL -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtWidgets -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtGui -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtCore src\PrefWin.h -o release\moc_PrefWin.cpp
 
 release\moc_RadPop.cpp: src\MainWin.h \
 		C:\glew-1.11.0\include\GL\glew.h \
@@ -4057,7 +4057,7 @@ release\moc_RadPop.cpp: src\MainWin.h \
 		src\PP.h \
 		src\RadPop.h \
 		src\RadPop.h
-	C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\bin\moc.exe $(DEFINES) -D_MSC_VER=1800 -D_WIN32 -D_WIN64 -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/mkspecs/win32-msvc2013 -IC:/Users/aleks/Documents/Qt/Shadows_Spider -IC:/glew-1.11.0/include -IC:/glm_961 -I/home/aleks/Desktop/glm -I/home/aleks/Desktop/glew-1.11.0/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtOpenGL -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtWidgets -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtGui -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtCore src\RadPop.h -o release\moc_RadPop.cpp
+	C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\bin\moc.exe $(DEFINES) -D_MSC_VER=1800 -D_WIN32 -D_WIN64 -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/mkspecs/win32-msvc2013 -IC:/Users/aleks/Documents/GitHub/Shadows_Spider -IC:/glew-1.11.0/include -IC:/glm_961 -I/home/aleks/Desktop/glm -I/home/aleks/Desktop/glew-1.11.0/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtOpenGL -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtWidgets -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtGui -IC:/Qt/Qt5.4.0/5.4/msvc2013_64_opengl/include/QtCore src\RadPop.h -o release\moc_RadPop.cpp
 
 compiler_moc_source_make_all:
 compiler_moc_source_clean:
