@@ -1,14 +1,48 @@
-# Compiled object files
+#Qt ignore
+*.slo
+*.lo
 *.o
-*.bin
+*.a
+*.la
+*.lai
+*.so
+*.dll
+*.dylib
 *.exe
-*.obj
 
-# Generated MOC, resource and UI files
+debug\
+release\
+release/
+release/*
+
+*.Debug
+*.Release
+
+*.dbug
+*.release
+.pro.user
+
+
+# Qt-es
+/.qmake.cache
+/.qmake.stash
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+*.moc
 moc_*.cpp
-moc_*
 qrc_*.cpp
 ui_*.h
+Makefile*
+*-build-*
+
+# QtCreator
+*.autosave
+
+#QtCtreator Qml
+*.qmlproject.user
+*.qmlproject.user.*
 
 # Windows image file caches
 Thumbs.db
@@ -16,13 +50,6 @@ ehthumbs.db
 
 # Folder config file
 Desktop.ini
-
-# Debug and Release directories (created under Windows, not Linux)
-Debug/
-Release/
-
-# .log files (usually created by QtTest - thanks to VestniK)
-*.log
 
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
