@@ -826,6 +826,7 @@ void GLWidget::paintGL()
 //        }
 //    }
 
+
     glBindFramebuffer(GL_FRAMEBUFFER, main_node.fbo1);
     glViewport(0, 0, width(), height());
     glClearColor(0.f, 0.f, 0.f, 0.f);
@@ -857,7 +858,6 @@ void GLWidget::paintGL()
                 myWin.allObj[i]->render(myWin.allGL[GLidx]);
         }
     }
-
 
     for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
     {

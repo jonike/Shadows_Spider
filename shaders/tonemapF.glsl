@@ -31,6 +31,7 @@ in Vert
 
 layout(bindless_sampler, location = 0) uniform sampler2D bloomC;
 layout(bindless_sampler, location = 1) uniform sampler2D lumaT;
+layout(bindless_sampler, location = 2) uniform sampler2D gizT;
 layout(location = 0) out vec3 Ci;
 
 uniform bool adaptAuto, vignette;
@@ -75,4 +76,7 @@ void main()
 
     Ci = bloom.rgb * expoAdapt / lum;
     Ci = filmicHabel(Ci) / filmicHabel(vec3(11.2f));
+
+    vec4 giz = texture(gizT, v.uv);
+    Ci = mix(Ci.rgb, giz.rgb, giz.a);
 }

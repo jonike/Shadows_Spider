@@ -28,8 +28,8 @@ MainWin::MainWin(QWidget *parent) : QMainWindow(parent)
     setContextMenuPolicy(Qt::ActionsContextMenu);
 
     myFocus = new FocusCtrlDel;
-//    resize(1024, 600);
-    resize(1400, 1000);
+    resize(1024, 600);
+//    resize(1400, 1000);
 
     centerToScreen(this);
 
@@ -382,19 +382,19 @@ void MainWin::objInit()
         allObj.push_back(loadO[i]);
     }
 
-//    loadO = myGLWidgetSh->VBOup(0, "SPOT", "light", 0);
-//    //loadO = myGLWidgetSh->VBOup(0, "POINT", "light", 0);
-//    for (unsigned int i = 0; i < loadO.size(); ++i)
-//    {
-////        loadO[i]->t->val_3 = glm::vec3(0.f, 8.f, .1f);
-//        loadO[i]->t->val_3 = glm::vec3(6.f, 8.f, .1f);
-//        loadO[i]->piv->val_3 = loadO[i]->t->val_3;
-//        loadO[i]->Cgiz = glm::vec3(1.f, 0.f, 0.f);
-//        loadO[i]->setTarg(loadO[i]->targO, 0.f);
-//        loadO[i]->lSpotO->val_f = 60.f;
+    loadO = myGLWidgetSh->VBOup(0, "SPOT", "light", 0);
+    //loadO = myGLWidgetSh->VBOup(0, "POINT", "light", 0);
+    for (unsigned int i = 0; i < loadO.size(); ++i)
+    {
+//        loadO[i]->t->val_3 = glm::vec3(0.f, 8.f, .1f);
+        loadO[i]->t->val_3 = glm::vec3(6.f, 8.f, .1f);
+        loadO[i]->piv->val_3 = loadO[i]->t->val_3;
+        loadO[i]->Cgiz = glm::vec3(1.f, 0.f, 0.f);
+        loadO[i]->setTarg(loadO[i]->targO, 0.f);
+        loadO[i]->lSpotO->val_f = 60.f;
 
-//        allObj.push_back(loadO[i]);
-//    }
+        allObj.push_back(loadO[i]);
+    }
 
 //    loadO = myGLWidgetSh->VBOup(0, "SPOT", "light", 0); // #2
 //    for (unsigned int i = 0; i < loadO.size(); ++i)

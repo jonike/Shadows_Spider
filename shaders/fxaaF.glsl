@@ -23,7 +23,6 @@ in Vert
 } v;
 
 layout(bindless_sampler, location = 0) uniform sampler2D aliasedT;
-layout(bindless_sampler, location = 1) uniform sampler2D gizT;
 layout(location = 0) out vec3 Ci;
 
 uniform float fxaaSubPix, fxaaEdgeThr, fxaaEdgeThrMin;
@@ -502,9 +501,5 @@ vec4 FxaaPixelShader(
 
 void main()
 {
-    vec4 fxaa = FxaaPixelShader(aliasedT, v.uv, texelSize, fxaaSubPix, fxaaEdgeThr, fxaaEdgeThrMin);
-    vec4 giz_tex = texture(gizT, v.uv);
-
-    Ci = mix(fxaa.rgb, giz_tex.rgb, giz_tex.a);
+    Ci = FxaaPixelShader(aliasedT, v.uv, texelSize, fxaaSubPix, fxaaEdgeThr, fxaaEdgeThrMin).rgb;
 }
-

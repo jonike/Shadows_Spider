@@ -21,7 +21,6 @@ unix
     INCLUDEPATH += /home/aleks/Desktop/glew-1.11.0/include/
 }
 
-#MYTEST IN BRANCH 2 !
 unix: LIBS += -L"/home/aleks/Desktop/glew-1.11.0/lib/" -lGLEW -lGLU -lGL
 unix: QMAKE_CXX = ccache g++
 unix: QMAKE_CXXFLAGS += -Wno-missing-field-initializers

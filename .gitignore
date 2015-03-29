@@ -1,6 +1,14 @@
+# Compiled object files
+*.o
 *.bin
 *.exe
 *.obj
+
+# Generated MOC, resource and UI files
+moc_*.cpp
+moc_*
+qrc_*.cpp
+ui_*.h
 
 # Windows image file caches
 Thumbs.db
@@ -8,6 +16,13 @@ ehthumbs.db
 
 # Folder config file
 Desktop.ini
+
+# Debug and Release directories (created under Windows, not Linux)
+Debug/
+Release/
+
+# .log files (usually created by QtTest - thanks to VestniK)
+*.log
 
 # Recycle Bin used on file shares
 $RECYCLE.BIN/

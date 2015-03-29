@@ -1311,7 +1311,6 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
             else if (proN == "pFxaa")
             {
                 glProgramUniformHandleui64ARB(proH, 0, myGL->tonemap_node.tex1_64);
-                glProgramUniformHandleui64ARB(proH, 1, myGL->rttGiz_64);
 
                 glUniform1f(glGetUniformLocation(proH, "fxaaSubPix"), myWin.myFSQ->fxaaSubPix->val_f);
                 glUniform1f(glGetUniformLocation(proH, "fxaaEdgeThr"), myWin.myFSQ->fxaaEdgeThr->val_f);
@@ -1324,6 +1323,7 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
             {
                 glProgramUniformHandleui64ARB(proH, 0, myGL->aoBloomC_node.tex1_64);
                 glProgramUniformHandleui64ARB(proH, 1, myGL->lumaAdapt[myGL->currLum].tex1_64);
+                glProgramUniformHandleui64ARB(proH, 2, myGL->rttGiz_64);
 
                 glUniform1f(glGetUniformLocation(proH, "expo"), log(myWin.myFSQ->expo->val_f));
                 glUniform1i(glGetUniformLocation(proH, "adaptAuto"), myWin.myFSQ->adaptAuto->val_b);
