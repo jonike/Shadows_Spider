@@ -776,14 +776,14 @@ void GLWidget::paintGL()
         {
             if (type != "RTT" && type != "VOL" && !myWin.allObj[i]->gizSideObj && name != "pivot")
             {
+                myWin.allObj[i]->mvpGet(myWin.allGL[GLidx]);
+
 //                if (name == "teapot")
 //                {
 //                    myWin.allObj[i]->t->val_3.y = myWin.myAnim->dynAnim("cycle") * 10.f;
 ////                    myWin.allObj[i]->r->val_3.z = myWin.myAnim->dynAnim("accelDecel") * 500.f;
 //                    myWin.allObj[i]->shadowCast->val_b = 0;
 //                }
-
-                myWin.allObj[i]->mvpGet(myWin.allGL[GLidx]);
             }
         }
 
@@ -825,7 +825,6 @@ void GLWidget::paintGL()
 //            }
 //        }
 //    }
-
 
     glBindFramebuffer(GL_FRAMEBUFFER, main_node.fbo1);
     glViewport(0, 0, width(), height());

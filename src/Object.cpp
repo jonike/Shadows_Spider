@@ -1046,7 +1046,6 @@ void Object::mvpGet(shared_ptr<GLWidget> myGL)
 
     SM = glm::scale(glm::mat4(), usableScale);
 
-
     if (type == "CAMLI" && camLiType->val_s != "DIR")
         RM = glm::yawPitchRoll(glm::radians(r->val_3.x), glm::radians(r->val_3.y), 0.f);
 

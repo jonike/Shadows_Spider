@@ -277,7 +277,6 @@ void GLWidgetSh::writeShadow(int idx)
                 if (myWin.allGL[j].get()->isVisible())
                 {
                     GLidx = j;
-
                     break;
                 }
             }
@@ -291,10 +290,7 @@ void GLWidgetSh::writeShadow(int idx)
             for (unsigned int j = 0; j < myWin.allObj.size(); ++j)
             {
                 if (myWin.allObj[j]->type == "OBJ" && myWin.allObj[j]->shadowCast->val_b && myWin.searchUp(myWin.allObj[j]))
-                {
-                    myWin.allObj[j]->mvpGet(myWin.allGL[GLidx]); //
                     myWin.allObj[j]->render(myWin.allGL[GLidx]); //
-                }
             }
 
             myWin.allObj[idx]->dirtyShadow = 0;
@@ -396,7 +392,6 @@ void GLWidgetSh::paintSlow(shared_ptr<GLWidget> myGL)
         }
     }
 }
-
 
 GLuint GLWidgetSh::dds16fUp(string pathIn)
 {    
