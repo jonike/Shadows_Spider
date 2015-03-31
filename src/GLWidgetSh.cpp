@@ -59,7 +59,7 @@ void GLWidgetSh::initializeGL()
 void GLWidgetSh::texInit()
 {
 //    allTex.push_back( { "brush5", "ALBEDO", texUp("brush/green16.jpg") } );
-//    allTex.push_back( { "brush5", "ALBEDO", texUp("brush/green64.jpg") } );
+    allTex.push_back( { "brush5", "ALBEDO", texUp("brush/red64.jpg") } );
 
     //ALBEDO
     allTex.push_back( { "BLANK", "ALBEDO", texUp("albedo/BLANK.png") } );
@@ -355,6 +355,7 @@ void GLWidgetSh::paintSlow(shared_ptr<GLWidget> myGL)
 {
     string pathTex = myWin.pathTable->pathTex->val_s.toStdString();
     string pathIn = "brush/green16.jpg";
+//    string pathIn = "brush/red64.jpg";
     string pathTemp = pathTex + pathIn;
     const char *path = pathTemp.c_str();
 
@@ -372,7 +373,7 @@ void GLWidgetSh::paintSlow(shared_ptr<GLWidget> myGL)
 
     for (unsigned int i = 0; i < allTex.size(); ++i) //paint
     {
-        if (allTex[i].name == "BLANK" && allTex[i].type == "albedo")
+        if (allTex[i].name == "BLANK" && allTex[i].type == "ALBEDO")
         {
             glTextureSubImage2D(allTex[i].tex_32, 0, uu * 256, vv * 256, imgW, imgH, GL_RGB, GL_UNSIGNED_BYTE, img);
 //            glTextureSubImage2D(allTex[i].tex_32, 0, uu * 256, vv * 256, 8, 8, GL_RGB, GL_UNSIGNED_BYTE, img);

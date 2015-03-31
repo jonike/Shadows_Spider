@@ -418,14 +418,6 @@ void Attrs::etcTable_init()
     fontSep->type = "sep";
     multiEtc.push_back(fontSep);
 
-    mpfFontSize = make_shared<MultiAttr>();
-    mpfFontSize->name = "mpfFontSize";
-    mpfFontSize->type = "int";
-    mpfFontSize->val_i = 15;
-    mpfFontSize->min = 5;
-    mpfFontSize->max = 20;
-    multiEtc.push_back(mpfFontSize);
-
     rowH = make_shared<MultiAttr>();
     rowH->name = "rowH";
     rowH->type = "int";
@@ -1175,7 +1167,7 @@ void Attrs::boolChange()
             for (unsigned int j = 0; j < boolChangeTemp.size(); ++j)
             {
                 if (tableType == "attr")
-                    multiVec = boolChangeTemp[j]->multiObj; //use each obj's multi
+                    multiVec = boolChangeTemp[j]->multiObj;
 
                 for (unsigned int k = 0; k < multiVec.size(); ++k)
                 {
@@ -1446,7 +1438,7 @@ void Attrs::writeValue(QTableWidgetItem *item)
             for (unsigned int i = 0; i < selObjs.size(); ++i)
             {
                 if (tableType == "attr")
-                    multiVec = selObjs[i]->multiObj; //use each obj's multi
+                    multiVec = selObjs[i]->multiObj;
 
                 for (unsigned int j = 0; j < multiVec.size(); ++j)
                 {
@@ -1539,18 +1531,7 @@ void Attrs::writeValue(QTableWidgetItem *item)
                     {
                         if (multiVec[j]->name == singleItem->data(33))
                         {
-//                            qDebug() << "pD.x in writeValue = " << pD.x;
-
-
-//                            if (selObjs[i]->name->val_s == myWin.selB->name->val_s)
-//                            {
-//                                multiVec[j]->val_3[singleItem->data(34).toInt()] = item->text().toFloat();
-//                            }
-
-
-//                            qDebug() << "item->text().toFloat() = " << selObjs[i]->name->val_s << item->text().toFloat();
                             multiVec[j]->val_3[singleItem->data(34).toInt()] = item->text().toFloat();
-
 
                             if (multiVec[j]->name == "t") //PIVOT
                             {
@@ -1558,14 +1539,14 @@ void Attrs::writeValue(QTableWidgetItem *item)
                                 {
                                     if (multiVec[k]->name == "piv")
                                     {
-//                                        float pivVal = multiVec[k]->val_3[singleItem->data(34).toInt()];
-//                                        float tVal = multiVec[j]->val_3[singleItem->data(34).toInt()];
-//                                        float textVal = item->text().toFloat();
-//                                        float offsetVal = pivVal - tVal;
-//                                        qDebug() << "piv / t / text / offset = " << pivVal << tVal << textVal << offsetVal;
+                                        //float pivVal = multiVec[k]->val_3[singleItem->data(34).toInt()];
+                                        //float tVal = multiVec[j]->val_3[singleItem->data(34).toInt()];
+                                        //float textVal = item->text().toFloat();
+                                        //float offsetVal = pivVal - tVal;
+                                        //qDebug() << "piv / t / text / offset = " << pivVal << tVal << textVal << offsetVal;
 
                                         multiVec[k]->val_3[singleItem->data(34).toInt()] = item->text().toFloat();
-//                                        multiVec[k]->val_3[singleItem->data(34).toInt()] = offsetVal;
+                                        //multiVec[k]->val_3[singleItem->data(34).toInt()] = offsetVal;
                                     }
                                 }
                             }
@@ -1578,52 +1559,16 @@ void Attrs::writeValue(QTableWidgetItem *item)
                         }
                     }
 
-//                    else if (singleItem->data(32) == "vec3")
-//                    {
-//                        if (multiVec[j]->name == singleItem->data(33))
-//                        {
-//                            multiVec[j]->val_3[singleItem->data(34).toInt()] = item->text().toFloat();
-
-//                            if (multiVec[j]->name == "t") //PIVOT
-//                            {
-//                                for (unsigned int k = 0; k < multiVec.size(); ++k)
-//                                {
-//                                    if (multiVec[k]->name == "piv")
-//                                    {
-//                                        //                                        float pivVal = multiVec[k]->val_3[singleItem->data(34).toInt()];
-//                                        //                                        float tVal = multiVec[j]->val_3[singleItem->data(34).toInt()];
-//                                        //                                        float textVal = item->text().toFloat();
-//                                        //                                        float offsetVal = pivVal - tVal;
-//                                        //                                        qDebug() << "piv / t / text / offset = " << pivVal << tVal << textVal << offsetVal;
-
-//                                        multiVec[k]->val_3[singleItem->data(34).toInt()] = item->text().toFloat();
-//                                        //                                        multiVec[k]->val_3[singleItem->data(34).toInt()] = offsetVal;
-//                                    }
-//                                }
-//                            }
-
-//                            if (selObjs[i]->type == "CAMLI")
-//                                selObjs[i]->setDirty();
-
-//                            else if (isTransformAttr(multiVec[j]->name) && selObjs[i]->type == "OBJ")
-//                                myWin.setLightsDirty();
-//                        }
-//                    }
-
                     else if (singleItem->data(32) == "vec2")
                     {
                         if (multiVec[j]->name == singleItem->data(33))
-                        {
                             multiVec[j]->val_2[singleItem->data(34).toInt()] = item->text().toFloat();
-                        }
                     }
 
                     else if (singleItem->data(32) == "vec4")
                     {
                         if (multiVec[j]->name == singleItem->data(33))
-                        {
                             multiVec[j]->val_4[singleItem->data(34).toInt()] = item->text().toFloat();
-                        }
                     }
 
                 }
@@ -1632,25 +1577,6 @@ void Attrs::writeValue(QTableWidgetItem *item)
 
         if (!mmbTgl)
             refreshTable();
-    }
-}
-
-void Attrs::dragUndo_prep()
-{
-    for (int i = 0; i < selectedItems().size(); ++i)
-    {
-        for (unsigned int j = 0; j < multiVec.size(); ++j)
-        {
-            if (selectedItems()[i]->data(33) == multiVec[j]->name)
-            {
-                shared_ptr<MultiAttr> at = multiVec[j]->Clone();
-
-                if (selectedItems()[i]->data(32) == "vec3")
-                    at->idx_3 = selectedItems()[i]->data(34).toInt();
-
-                undoDragAttrs.push_back(at);
-            }
-        }
     }
 }
 
@@ -1671,64 +1597,87 @@ void Attrs::vDrag(glm::vec2 diff)
         }
     }
 
-    foreach (QTableWidgetItem *singleItem, selItems)
+    myWin.attrTable->writeAttrTgl = 0;
+
+    vector<shared_ptr<Object>> selObjs = selTemp();
+
+    for (unsigned int i = 0; i < selObjs.size(); ++i)
     {
-        QString attrNameVD = singleItem->data(33).toString();
-        QString attrTypeVD = singleItem->data(32).toString();
+        if (tableType == "attr")
+            multiVec = selObjs[i]->multiObj;
 
-        if (ctrlTgl)
-            vSlide = vSliderSpeed->val_f * myWin.etcTable->dragBoost->val_f;
-
-        else if (altTgl)
-            vSlide = vSliderSpeed->val_f * myWin.etcTable->dragSlow->val_f;
-
-        else
-            vSlide = vSliderSpeed->val_f;
-
-        if (attrNameVD == "r") vSlide *= 10.f;
-        else if (attrTypeVD == "float") vSlide *= .3f;
-        else if (attrTypeVD == "int") vSlide *= 5.f;
-        else if (attrNameVD == "t" || attrNameVD == "pivot") vSlide *= .2f;
-
-        //SET
-        vector<shared_ptr<Object>> selObjs = selTemp();
-
-        for (unsigned int i = 0; i < selObjs.size(); ++i)
+        for (unsigned int j = 0; j < multiVec.size(); ++j)
         {
-            if (tableType == "attr")
-                multiVec = selObjs[i]->multiObj; //use each obj's multi
-
-            for (unsigned int j = 0; j < multiVec.size(); ++j)
+            foreach (QTableWidgetItem *singleItem, selItems)
             {
-                if (attrNameVD == multiVec[j]->name)
+                QString attrNameVD = singleItem->data(33).toString();
+                QString attrTypeVD = singleItem->data(32).toString();
+
+                if (multiVec[j]->name == attrNameVD)
                 {
-                    if (attrTypeVD == "int")
+                    float vSlide, vSlideVal;
+
+                    if (ctrlTgl) vSlide = vSliderSpeed->val_f * myWin.etcTable->dragBoost->val_f;
+                    else if (altTgl) vSlide = vSliderSpeed->val_f * myWin.etcTable->dragSlow->val_f;
+                    else vSlide = vSliderSpeed->val_f;
+
+                    if (attrNameVD == "r") vSlide *= 10.f;
+                    else if (attrTypeVD == "float") vSlide *= .3f;
+                    else if (attrTypeVD == "int") vSlide *= 5.f;
+                    else if (attrNameVD == "t" || attrNameVD == "pivot") vSlide *= .2f;
+
+                    if (tableType == "attr")
                     {
-                        vSlideVal = vSlide * diff.x;
-
-                        int slide2Int = glm::clamp(item(singleItem->row(), 1)->text().toInt() + (int)vSlideVal, (int)multiVec[j]->min, (int)multiVec[j]->max);
-
-                        item(singleItem->row(), 1)->setText(QString::number(slide2Int, 'g', '4'));
+                        if (attrTypeVD == "int") vSlideVal = glm::clamp(multiVec[j]->val_i + vSlide * diff.x, multiVec[j]->min, multiVec[j]->max);
+                        else if (attrTypeVD == "float") vSlideVal = glm::clamp(multiVec[j]->val_f + vSlide * diff.x, multiVec[j]->min, multiVec[j]->max);
+                        else if (attrTypeVD == "vec2") vSlideVal = glm::clamp(multiVec[j]->val_2[singleItem->data(34).toInt()] + vSlide * diff.x, multiVec[j]->min, multiVec[j]->max);
+                        else if (attrTypeVD == "vec3") vSlideVal = glm::clamp(multiVec[j]->val_3[singleItem->data(34).toInt()] + vSlide * diff.x, multiVec[j]->min, multiVec[j]->max);
+                        else if (attrTypeVD == "vec4") vSlideVal = glm::clamp(multiVec[j]->val_4[singleItem->data(34).toInt()] + vSlide * diff.x, multiVec[j]->min, multiVec[j]->max);
                     }
 
-                    else if (attrTypeVD == "float" || attrTypeVD == "vec2" || attrTypeVD == "vec3" || attrTypeVD == "vec4")
+                    else
+                        vSlideVal = glm::clamp(item(singleItem->row(), 1)->text().toFloat() + vSlide * diff.x, multiVec[j]->min, multiVec[j]->max);
+
+                    if (selObjs[i] == myWin.selB || tableType != "attr")
                     {
-                        vSlideVal = item(singleItem->row(), 1)->text().toFloat() + vSlide * diff.x;
+                        if (attrTypeVD == "int")
+                            item(singleItem->row(), 1)->setText(QString::number((int)vSlideVal, 'g', '4'));
 
-//                        qDebug() << "item(singleItem->row(), 1)->text().toFloat() = " << i <<  item(singleItem->row(), 1)->text().toFloat();
-
-//                        vSlideVal = item(singleItem->row(), 1)->text().toFloat() + vSlide * diff.x;
-//                        vSlideVal = multiVec[j]->val_3[singleItem->data(34).toInt()] + vSlide * diff.x;
-//                        vSlideVal = multiVec[j]->val_3[1] + vSlide * diff.x;
-
-                        vSlideVal = glm::clamp(vSlideVal, multiVec[j]->min, multiVec[j]->max);
-
-                        stringstream drag_ss;
-                        drag_ss << fixed << setprecision(3) << vSlideVal;
-
-                        item(singleItem->row(), 1)->setText(QString::fromStdString(drag_ss.str()));
+                        else
+                        {
+                            stringstream drag_ss;
+                            drag_ss << fixed << setprecision(3) << vSlideVal;
+                            item(singleItem->row(), 1)->setText(QString::fromStdString(drag_ss.str()));
+                        }
                     }
+
+                    if (attrTypeVD == "int") multiVec[j]->val_i = vSlideVal;
+                    else if (attrTypeVD == "float") multiVec[j]->val_f = vSlideVal;
+                    else if (attrTypeVD == "vec2") multiVec[j]->val_2[singleItem->data(34).toInt()] = vSlideVal;
+                    else if (attrTypeVD == "vec3") multiVec[j]->val_3[singleItem->data(34).toInt()] = vSlideVal;
+                    else if (attrTypeVD == "vec4") multiVec[j]->val_4[singleItem->data(34).toInt()] = vSlideVal;
                 }
+            }
+        }
+    }
+
+    myWin.attrTable->writeAttrTgl = 1;
+}
+
+void Attrs::dragUndo_prep()
+{
+    for (int i = 0; i < selectedItems().size(); ++i)
+    {
+        for (unsigned int j = 0; j < multiVec.size(); ++j)
+        {
+            if (selectedItems()[i]->data(33) == multiVec[j]->name)
+            {
+                shared_ptr<MultiAttr> at = multiVec[j]->Clone();
+
+                if (selectedItems()[i]->data(32) == "vec3")
+                    at->idx_3 = selectedItems()[i]->data(34).toInt();
+
+                undoDragAttrs.push_back(at);
             }
         }
     }

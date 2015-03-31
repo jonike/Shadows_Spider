@@ -34,7 +34,6 @@ public:
     bool altTgl, ctrlTgl, shiftTgl, qTgl;
     bool lmbTgl, mmbTgl;
     bool setupTgl, writeAttrTgl, camAttrWrongType;
-    float vSlide, vSlideVal;
     int useThisRow, lastRow, lastCol, storedStackedIdx, tabIdx;
     bool refreshRowH_onRelease = 0;
     QString changeEnumName;
@@ -55,7 +54,7 @@ public:
 
     //ETC PREFS
     shared_ptr<MultiAttr> framed, selAccuracy;
-    shared_ptr<MultiAttr> fontSep, mpfFontSize, rowH, rowH_sep;
+    shared_ptr<MultiAttr> fontSep, rowH, rowH_sep;
     shared_ptr<MultiAttr> dragSep, dragBoost, dragBoostHSV, dragSlow;
     shared_ptr<MultiAttr> dollySpeed, dollySpeed_ortho, dragManipSpeed, panSpeed, panSpeed_ortho, vSliderSpeed, tumbleSpeed, wheelSpeed, wheelSpeed_ortho;
     shared_ptr<MultiAttr> fpsSep, fpsMouseSpeed, fpsFBSpeed, fpsLRSpeed, fpsUDSpeed, fpsWheelSpeed;

@@ -170,7 +170,6 @@ void Gizmo::transform(shared_ptr<GLWidget> myGLin)
         }
     }
 
-
     else if (myWin.myGizNull->gizType == "S")
     {
 //        if (myWin.gizSpace == "local")

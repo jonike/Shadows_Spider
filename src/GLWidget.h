@@ -35,7 +35,7 @@ public:
     bool lmbTgl, mmbTgl, rmbTgl, altTgl, ctrlTgl, shiftTgl, spaceTgl;
     bool aTgl, bTgl, cTgl, dTgl, eTgl, fTgl, gTgl, hTgl, iTgl, jTgl, kTgl, lTgl, mTgl, nTgl, oTgl, pTgl, qTgl, rTgl, sTgl, tTgl, uTgl, vTgl, wTgl, xTgl, yTgl, zTgl;
     bool colorPickTgl, disableSelRect, gizSideTgl, gizSpaceTgl, mpfTgl, rezGateTgl, rezGateTgl_sel, singleShot, statsTgl, wireOverTgl, rttVizTgl;
-    float aspect, aspectSide, NDC_x, NDC_y, rayIntersectDist, vSlide, vSliderSpeed;
+    float aspect, aspectSide, NDC_x, NDC_y, rayIntersectDist;
 
     glm::mat4 VMgizSide, PM, PMgizSide, PMinv_cube, PMrtt;
     glm::vec2 pNew, pOld, pD, rayP;

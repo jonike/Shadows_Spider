@@ -624,9 +624,6 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     lookFPS = glm::normalize(t->val_3);
 
     //TXT
-    txtCellSize = glm::vec2(1.f / 16, (300.f / 384) / 6);
-    txtCellOffset = glm::vec2(.5f / 256);
-    txtSize = .8f;
     txtOrigin = glm::vec2(-.95f, .8f);
 }
 
@@ -802,9 +799,6 @@ Object::Object(const Object &obj) : myWin(obj.myWin) //COPY CONSTRUCTOR
     gizSideObj = obj.gizSideObj;
 
     //TXT
-    txtSize = obj.txtSize;
-    txtCellSize = obj.txtCellSize;
-    txtCellOffset = obj.txtCellOffset;
     txtOrigin = obj.txtOrigin;
 
     //TRANSFORM
@@ -1486,10 +1480,16 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                 }
 
                 glUniform3fv(glGetUniformLocation(proH, "Ctxt"), 1, &myWin.glslTable->Ctxt->val_3.r);
+
+                glm::vec2 txtCellSize(1.f / 16, (300.f / 384) / 6);
                 glUniform2fv(glGetUniformLocation(proH, "txtCellSize"), 1, &txtCellSize.x);
+
+                glm::vec2 txtCellOffset(.5f / 256);
                 glUniform2fv(glGetUniformLocation(proH, "txtCellOffset"), 1, &txtCellOffset.x);
 
                 glUniform2fv(glGetUniformLocation(proH, "txtOrigin"), 1, &txtOrigin.x);
+
+                float txtSize = .8f;
                 glm::vec2 txtSizeUse(.75f * 16 / (myGL->width() / txtSize), .75f * 33.33 / (myGL->height() / txtSize));
                 glUniform2fv(glGetUniformLocation(proH, "txtSize"), 1, &txtSizeUse.x);
             }

@@ -158,7 +158,7 @@ void GLWidget::keyReleaseEvent(QKeyEvent *e)
         debugBool = !debugBool;
         qDebug() << "debugBool = " << debugBool;
 
-//        qDebug() << "entering / exiting paint mode";
+        qDebug() << "entering / exiting paint mode";
 //        myWin.setLightsDirty();
 
     }
@@ -1017,8 +1017,11 @@ void GLWidget::paintGL()
         glClear(GL_DEPTH_BUFFER_BIT);
     }
 
-//        if (debugBool)
-//            myWin.myGLWidgetSh->paintSlow(myWin.allGL[GLidx]); //
+//    if (debugBool)
+//    {
+//        qDebug() << "in paintSlow()";
+//        myWin.myGLWidgetSh->paintSlow(myWin.allGL[GLidx]); //
+//    }
 
     /* COMP */
     glDisable(GL_BLEND);

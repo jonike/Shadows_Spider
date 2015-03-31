@@ -91,10 +91,8 @@ public:
     bool gizSideObj = 0;
 
     //TXT
-    glm::vec3 Ctxt;
     const char *txt2D;
-    float txtSize;
-    glm::vec2 txtCellSize, txtCellOffset, txtOrigin;
+    glm::vec2 txtOrigin;
 
     //TRANSFORM
     glm::mat3 NM;

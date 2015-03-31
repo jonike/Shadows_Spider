@@ -561,7 +561,7 @@ void MainWin::startupScene(QString name)
         loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "teapot.obj", "OBJ", "teapot", 0);
         for (unsigned int i = 0; i < loadO.size(); ++i)
         {
-//            loadO[i]->t->val_3 = glm::vec3(0.f, 3.f, 0.f);
+//            loadO[i]->t->val_3 = glm::vec3(0.f, 5.f, 0.f);
             loadO[i]->r->val_3 = glm::vec3(0.f, 90.f, 0.f);
             loadO[i]->s->val_3 = glm::vec3(1.5f);
             allObj.push_back(loadO[i]);

@@ -18,10 +18,8 @@ release/*
 *.Debug
 *.Release
 
-*.dbug
+*.debug
 *.release
-.pro.user
-
 
 # Qt-es
 /.qmake.cache
@@ -87,3 +85,4 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+Shadows_Spider.pro.user
