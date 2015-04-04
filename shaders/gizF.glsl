@@ -21,8 +21,8 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450 core
 
-uniform bool CpickTgl, ssaoTgl;
-uniform vec3 Cgiz, Crand;
+uniform bool ssaoTgl;
+uniform vec3 Cgiz;
 
 layout(location = 0) out vec4 rttC;
 layout(location = 4) out vec4 ssaoMask;
@@ -30,9 +30,6 @@ layout(location = 5) out vec4 rttGiz;
 
 void main()
 {
-    if (CpickTgl)
-        rttC = vec4(Crand, 1.f);
-
     rttGiz = vec4(Cgiz, 1.f);
 
     //RTT

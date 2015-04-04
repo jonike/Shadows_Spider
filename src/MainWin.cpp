@@ -695,14 +695,13 @@ void MainWin::addOutliner()
     dock_outliner->setWidget(dock_outliner_holder);
     addDockWidget(Qt::LeftDockWidgetArea, dock_outliner);
 
-    // dock_outliner_holder->setMaximumWidth(100);
-    //    dock_outliner->setFloating(1); //
-    //    dock_outliner->setVisible(1); //
+    dock_outliner->setFloating(1); //
+    dock_outliner->setVisible(1); //
 
-    //    centerToScreen(dock_outliner);
-    //    glm::vec2 moveRelative(glm::vec2(-650, 200) + toVec2(dock_outliner->pos()));
-    //    dock_outliner->move(moveRelative.x, moveRelative.y);
-    //    dock_outliner->resize(dock_outliner->width() - 100, dock_outliner->height());
+    centerToScreen(dock_outliner);
+    glm::vec2 moveRelative(glm::vec2(-650, 200) + toVec2(dock_outliner->pos()));
+    dock_outliner->move(moveRelative.x, moveRelative.y);
+    dock_outliner->resize(dock_outliner->width() - 100, dock_outliner->height());
 
     //SHOW / HIDE OUTLINER
     QAction *showHideOutliner = dock_outliner->toggleViewAction();

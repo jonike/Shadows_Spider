@@ -371,7 +371,7 @@ void PP::postFX(shared_ptr<GLWidget> myGLin)
     myGL->ssao_gauss_node.tex2_64 = glGetTextureHandleARB(gaussianBlur(myGL->ssao_node, myGL->ssao_gauss_node, myWin.myFSQ->ssaoBlur->val_b));
     glMakeTextureHandleResidentARB(myGL->ssao_gauss_node.tex2_64);
 
-    //BLOOM + C COMBINE
+    //AO * (BLOOM + C)
     bloomRender();
 
     glBindFramebuffer(GL_FRAMEBUFFER, myGL->aoBloomC_node.fbo1);

@@ -1381,14 +1381,7 @@ bool GLWidget::checkForHits() //READPIXELS
         QString type = myWin.allObj[j]->type;
         if ((type == "CAMLI" || type == "OBJ") && myWin.searchUp(myWin.allObj[j]))
         {
-            if (myWin.allObj[j]->bb->val_b)
-                myWin.myGLWidgetSh->glUseProgram2("pBB");
-
-            else if (myWin.allObj[j]->type == "CAMLI")
-                myWin.myGLWidgetSh->glUseProgram2("pGiz");
-
-            else if (myWin.allObj[j]->type == "OBJ")
-                myWin.myGLWidgetSh->glUseProgram2("pBase");
+            myWin.myGLWidgetSh->glUseProgram2("pBB");
 
             myWin.allObj[j]->mvpGet(myWin.allGL[GLidx]);
             myWin.allObj[j]->render(myWin.allGL[GLidx]);

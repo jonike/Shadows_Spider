@@ -68,11 +68,10 @@ uniform float fogDen;
 uniform vec4 wireCombo; //(CwireUse->val_3, wireMode);
 
 //etc
-uniform bool CpickTgl, ssaoTgl, shadowCast, vignette;
+uniform bool ssaoTgl, shadowCast, vignette;
 const float PI = 3.14159;
 uniform int myLightType[4];
 uniform mat4 VMinv;
-uniform vec3 Crand;
 
 float fresnel(float eta, float NdotV) // schlick
 {
@@ -261,9 +260,6 @@ void main()
         rttC.rgb += (indirDiff + indirSpec);
 
     rttC.a = Kcombo.y * alphaM;
-
-    if (CpickTgl)
-        rttC = vec4(Crand, 1.f);
 
     //FX
     if (wireCombo.a == 1) rttC.rgb = mix(rttC.rgb, wireCombo.rgb, wire(g.wire, .75f));

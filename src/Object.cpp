@@ -1152,7 +1152,7 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
             glUniform1i(glGetUniformLocation(proH, "ssaoTgl"), ssaoTgl->val_b);
 
             /* SHADER SPECIFIC TEX / UNI */
-            if (bb->val_b || proN == "pBase")
+            if (proN == "pBase" || proN == "pBB")
             {
                 //WIREFRAME
                 glm::vec3 CwireUse = (selected) ? myWin.glslTable->Csel->val_3 : Cwire->val_3;
@@ -1165,7 +1165,7 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                 glUniform4fv(glGetUniformLocation(proH, "wireCombo"), 1, &wireCombo.r);
             }
 
-            if (bb->val_b || proN == "pGiz" || proN == "pBase")
+            if (proN == "pBB")
             {
                 glUniform1i(glGetUniformLocation(proH, "CpickTgl"), myGL->colorPickTgl);
                 glUniform3fv(glGetUniformLocation(proH, "Crand"), 1, &Crand.r);
@@ -1232,7 +1232,7 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
 
             else if (proN == "pBase")
             {
-                if (selected && !bb->val_b && myWin.selMode != "OBJ")
+                if (selected && myWin.selMode != "OBJ")
                 {
                     glm::mat4 VPM = glm::mat4(glm::vec4(myGL->width() / 2.f, 0.f, 0.f, 0.f),
                                               glm::vec4(0.f, myGL->height() / 2.f, 0.f, 0.f),

@@ -23,6 +23,7 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(location = 0) out vec4 rttC;
 layout(location = 4) out vec4 ssaoMask;
+layout(location = 5) out vec4 rttGiz;
 
 uniform vec3 Crand;
 uniform vec4 wireCombo; //(CwireUse->val_3, wireMode);
@@ -34,7 +35,7 @@ void main()
         rttC = vec4(Crand, 1.f);
 
     else
-        rttC = vec4(wireCombo.rgb, 1.f);
+        rttGiz = vec4(wireCombo.rgb, 1.f);
 
     ssaoMask = vec4(0.f);
 }
