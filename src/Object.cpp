@@ -1797,13 +1797,13 @@ void Object::rename(QString newName) //recursive
                 preExist = 1;
         }
 
-        for (unsigned int i = 0; i < myWin.myGLWidgetSh->vboNames.size(); ++i)
+        if (preExist)
         {
-            if (myWin.myGLWidgetSh->vboNames[i] == newName)
-                preExist = 1;
+            newName = QString::fromStdString(getIncName(newName.toStdString()));
+            rename(newName);
         }
 
-        if (!preExist)
+        else
         {
             for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
             {
@@ -1815,31 +1815,6 @@ void Object::rename(QString newName) //recursive
             }
 
             name->val_s = newName;
-        }
-
-        else
-        {
-            for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
-            {
-                if (myWin.allObj[i]->name->val_s == newName) //pre-existing name entered
-                {
-                    newName = QString::fromStdString(getIncName(newName.toStdString()));
-                    rename(newName);
-
-                    break;
-                }
-            }
-
-            for (unsigned int i = 0; i < myWin.myGLWidgetSh->vboNames.size(); ++i)
-            {
-                if (myWin.myGLWidgetSh->vboNames[i] == newName)//pre-existing name entered
-                {
-                    newName = QString::fromStdString(getIncName(newName.toStdString()));
-                    rename(newName);
-
-                    break;
-                }
-            }
         }
     }
 }

@@ -202,8 +202,7 @@ void MainWin::camInit()
         { "ORTHO", "top", {0.f, 5.f, .002f} }, //
 
         { "PERSP", "persp", {10.f, 10.f, 10.f} },
-        { "PERSP", "persp2", {-5.f, 2.f, 5.f} },
-//        { "SPOT", "persp2", {-5.f, 2.f, 5.f} },
+        { "PERSP", "persp1", {-5.f, 2.f, 5.f} },
     };
 
     for (unsigned int i = 0; i < arraySize(myCamSetup); ++i)
@@ -250,7 +249,7 @@ void MainWin::glWidgetInit()
         { "left", 1, *hLayD },
 
         { "persp", 0, *vLay },
-        { "persp2", 1, *vLay },
+        { "persp1", 1, *vLay },
 //        { "top", 1, *vLay },
     };
 
@@ -558,6 +557,15 @@ void MainWin::startupScene(QString name)
 
     else if (name == "teapotPlane")
     {
+        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "teapot.obj", "OBJ", "teapot", 0);
+        for (unsigned int i = 0; i < loadO.size(); ++i)
+        {
+            loadO[i]->t->val_3 = glm::vec3(3.f, 0.f, 0.f);
+            loadO[i]->r->val_3 = glm::vec3(0.f, 90.f, 0.f);
+            loadO[i]->s->val_3 = glm::vec3(1.5f);
+            allObj.push_back(loadO[i]);
+        }
+
         loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "teapot.obj", "OBJ", "teapot", 0);
         for (unsigned int i = 0; i < loadO.size(); ++i)
         {

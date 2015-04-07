@@ -1474,18 +1474,12 @@ void Attrs::writeActions(QString type, QString name, unsigned int idxO, unsigned
 
     else if (type == "QString")
     {
-        for (unsigned int k = 0; k < myWin.allObj.size(); ++k)
-        {
-            if (myWin.allObj[k]->selected)
-            {
-                myWin.allObj[k]->rename(valText);
+        selObjs[idxO]->rename(valText);
 
-                if (myWin.allObj[k]->type == "CAMLI")
-                {
-                    for (unsigned int l = 0; l < myWin.allCamCombo.size(); ++l)
-                        myWin.allCamCombo[l]->refresh();
-                }
-            }
+        if (selObjs[idxO]->type == "CAMLI")
+        {
+            for (unsigned int l = 0; l < myWin.allCamCombo.size(); ++l)
+                myWin.allCamCombo[l]->refresh();
         }
 
         myWin.myOutliner->refreshOutliner(1);
@@ -1543,9 +1537,9 @@ void Attrs::writeValue(QTableWidgetItem *item)
     {
         selObjs = selTemp();
 
-        foreach (QTableWidgetItem *singleItem, selectedItems())
+        for (unsigned int i = 0; i < selObjs.size(); ++i)
         {
-            for (unsigned int i = 0; i < selObjs.size(); ++i)
+            foreach (QTableWidgetItem *singleItem, selectedItems())
             {
                 if (tableType == "attr")
                     multiVec = selObjs[i]->multiObj;
@@ -1555,7 +1549,11 @@ void Attrs::writeValue(QTableWidgetItem *item)
                     QString name = multiVec[j]->name;
 
                     if (name == singleItem->data(33) || singleItem->row() == 0)
+                    {
                         writeActions(singleItem->data(32).toString(), name, i, j, singleItem->data(34).toInt(), glm::clamp(item->text().toFloat(), multiVec[j]->min, multiVec[j]->max), singleItem->text());
+
+                        break;
+                    }
                 }
             }
         }

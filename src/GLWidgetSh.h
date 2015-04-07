@@ -50,22 +50,22 @@ typedef struct
 
     struct
     {
-      unsigned int dwSize;
-      unsigned int dwFlags;
-      unsigned int dwFourCC;
-      unsigned int dwRGBBitCount;
-      unsigned int dwRBitMask;
-      unsigned int dwGBitMask;
-      unsigned int dwBBitMask;
-      unsigned int dwAlphaBitMask;
+        unsigned int dwSize;
+        unsigned int dwFlags;
+        unsigned int dwFourCC;
+        unsigned int dwRGBBitCount;
+        unsigned int dwRBitMask;
+        unsigned int dwGBitMask;
+        unsigned int dwBBitMask;
+        unsigned int dwAlphaBitMask;
     } sPixelFormat;
 
     struct
     {
-      unsigned int dwCaps1;
-      unsigned int dwCaps2;
-      unsigned int dwDDSX;
-      unsigned int dwReserved;
+        unsigned int dwCaps1;
+        unsigned int dwCaps2;
+        unsigned int dwDDSX;
+        unsigned int dwReserved;
     } sCaps;
 
     unsigned int dwReserved2;
@@ -80,7 +80,6 @@ public:
     GLWidgetSh(MainWin &, QWidget *parent = 0);
 
     vector<GLSharedData> GLDataSh;
-    vector<QString> vboNames;
     vector<shared_ptr<Object>> newO;
     vector<Pro> allPro;
     vector<AbjNode> allShadow;

@@ -709,7 +709,6 @@ void GLWidgetSh::VAOup(shared_ptr<Object> obj)
 vector<shared_ptr<Object>> GLWidgetSh::VBOup(QString path, QString type, QString name, shared_ptr<Object> dupe)
 {
     if (!myWin.loadO.empty()) myWin.loadO.clear();
-    if (!vboNames.empty()) vboNames.clear();
     if (!newO.empty()) newO.clear();
 
     if (path.isEmpty())
@@ -1045,7 +1044,6 @@ vector<shared_ptr<Object>> GLWidgetSh::VBOup(QString path, QString type, QString
             indexVBO_TBN(vertices, uvs, normals, tangents, bitangents, obj->idxE, obj->pE, obj->uvE, obj->nE, obj->tE, obj->bE);
 
             newO.push_back(obj);
-            vboNames.push_back(obj->name->val_s);
         }
     }
 
@@ -1113,8 +1111,6 @@ vector<shared_ptr<Object>> GLWidgetSh::VBOup(QString path, QString type, QString
 
         VAOup(newO[i]);
     }
-
-    if (!vboNames.empty()) vboNames.clear();
 
     return newO;
 }
