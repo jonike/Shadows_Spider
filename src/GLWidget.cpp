@@ -160,7 +160,6 @@ void GLWidget::keyReleaseEvent(QKeyEvent *e)
 
         qDebug() << "entering / exiting paint mode";
 //        myWin.setLightsDirty();
-
     }
 
     else if (e->key() == Qt::Key_F6)
@@ -847,6 +846,22 @@ void GLWidget::paintGL()
     myWin.myFSQ->render(myWin.allGL[GLidx]);
     glEnable(GL_DEPTH_TEST);
 
+    if (gizSideTgl)
+    {
+        glViewport(0, 0, myWin.glslTable->gizSideS->val_3.x, myWin.glslTable->gizSideS->val_3.y);
+        myWin.myGLWidgetSh->glUseProgram2("pGiz_side");
+        glDisable(GL_DEPTH_TEST);
+
+        for (unsigned int i = 0; i < myWin.allGizSide.size(); ++i)
+        {
+            myWin.allGizSide[i]->mvpGet(myWin.allGL[GLidx]);
+            myWin.allGizSide[i]->render(myWin.allGL[GLidx]);
+        }
+
+        glEnable(GL_DEPTH_TEST);
+        glViewport(0, 0, width(), height());
+    }
+
     if (selCamLi->gridV)
     {
         myWin.myGLWidgetSh->glUseProgram2("pGrid");
@@ -1000,21 +1015,6 @@ void GLWidget::paintGL()
 
             glEnable(GL_CULL_FACE);
         }
-    }
-
-    if (gizSideTgl)
-    {
-        glViewport(0, 0, myWin.glslTable->gizSideS->val_3.x, myWin.glslTable->gizSideS->val_3.y);
-        myWin.myGLWidgetSh->glUseProgram2("pGiz_side");
-
-        for (unsigned int i = 0; i < myWin.allGizSide.size(); ++i)
-        {
-            myWin.allGizSide[i]->mvpGet(myWin.allGL[GLidx]);
-            myWin.allGizSide[i]->render(myWin.allGL[GLidx]);
-        }
-
-        glViewport(0, 0, width(), height());
-        glClear(GL_DEPTH_BUFFER_BIT);
     }
 
 //    if (debugBool)

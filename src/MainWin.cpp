@@ -144,17 +144,17 @@ void MainWin::progressAdd_init()
 
     lightCt = countLights();
 
-//    //SINGLE VIEW AT START
-//    for (unsigned int i = 0; i < allGL.size(); ++i)
-//    {
-//        if (allGL[i]->debugID == 4)
-//        {
-//            blankW_main->setParent(0);
-//            stackedMain->insertWidget(1, &allGL[i]->mySplitV);
-//            stackedMain->setCurrentIndex(1);
-//            savedIdx = 1;
-//        }
-//    }
+    //SINGLE VIEW AT START
+    for (unsigned int i = 0; i < allGL.size(); ++i)
+    {
+        if (allGL[i]->debugID == 4)
+        {
+            blankW_main->setParent(0);
+            stackedMain->insertWidget(1, &allGL[i]->mySplitV);
+            stackedMain->setCurrentIndex(1);
+            savedIdx = 1;
+        }
+    }
 }
 
 void MainWin::gridInit()

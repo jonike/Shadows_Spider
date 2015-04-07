@@ -45,6 +45,7 @@ public:
     QMenu RMB_menu;
     QFont labelF, sepF, valF;
 
+    vector<shared_ptr<Object>> selObjs;
     vector<shared_ptr<MultiAttr>> multiVec, multiCut, multiCut_stored, multiEtc, multiEtc_stored, multiGL, multiGL_stored, multiPath, multiPath_stored, prefReset, prefReset_stored, undoDragAttrs;
     vector<TableButtons> myButtons;
     vector<Combo*> myEnumCombo;
@@ -78,6 +79,7 @@ public:
     vector<shared_ptr<Object>> selTemp();
     bool isTransformAttr(QString);
     void refreshRowH();
+    void writeActions(QString, QString, unsigned int, unsigned int, int, float, QString);
 
 public slots:
     void changeEnum(QString);

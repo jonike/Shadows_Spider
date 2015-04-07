@@ -275,8 +275,8 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     nearClip->name = "nearClip";
     nearClip->type = "float";
     nearClip->typeX = "CAMLI";
-    nearClip->val_f = .001f;
-    nearClip->min = .001f;
+    nearClip->val_f = .01f;
+    nearClip->min = .01f;
     nearClip->tab = 1;
     multiObj.push_back(nearClip);
 
@@ -284,7 +284,8 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     farClip->name = "farClip";
     farClip->type = "float";
     farClip->typeX = "CAMLI";
-    farClip->val_f = 1000.f;
+    farClip->val_f = 500.f;
+    farClip->min = .01f;
     farClip->tab = 1;
     multiObj.push_back(farClip);
 
@@ -605,6 +606,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
         0.f, .5f, 0.f, 0.f,
         0.f, 0.f, .5f, 0.f,
         .5f, .5f, .5f, 1.f);
+
     Crand = genColorID();
     showN = 0;
     nType = 0;

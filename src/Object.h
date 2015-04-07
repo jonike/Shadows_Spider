@@ -50,7 +50,6 @@ public:
     shared_ptr<MultiAttr> camLiType;
     shared_ptr<MultiAttr> camSep, fov, nearClip, farClip, nearShadow, farShadow, orthoFree, orthoType, orthoZoom;
 
-
     shared_ptr<MultiAttr> lightSep, Cl, lInten, lSpotI, lSpotO;
     shared_ptr<MultiAttr> volSep, volCone, volDist, volS;
 

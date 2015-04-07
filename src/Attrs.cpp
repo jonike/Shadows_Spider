@@ -150,8 +150,8 @@ void Attrs::keyPressEvent(QKeyEvent *e)
 
                             if (multiVec[j]->name == "fov")
                             {
-                                for (vector<shared_ptr<GLWidget>>::iterator it = myWin.allGL.begin(); it != myWin.allGL.end(); ++it)
-                                    (*it)->resizeGL((*it)->width(), (*it)->height());
+                                for (unsigned int k = 0; k < myWin.allGL.size(); ++k)
+                                    myWin.allGL[k]->resizeGL(myWin.allGL[k]->width(), myWin.allGL[k]->height());
                             }
                         }
 
@@ -1421,6 +1421,116 @@ void Attrs::refreshRowH()
     refreshRowH_onRelease = 0;
 }
 
+void Attrs::writeActions(QString type, QString name, unsigned int idxO, unsigned int idxM, int idxV, float val, QString valText)
+{
+    if (type == "float")
+    {
+        multiVec[idxM]->val_f = val;
+
+        if (name == "gridSize")
+        {
+            for (unsigned int k = 0; k < myWin.allObj.size(); ++k)
+            {
+                if (myWin.allObj[k]->type == "GRID")
+                    myWin.allObj[k]->s->val_3 = glm::vec3(multiVec[idxM]->val_f);
+            }
+        }
+
+        else if (name == "fov" || name == "orthoZoom" || name == "nearClip" || name == "farClip")
+        {
+            for (unsigned int k = 0; k < myWin.allGL.size(); ++k)
+                myWin.allGL[k]->resizeGL(myWin.allGL[k]->width(), myWin.allGL[k]->height());
+        }
+    }
+
+    else if (type == "int")
+    {
+        multiVec[idxM]->val_i = val;
+
+        if (name == "CPopSize")
+        {
+            myWin.myCPopWin->resize(multiVec[idxM]->val_i, multiVec[idxM]->val_i);
+            myWin.myCPopWin->myCPop->update();
+        }
+
+        else if (name == "CPopManipSize")
+        {
+            myWin.myCPopWin->myCPop->changedManip = 1;
+            myWin.myCPopWin->myCPop->update();
+        }
+
+        else if (name == "rowH" || name == "rowH_sep")
+        {
+            if (mmbTgl) refreshRowH_onRelease = 1;
+            else refreshRowH();
+        }
+    }
+
+    else if (type == "QShortcut")
+    {
+        multiVec[idxM]->val_s = valText;
+        multiVec[idxM]->cut->setKey(QKeySequence::fromString(multiVec[idxM]->val_s));
+    }
+
+    else if (type == "QString")
+    {
+        for (unsigned int k = 0; k < myWin.allObj.size(); ++k)
+        {
+            if (myWin.allObj[k]->selected)
+            {
+                myWin.allObj[k]->rename(valText);
+
+                if (myWin.allObj[k]->type == "CAMLI")
+                {
+                    for (unsigned int l = 0; l < myWin.allCamCombo.size(); ++l)
+                        myWin.allCamCombo[l]->refresh();
+                }
+            }
+        }
+
+        myWin.myOutliner->refreshOutliner(1);
+    }
+
+    else if (type == "vec2")
+    {
+        multiVec[idxM]->val_2[idxV] = val;
+    }
+
+    else if (type == "vec3")
+    {
+        multiVec[idxM]->val_3[idxV] = val;
+
+        if (name == "t")
+        {
+            for (unsigned int k = 0; k < multiVec.size(); ++k)
+            {
+                if (multiVec[k]->name == "piv")
+                {
+                    //float pivVal = multiVec[k]->val_3[idxV];
+                    //float tVal = multiVec[j]->val_3[idxV];
+                    //float textVal = item->text().toFloat();
+                    //float offsetVal = pivVal - tVal;
+                    //qDebug() << "piv / t / text / offset = " << pivVal << tVal << textVal << offsetVal;
+
+//                    multiVec[k]->val_3[idxV] = item->text().toFloat(); // !!!
+                    //multiVec[k]->val_3[idxV] = offsetVal;
+                }
+            }
+        }
+
+        if (selObjs[idxO]->type == "CAMLI")
+            selObjs[idxO]->setDirty();
+
+        else if (isTransformAttr(name) && selObjs[idxO]->type == "OBJ")
+            myWin.setLightsDirty();
+    }
+
+    else if (type == "vec4")
+    {
+        multiVec[idxM]->val_4[idxV] = val;
+    }
+}
+
 void Attrs::writeValue(QTableWidgetItem *item)
 {
     if (setupTgl)
@@ -1431,7 +1541,7 @@ void Attrs::writeValue(QTableWidgetItem *item)
 
     else if (writeAttrTgl)
     {
-        vector<shared_ptr<Object>> selObjs = selTemp();
+        selObjs = selTemp();
 
         foreach (QTableWidgetItem *singleItem, selectedItems())
         {
@@ -1442,138 +1552,15 @@ void Attrs::writeValue(QTableWidgetItem *item)
 
                 for (unsigned int j = 0; j < multiVec.size(); ++j)
                 {
-                    if (singleItem->data(32) == "float")
-                    {
-                        if (multiVec[j]->name == singleItem->data(33))
-                        {
-                            multiVec[j]->val_f = glm::clamp(item->text().toFloat(), multiVec[j]->min, multiVec[j]->max);
+                    QString name = multiVec[j]->name;
 
-                            if (multiVec[j]->name == "fov" || multiVec[j]->name == "orthoZoom")
-                            {
-                                for (vector<shared_ptr<GLWidget>>::iterator it = myWin.allGL.begin(); it != myWin.allGL.end(); ++it)
-                                    (*it)->resizeGL((*it)->width(), (*it)->height());
-                            }
-
-                            else if (multiVec[j]->name == "gridSize")
-                            {
-                                for (unsigned int k = 0; k < myWin.allObj.size(); ++k)
-                                {
-                                    if (myWin.allObj[k]->type == "GRID")
-                                        myWin.allObj[k]->s->val_3 = glm::vec3(multiVec[j]->val_f);
-                                }
-                            }
-                        }
-                    }
-
-                    else if (singleItem->data(32) == "int")
-                    {
-                        if (multiVec[j]->name == singleItem->data(33))
-                        {
-                            multiVec[j]->val_i = glm::clamp(item->text().toFloat(), multiVec[j]->min, multiVec[j]->max);
-
-                            if (multiVec[j]->name == "CPopSize")
-                            {
-                                myWin.myCPopWin->resize(multiVec[j]->val_i, multiVec[j]->val_i);
-                                myWin.myCPopWin->myCPop->update();
-                            }
-
-                            else if (multiVec[j]->name == "CPopManipSize")
-                            {
-                                myWin.myCPopWin->myCPop->changedManip = 1;
-                                myWin.myCPopWin->myCPop->update();
-                            }
-
-                            else if (multiVec[j]->name == "rowH" || multiVec[j]->name == "rowH_sep")
-                            {
-                                if (mmbTgl)
-                                    refreshRowH_onRelease = 1;
-
-                                else
-                                    refreshRowH();
-                            }
-                        }
-                    }
-
-                    else if (singleItem->data(32) == "QShortcut")
-                    {
-                        if (multiVec[j]->name == singleItem->data(33))
-                        {
-                            multiVec[j]->val_s = singleItem->text();
-                            multiVec[j]->cut->setKey(QKeySequence::fromString(multiVec[j]->val_s));
-                        }
-                    }
-
-                    else if (singleItem->data(32) == "QString")
-                    {
-                        if (singleItem->row() == 0) // name
-                        {
-                            for (unsigned int k = 0; k < myWin.allObj.size(); ++k)
-                            {
-                                if (myWin.allObj[k]->selected)
-                                {
-                                    myWin.allObj[k]->rename(singleItem->text());
-
-                                    if (myWin.allObj[k]->type == "CAMLI")
-                                    {
-                                        for (unsigned int l = 0; l < myWin.allCamCombo.size(); ++l)
-                                            myWin.allCamCombo[l]->refresh();
-                                    }
-                                }
-                            }
-
-                            myWin.myOutliner->refreshOutliner(1);
-
-                            break;
-                        }
-                    }
-
-                    else if (singleItem->data(32) == "vec3")
-                    {
-                        if (multiVec[j]->name == singleItem->data(33))
-                        {
-                            multiVec[j]->val_3[singleItem->data(34).toInt()] = item->text().toFloat();
-
-                            if (multiVec[j]->name == "t") //PIVOT
-                            {
-                                for (unsigned int k = 0; k < multiVec.size(); ++k)
-                                {
-                                    if (multiVec[k]->name == "piv")
-                                    {
-                                        //float pivVal = multiVec[k]->val_3[singleItem->data(34).toInt()];
-                                        //float tVal = multiVec[j]->val_3[singleItem->data(34).toInt()];
-                                        //float textVal = item->text().toFloat();
-                                        //float offsetVal = pivVal - tVal;
-                                        //qDebug() << "piv / t / text / offset = " << pivVal << tVal << textVal << offsetVal;
-
-                                        multiVec[k]->val_3[singleItem->data(34).toInt()] = item->text().toFloat();
-                                        //multiVec[k]->val_3[singleItem->data(34).toInt()] = offsetVal;
-                                    }
-                                }
-                            }
-
-                            if (selObjs[i]->type == "CAMLI")
-                                selObjs[i]->setDirty();
-
-                            else if (isTransformAttr(multiVec[j]->name) && selObjs[i]->type == "OBJ")
-                                myWin.setLightsDirty();
-                        }
-                    }
-
-                    else if (singleItem->data(32) == "vec2")
-                    {
-                        if (multiVec[j]->name == singleItem->data(33))
-                            multiVec[j]->val_2[singleItem->data(34).toInt()] = item->text().toFloat();
-                    }
-
-                    else if (singleItem->data(32) == "vec4")
-                    {
-                        if (multiVec[j]->name == singleItem->data(33))
-                            multiVec[j]->val_4[singleItem->data(34).toInt()] = item->text().toFloat();
-                    }
-
+                    if (name == singleItem->data(33) || singleItem->row() == 0)
+                        writeActions(singleItem->data(32).toString(), name, i, j, singleItem->data(34).toInt(), glm::clamp(item->text().toFloat(), multiVec[j]->min, multiVec[j]->max), singleItem->text());
                 }
             }
         }
+
+        selObjs.clear();
 
         if (!mmbTgl)
             refreshTable();
@@ -1598,8 +1585,7 @@ void Attrs::vDrag(glm::vec2 diff)
     }
 
     myWin.attrTable->writeAttrTgl = 0;
-
-    vector<shared_ptr<Object>> selObjs = selTemp();
+    selObjs = selTemp();
 
     for (unsigned int i = 0; i < selObjs.size(); ++i)
     {
@@ -1651,15 +1637,13 @@ void Attrs::vDrag(glm::vec2 diff)
                         }
                     }
 
-                    if (attrTypeVD == "int") multiVec[j]->val_i = vSlideVal;
-                    else if (attrTypeVD == "float") multiVec[j]->val_f = vSlideVal;
-                    else if (attrTypeVD == "vec2") multiVec[j]->val_2[singleItem->data(34).toInt()] = vSlideVal;
-                    else if (attrTypeVD == "vec3") multiVec[j]->val_3[singleItem->data(34).toInt()] = vSlideVal;
-                    else if (attrTypeVD == "vec4") multiVec[j]->val_4[singleItem->data(34).toInt()] = vSlideVal;
+                    writeActions(attrTypeVD, attrNameVD, i, j, singleItem->data(34).toInt(), vSlideVal, singleItem->text());
                 }
             }
         }
     }
+
+    selObjs.clear();
 
     myWin.attrTable->writeAttrTgl = 1;
 }

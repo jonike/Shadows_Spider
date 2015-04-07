@@ -29,7 +29,6 @@ reference:
     http://anki3d.org/screen-space-ambient-occlusion/
 */
 
-
 in Vert
 {
     vec2 uv;
