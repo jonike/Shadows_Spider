@@ -72,6 +72,17 @@ typedef struct
 
 } ddsHeader;
 
+struct lightUBO
+{
+    glm::vec4 Cl_type, falloff, lDirRot, lP;
+//    glm::vec4 ShadowCoord;
+};
+
+//struct baseUBO
+//{
+//    glm::mat4 NM, MV;
+//};
+
 class GLWidgetSh : public QGLWidget
 {
     Q_OBJECT
@@ -85,9 +96,13 @@ public:
     vector<AbjNode> allShadow;
     vector<Tex> allTex;
 
-    GLuint pro;
+    GLuint pro, ubo_lights, ubo_;
     QString proN;
     bool dontRename = 0;
+    bool UBO_light_needsUp = 1;
+
+    void UBO_update();
+    void UBO_init();
 
     //LIGHT
     int shadowIdx;

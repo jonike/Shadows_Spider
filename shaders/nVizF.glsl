@@ -31,11 +31,10 @@ in Geo
     vec3 Cv;
 } g;
 
-//OUT
-layout(location = 0) out vec4 rttC;
+layout(location = 1) out vec4 rttGiz;
 
 void main()
 {
-    rttC = vec4(g.Cv, 1.f);
+    rttGiz = vec4(g.Cv, 1.f);
 }
 

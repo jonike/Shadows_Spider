@@ -38,7 +38,7 @@ layout(bindless_sampler, location = 2) uniform sampler2D bloom_gauss2;
 layout(bindless_sampler, location = 3) uniform sampler2D bloom_gauss3;
 layout(bindless_sampler, location = 4) uniform sampler2D bloom_gauss4;
 layout(bindless_sampler, location = 5) uniform sampler2D bloom_gauss5;
-layout(bindless_sampler, location = 6) uniform sampler2D rttC;
+layout(bindless_sampler, location = 6) uniform sampler2D defT;
 layout(bindless_sampler, location = 7) uniform sampler2D lens;
 
 layout(location = 0) out vec4 Ci;
@@ -55,7 +55,7 @@ void main()
     vec3 b5 = texture(bloom_gauss5, v.uv).rgb;
     vec4 lensT = texture(lens, v.uv);
 
-    Ci = texture(rttC, v.uv);
+    Ci = texture(defT, v.uv);
 
     vec3 bloom = (b0*.5f + b1*.6f + b2*.6f + b3*.45f + b4*.35f + b5*.23f) / 2.2f;
     vec3 lensBloom = (b0 + b1*.8f + b2*.6f + b3*.45f + b4*.35f + b5*.23f) / 3.2f;

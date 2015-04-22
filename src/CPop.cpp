@@ -66,6 +66,7 @@ void CPop::mouseMoveEvent(QMouseEvent *e)
         val = glm::max(0.f, min((float)e->pos().y() / (float)width(), 1.f));
 
         update();
+        myWin.myGLWidgetSh->UBO_light_needsUp = 1; //
     }
 }
 
@@ -81,6 +82,7 @@ void CPop::wheelEvent(QWheelEvent *e)
 
     drawHueRect();
     update();
+    myWin.myGLWidgetSh->UBO_light_needsUp = 1; //
 
     if (targetAttr != 0)
     {

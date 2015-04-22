@@ -65,17 +65,6 @@ HEADERS  += \
 OTHER_FILES += \
 
 DISTFILES += \
-    shaders/aoBloomCF.glsl \
-    shaders/atmosF.glsl \
-    shaders/base1F.glsl \
-    shaders/base1G.glsl \
-    shaders/base1V.glsl \
-    shaders/base2F.glsl \
-    shaders/base2G.glsl \
-    shaders/base2V.glsl \
-    shaders/base3F.glsl \
-    shaders/base3G.glsl \
-    shaders/base3V.glsl \
     shaders/bbF.glsl \
     shaders/bbV.glsl \
     shaders/bloomF.glsl \
@@ -85,11 +74,7 @@ DISTFILES += \
     shaders/finalF.glsl \
     shaders/fxaaF.glsl \
     shaders/gaussF.glsl \
-    shaders/gBufferF.glsl \
-    shaders/gBufferV.glsl \
     shaders/giz_circV.glsl \
-    shaders/giz_side_overF.glsl \
-    shaders/giz_sideF.glsl \
     shaders/gizF.glsl \
     shaders/gizV.glsl \
     shaders/gridF.glsl \
@@ -115,6 +100,15 @@ DISTFILES += \
     shaders/txtG.glsl \
     shaders/txtV.glsl \
     shaders/volumeLightF.glsl \
-    shaders/volumeLightV.glsl
+    shaders/volumeLightV.glsl \
+    shaders/baseDefF.glsl \
+    shaders/baseDefG.glsl \
+    shaders/baseDefV.glsl \
+    shaders/defF.glsl \
+    shaders/stencilGeoF.glsl \
+    shaders/stencilGeoV.glsl \
+    shaders/wireframeF.glsl \
+    shaders/wireframeV.glsl \
+    shaders/bloomCF.glsl
 
 

@@ -28,14 +28,12 @@ in Vert
 } v;
 
 layout(binding = 0) uniform samplerCube cubeM_specular_32;
-layout(location = 0) out vec4 rttC;
-layout(location = 4) out vec4 ssaoMask;
-
-uniform bool ssaoTgl;
+layout(location = 0) out vec4 simp_sky_32;
+layout(location = 1) out vec4 simp_Giz_32;
 
 void main()
 {
-    rttC = texture(cubeM_specular_32, v.uv);
+    simp_sky_32 = texture(cubeM_specular_32, v.uv);
 
-    ssaoMask = (ssaoTgl) ? vec4(1.f) : vec4(0.f);
+    simp_Giz_32 = vec4(0.f);
 }

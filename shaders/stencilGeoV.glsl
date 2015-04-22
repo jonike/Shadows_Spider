@@ -20,25 +20,17 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #version 450 core
-#extension GL_ARB_bindless_texture : require
 
-in Vert
+layout(location = 0) in vec3 pE;
+
+uniform mat4 MVP;
+
+out Vert
 {
-    vec2 uv;
+    vec3 p;
 } v;
-
-layout(bindless_sampler, location = 0) uniform sampler2D rttC;
-layout(bindless_sampler, location = 1) uniform sampler2D rttBloom;
-layout(bindless_sampler, location = 2) uniform sampler2D ssaoT;
-
-layout(location = 0) out vec4 Ci;
 
 void main()
 {
-    vec4 rttC_tex = texture(rttC, v.uv);
-    vec4 bloom_tex = texture(rttBloom, v.uv);
-    float ssao = 1.f - texture(ssaoT, v.uv).r;
-
-    Ci = vec4(rttC_tex.rgb + bloom_tex.rgb, rttC_tex.a);
-    Ci.rgb *= clamp(ssao, 0.f, 1.f);
+    gl_Position = MVP * vec4(pE, 1.f);
 }

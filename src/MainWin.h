@@ -153,7 +153,7 @@ public:
     Gizmo *myGizmo;
     PP *myPP;
 
-    bool CPopWinTgl, PrefWinTgl, fogTgl, searchB;
+    bool CPopWinTgl, PrefWinTgl, searchB;
     int savedIdx = 2;
     int lastFocusGL = 0;
     QString lastScene, layoutType, myStyle, searchDownType, oldSelB;

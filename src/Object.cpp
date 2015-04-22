@@ -110,7 +110,8 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     normalM->name = "normalM";
     normalM->type = "enum";
     normalM->typeX = "OBJ";
-    normalM->val_s = "BLANK";
+//    normalM->val_s = "BLANK";
+    normalM->val_s = "voronoi";
     multiObj.push_back(normalM);
 
     ruffM = make_shared<MultiAttr>();
@@ -188,13 +189,6 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
         shadowCast->tab = 1;
         shadowCast->val_b = 1;
         multiObj.push_back(shadowCast);
-
-        ssaoTgl = make_shared<MultiAttr>();
-        ssaoTgl->name = "ssao";
-        ssaoTgl->type = "bool";
-        ssaoTgl->tab = 1;
-        ssaoTgl->val_b = 1;
-        multiObj.push_back(ssaoTgl);
 
         backface = make_shared<MultiAttr>();
         backface->name = "backface";
@@ -364,7 +358,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     lSpotO->name = "lSpotO";
     lSpotO->type = "float";
     lSpotO->typeX = "CAMLI";
-    lSpotO->val_f = 20.f;
+    lSpotO->val_f = 30.f;
     multiObj.push_back(lSpotO);
 
     //VOLUME LIGHT
@@ -397,38 +391,6 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     multiObj.push_back(volS);
 
     /* FSQ */
-    //FOG
-    Cfog = make_shared<MultiAttr>();
-    Cfog->name = "Cfog";
-    Cfog->type = "color";
-    Cfog->typeX = "FBO";
-    Cfog->val_2 = glm::vec2(.5f);
-    Cfog->min = .001f;
-    Cfog->max = 1.f;
-    multiObj.push_back(Cfog);
-
-    fogDen = make_shared<MultiAttr>();
-    fogDen->name = "fogDen";
-    fogDen->type = "float";
-    fogDen->typeX = "FBO";
-    fogDen->val_f = .1f;
-    fogDen->min = 0.f;
-    multiObj.push_back(fogDen);
-
-    //ATMOS
-    atmosSep = make_shared<MultiAttr>();
-    atmosSep->name = "atmos";
-    atmosSep->type = "sep";
-    atmosSep->typeX = "FBO";
-    multiObj.push_back(atmosSep);
-
-    atmosSun = make_shared<MultiAttr>();
-    atmosSun->name = "atmosSun";
-    atmosSun->type = "vec2";
-    atmosSun->typeX = "FBO";
-    atmosSun->val_2 = glm::vec2(45.f, 90.f);
-    multiObj.push_back(atmosSun);
-
     //BLOOM
     bloomSep = make_shared<MultiAttr>();
     bloomSep->name = "bloom";
@@ -596,7 +558,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     dirtyShadow = dirtyVM = 1;
 
     //ETC
-    expand = fogTgl = gridV = ignoreOutliner = ref = selected = 0;
+    expand = gridV = ignoreOutliner = ref = selected = 0;
     deletable = selectable = 1;
     type = "EMPTY";
 
@@ -671,7 +633,6 @@ Object::Object(const Object &obj) : myWin(obj.myWin) //COPY CONSTRUCTOR
             else if (multiObj[i]->name == "aniso") anisoTgl = multiObj[i];
 
                 else if (multiObj[i]->name == "shadowCast") shadowCast = multiObj[i];
-                else if (multiObj[i]->name == "ssao") ssaoTgl = multiObj[i];
                 else if (multiObj[i]->name == "backface") backface = multiObj[i];
                 else if (multiObj[i]->name == "Cwire") Cwire = multiObj[i];
                 else if (multiObj[i]->name == "normVLen") normVLen = multiObj[i];
@@ -709,12 +670,6 @@ Object::Object(const Object &obj) : myWin(obj.myWin) //COPY CONSTRUCTOR
 
             /*FSQ */
             else if (multiObj[i]->name == "cubeM") cubeM = multiObj[i];
-            else if (multiObj[i]->name == "Cfog") Cfog = multiObj[i];
-            else if (multiObj[i]->name == "fogDen") fogDen = multiObj[i];
-
-            //ATMOS
-            else if (multiObj[i]->name == "atmos") atmosSep = multiObj[i];
-            else if (multiObj[i]->name == "atmosSun") atmosSun = multiObj[i];
 
             //BLOOM
             else if (multiObj[i]->name == "bloom") bloomSep = multiObj[i];
@@ -777,7 +732,6 @@ Object::Object(const Object &obj) : myWin(obj.myWin) //COPY CONSTRUCTOR
     //ETC
     deletable = obj.deletable;
     expand = obj.expand;
-    fogTgl = obj.fogTgl;
     gridV = obj.gridV;
     ignoreOutliner = obj.ignoreOutliner;
     selectable = obj.selectable;
@@ -849,8 +803,6 @@ void Object::populateTexCombos()
             }
         }
     }
-
-    cubeM->comboList.push_back("atmos");
 }
 
 void Object::loadVAO(shared_ptr<GLWidget> myGL)
@@ -1132,73 +1084,32 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
             GLuint &proH = myWin.myGLWidgetSh->pro;
             QString proN = myWin.myGLWidgetSh->proN;
 
-            if (proN == "pBase" && myWin.lightCt > 0)
+            if ((proN == "pDef") && myWin.lightCt > 0)
                 shadowPass(proH);
 
             //OBJ MATRIX
             glUniformMatrix4fv(glGetUniformLocation(proH, "MVP"), 1, GL_FALSE, &MVP[0][0]);
             glUniformMatrix3fv(glGetUniformLocation(proH, "NM"), 1, GL_FALSE, &NM[0][0]);
 
-            if (proN == "pBase" || proN == "pVolumeLight")
-                glUniformMatrix4fv(glGetUniformLocation(proH, "MV"), 1, GL_FALSE, &MV[0][0]);
-
-            if (proN == "pBase" || proN == "pSky")
-                glUniformMatrix4fv(glGetUniformLocation(proH, "VM"), 1, GL_FALSE, &VM[0][0]);
-
-            if (proN == "pBase" || proN == "pAtmos")
+            if (proN == "pBB" || proN == "pWireframe")
             {
-                glm::mat4 VMinv = glm::inverse(myGL->selCamLi->VM);
-                glUniformMatrix4fv(glGetUniformLocation(proH, "VMinv"), 1, GL_FALSE, &VMinv[0][0]);
+                if (proN == "pBB")
+                {
+                    glUniform1i(glGetUniformLocation(proH, "CpickTgl"), myGL->colorPickTgl);
+                    glUniform4fv(glGetUniformLocation(proH, "Crand"), 1, &Crand.r);
+                }
+
+                glm::vec3 temp = (selected) ? myWin.glslTable->Csel->val_3 : Cwire->val_3;
+                glm::vec4 Cwire(temp, 1.f);
+                glUniform4fv(glGetUniformLocation(proH, "Cwire"), 1, &Cwire.r);
             }
 
-            glUniform1i(glGetUniformLocation(proH, "ssaoTgl"), ssaoTgl->val_b);
-
-            /* SHADER SPECIFIC TEX / UNI */
-            if (proN == "pBase" || proN == "pBB")
-            {
-                //WIREFRAME
-                glm::vec3 CwireUse = (selected) ? myWin.glslTable->Csel->val_3 : Cwire->val_3;
-
-                int wireMode = 999;
-                if (selected && !myGL->wireOverTgl && myWin.selMode != "OBJ") wireMode = 1;
-                else if (myGL->wireOverTgl) wireMode = 2;
-
-                glm::vec4 wireCombo(CwireUse, wireMode);
-                glUniform4fv(glGetUniformLocation(proH, "wireCombo"), 1, &wireCombo.r);
-            }
-
-            if (proN == "pBB")
-            {
-                glUniform1i(glGetUniformLocation(proH, "CpickTgl"), myGL->colorPickTgl);
-                glUniform3fv(glGetUniformLocation(proH, "Crand"), 1, &Crand.r);
-            }
-
-            if (proN == "pGiz" || proN == "pGiz_circ" || proN == "pGiz_side")
-                glUniform3fv(glGetUniformLocation(proH, "Cgiz"), 1, &Cgiz.r);
-
-            if (proN == "pAtmos" || proN == "pSky")
+            if (proN == "pSky")
             {
                 glUniformMatrix4fv(glGetUniformLocation(proH, "PMinv_cube"), 1, GL_FALSE, &myGL->PMinv_cube[0][0]);
 
-                if (proN == "pAtmos")
-                {
-                    glm::vec2 viewport(myGL->width(), myGL->height());
-                    GLuint viewportH = glGetUniformLocation(proH, "viewport");
-                    glUniform2fv(viewportH, 1, &viewport.x);
-
-                    glm::mat4 sunMatRX = glm::rotate(glm::mat4(), glm::radians(myWin.myFSQ->atmosSun->val_2.y + 90.f), glm::vec3(1.f, 0.f, 0.f));
-                    glm::mat4 sunMatRY = glm::rotate(glm::mat4(), glm::radians(myWin.myFSQ->atmosSun->val_2.x), glm::vec3(0.f, 1.f, 0.f));
-                    glm::vec3 sunDir = glm::vec3(0.f, 0.f, 1.f) * glm::mat3(sunMatRX * sunMatRY);
-
-                    GLuint sunDirH = glGetUniformLocation(proH, "sunDir");
-                    glUniform3fv(sunDirH, 1, &sunDir.x);
-                }
-
-                else if (proN == "pSky")
-                {
-                    glBindTextureUnit(0, myWin.cubeM_specular_32);
-                    glUniformMatrix4fv(glGetUniformLocation(proH, "VM"), 1, GL_FALSE, &myGL->selCamLi->VM[0][0]);
-                }
+                glUniformMatrix4fv(glGetUniformLocation(proH, "VM"), 1, GL_FALSE, &VM[0][0]);
+                glBindTextureUnit(0, myWin.cubeM_specular_32);
             }
 
             else if (proN == "pGrid")
@@ -1232,64 +1143,44 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                 glUniformMatrix4fv(glGetUniformLocation(proH, "depthMVP"), 1, GL_FALSE, &depthMVP[0][0]);
             }
 
-            else if (proN == "pBase")
+            else if (proN == "pBaseDef")
             {
-                if (selected && myWin.selMode != "OBJ")
-                {
-                    glm::mat4 VPM = glm::mat4(glm::vec4(myGL->width() / 2.f, 0.f, 0.f, 0.f),
-                                              glm::vec4(0.f, myGL->height() / 2.f, 0.f, 0.f),
-                                              glm::vec4(0.f, 0.f, 1.f, 0.f),
-                                              glm::vec4(myGL->width() / 2.f, myGL->height() / 2.f, 0.f, 1.f));
-                    glUniformMatrix4fv(glGetUniformLocation(proH, "VPM"), 1, GL_FALSE, &VPM[0][0]);
-                }
+                glUniformMatrix4fv(glGetUniformLocation(proH, "MV"), 1, GL_FALSE, &MV[0][0]);
 
-                //FOG
-                glm::vec4 CfogCombo(myWin.myFSQ->Cfog->val_3, fogTgl);
-                glUniform4fv(glGetUniformLocation(proH, "CfogCombo"), 1, &CfogCombo.r);
-                glUniform1f(glGetUniformLocation(proH, "fogDen"), myWin.myFSQ->fogDen->val_f);
+                glm::vec4 matPrefs0(Kr->val_f, 1.f / ior->val_f, ruffD->val_f, Ko->val_f);
+                glUniform4fv(glGetUniformLocation(proH, "matPrefs0"), 1, &matPrefs0.r);
 
-                //REFL
-                glm::vec4 Kcombo(Kr->val_f, Ko->val_f, 1.f / ior->val_f, 0.f);
-                glUniform4fv(glGetUniformLocation(proH, "Kcombo"), 1, &Kcombo.r);
+                float anisoTglF = (anisoTgl->val_b) ? 1.f : 0.f;
+                float shadowCastF = (shadowCast->val_b) ? 1.f : 0.f;
+                glm::vec4 matPrefs1(ruffA->val_2, anisoTglF, shadowCastF);
+                glUniform4fv(glGetUniformLocation(proH, "matPrefs1"), 1, &matPrefs1.r);
 
-                float anisoTglFloat = (anisoTgl->val_b) ? 1.f : 0.f;
-                glm::vec4 ruffCombo(ruffA->val_2, ruffD->val_f, anisoTglFloat);
-                glUniform4fv(glGetUniformLocation(proH, "ruffCombo"), 1, &ruffCombo.r);
+//                glUniform1i(glGetUniformLocation(proH, "vignette"), myWin.myFSQ->vignette->val_b);
 
-                glUniform1i(glGetUniformLocation(proH, "vignette"), myWin.myFSQ->vignette->val_b);
-                glUniform1i(glGetUniformLocation(proH, "shadowCast"), shadowCast->val_b);
-
-                //TILE MAPS
                 tileMaps(proH, "get");
-
-                for (unsigned int j = 0; j < myWin.myGLWidgetSh->allShadow.size(); ++j) // 0-1-2-3-4-5
-                    glProgramUniformHandleui64ARB(proH, 0 + j, myWin.myGLWidgetSh->allShadow[j].tex1_64);
 
                 for (unsigned int j = 0; j < myWin.myGLWidgetSh->allTex.size(); ++j)
                 {
                     if (myWin.myGLWidgetSh->allTex[j].name == albedoM->val_s && myWin.myGLWidgetSh->allTex[j].type == "ALBEDO")
-                        glProgramUniformHandleui64ARB(proH, 3, myWin.myGLWidgetSh->allTex[j].tex_64);
+                        glProgramUniformHandleui64ARB(proH, 0, myWin.myGLWidgetSh->allTex[j].tex_64);
 
                     else if (myWin.myGLWidgetSh->allTex[j].name == alphaM->val_s && myWin.myGLWidgetSh->allTex[j].type == "ALPHA")
-                        glProgramUniformHandleui64ARB(proH, 4, myWin.myGLWidgetSh->allTex[j].tex_64);
+                        glProgramUniformHandleui64ARB(proH, 1, myWin.myGLWidgetSh->allTex[j].tex_64);
 
                     else if (myWin.myGLWidgetSh->allTex[j].name == metallicM->val_s && myWin.myGLWidgetSh->allTex[j].type == "METALLIC")
-                        glProgramUniformHandleui64ARB(proH, 5, myWin.myGLWidgetSh->allTex[j].tex_64);
+                        glProgramUniformHandleui64ARB(proH, 2, myWin.myGLWidgetSh->allTex[j].tex_64);
 
                     else if (myWin.myGLWidgetSh->allTex[j].name == ruffM->val_s && myWin.myGLWidgetSh->allTex[j].type == "RUFF")
-                        glProgramUniformHandleui64ARB(proH, 6, myWin.myGLWidgetSh->allTex[j].tex_64);
+                        glProgramUniformHandleui64ARB(proH, 3, myWin.myGLWidgetSh->allTex[j].tex_64);
 
                     else if (myWin.myGLWidgetSh->allTex[j].name == normalM->val_s && myWin.myGLWidgetSh->allTex[j].type == "NORMAL")
-                        glProgramUniformHandleui64ARB(proH, 7, myWin.myGLWidgetSh->allTex[j].tex_64);
-
-                    glBindTextureUnit(8, myWin.cubeM_specular_32);
-                    glBindTextureUnit(9, myWin.cubeM_irradiance_32);
+                        glProgramUniformHandleui64ARB(proH, 4, myWin.myGLWidgetSh->allTex[j].tex_64);
                 }
             }
 
             else if (proN == "pLumaInit")
             {
-                glProgramUniformHandleui64ARB(proH, 0, myGL->rttC_64);
+                glProgramUniformHandleui64ARB(proH, 0, myGL->deferred_node.tex1_64);
             }
 
             else if (proN == "pLumaAdapt")
@@ -1302,29 +1193,6 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
 
             else if (proN == "pLumaAdapt_viz")
                 glProgramUniformHandleui64ARB(proH, 0, myGL->lumaAdapt[!myGL->currLum].tex1_64);
-
-            else if (proN == "pFxaa")
-            {
-                glProgramUniformHandleui64ARB(proH, 0, myGL->tonemap_node.tex1_64);
-
-                glUniform1f(glGetUniformLocation(proH, "fxaaSubPix"), myWin.myFSQ->fxaaSubPix->val_f);
-                glUniform1f(glGetUniformLocation(proH, "fxaaEdgeThr"), myWin.myFSQ->fxaaEdgeThr->val_f);
-                glUniform1f(glGetUniformLocation(proH, "fxaaEdgeThrMin"), myWin.myFSQ->fxaaEdgeThrMin->val_f);
-
-                glUniform2fv(glGetUniformLocation(proH, "texelSize"), 1, &myGL->texelSize.r);
-            }
-
-            else if (proN == "pTonemap")
-            {
-                glProgramUniformHandleui64ARB(proH, 0, myGL->aoBloomC_node.tex1_64);
-                glProgramUniformHandleui64ARB(proH, 1, myGL->lumaAdapt[myGL->currLum].tex1_64);
-                glProgramUniformHandleui64ARB(proH, 2, myGL->rttGiz_64);
-
-                glUniform1f(glGetUniformLocation(proH, "expo"), log(myWin.myFSQ->expo->val_f));
-                glUniform1i(glGetUniformLocation(proH, "adaptAuto"), myWin.myFSQ->adaptAuto->val_b);
-                glUniform1i(glGetUniformLocation(proH, "vignette"), myWin.myFSQ->vignette->val_b);
-                glUniform1f(glGetUniformLocation(proH, "vignetteD"), myWin.myFSQ->vignetteD->val_f);
-            }
 
             else if (proN == "pRtt")
                 glProgramUniformHandleui64ARB(proH, 0, myGL->tonemap_exposure_node.tex1_64);
@@ -1341,19 +1209,12 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                 glUniform1i(glGetUniformLocation(proH, "gaussStage"), gaussStage);
             }
 
-            else if (proN == "pAoBloomC")
-            {
-                glProgramUniformHandleui64ARB(proH, 0, myGL->rttC_64);
-                glProgramUniformHandleui64ARB(proH, 1, myGL->bloom_node.tex1_64);
-                glProgramUniformHandleui64ARB(proH, 2, myGL->ssao_gauss_node.tex2_64);
-            }
-
             else if (proN == "pBloom")
             {
                 for (int j = 0; j < 6; ++j)
                     glProgramUniformHandleui64ARB(proH, j, myGL->bloom_gauss_node[j].tex2_64);
 
-                glProgramUniformHandleui64ARB(proH, 6, myGL->rttC_64);
+                glProgramUniformHandleui64ARB(proH, 6, myGL->deferred_node.tex1_64);
 
                 for (unsigned int j = 0; j < myWin.myGLWidgetSh->allTex.size(); ++j)
                 {
@@ -1363,6 +1224,83 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
 
                 glUniform1f(glGetUniformLocation(proH, "bloomI"), myWin.myFSQ->bloomI->val_f);
                 glUniform1f(glGetUniformLocation(proH, "bloomLensI"), myWin.myFSQ->bloomLensI->val_f);
+            }
+
+            else if (proN == "pSSAO")
+            {
+                glProgramUniformHandleui64ARB(proH, 0, myGL->gbuf0_64);
+                glProgramUniformHandleui64ARB(proH, 1, myGL->gbuf2_64);
+
+                for (unsigned int j = 0; j < myWin.myGLWidgetSh->allTex.size(); ++j)
+                {
+                    if (myWin.myGLWidgetSh->allTex[j].name == "rand")
+                        glProgramUniformHandleui64ARB(proH, 2, myWin.myGLWidgetSh->allTex[j].tex_64);
+                }
+
+                glUniform1f(glGetUniformLocation(proH, "ssaoBias"), ssaoBias->val_f);
+                glUniform1f(glGetUniformLocation(proH, "ssaoInten"), ssaoInten->val_f);
+                glUniform1f(glGetUniformLocation(proH, "ssaoRad"), ssaoRad->val_f);
+                glUniform1i(glGetUniformLocation(proH, "ssaoRand"), ssaoRand->val_i);
+
+                glUniform1i(glGetUniformLocation(proH, "vignette"), myWin.myFSQ->vignette->val_b);
+            }
+
+            else if (proN == "pBloomC")
+            {
+                glProgramUniformHandleui64ARB(proH, 0, myGL->deferred_node.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 1, myGL->bloom_node.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 2, myGL->ssao_gauss_node.tex2_64);
+            }
+
+            else if (proN == "pDef")
+            {
+                glUniformMatrix4fv(glGetUniformLocation(proH, "MV"), 1, GL_FALSE, &MV[0][0]);
+                glUniformMatrix4fv(glGetUniformLocation(proH, "VM"), 1, GL_FALSE, &VM[0][0]);
+
+                glm::mat3 VMinv = glm::inverse(glm::mat3(myGL->selCamLi->VM));
+                glUniformMatrix3fv(glGetUniformLocation(proH, "VMinv"), 1, GL_FALSE, &VMinv[0][0]);
+
+                glProgramUniformHandleui64ARB(proH, 0, myGL->gbuf0_64);
+                glProgramUniformHandleui64ARB(proH, 1, myGL->gbuf1_64);
+                glProgramUniformHandleui64ARB(proH, 2, myGL->gbuf2_64);
+                glProgramUniformHandleui64ARB(proH, 3, myGL->gbuf3_64);
+                glProgramUniformHandleui64ARB(proH, 4, myGL->gbuf4_64);
+                glProgramUniformHandleui64ARB(proH, 5, myGL->gbuf5_64);
+
+                glProgramUniformHandleui64ARB(proH, 7, myGL->ssao_gauss_node.tex2_64);
+                glProgramUniformHandleui64ARB(proH, 8, myGL->simp_sky_64);
+
+                glBindTextureUnit(9, myWin.cubeM_specular_32);
+                glBindTextureUnit(10, myWin.cubeM_irradiance_32);
+
+                glUniform1f(glGetUniformLocation(proH, "debugF"), myWin.myFSQ->ssaoBias->val_f);
+                glUniform1i(glGetUniformLocation(proH, "vignette"), myWin.myFSQ->vignette->val_b);
+
+                //qDebug() << "NUM_LIGHTS = " << myWin.lightCt;
+                glUniform1i(glGetUniformLocation(proH, "NUM_LIGHTS"), myWin.lightCt);
+            }
+
+            else if (proN == "pTonemap")
+            {
+                glProgramUniformHandleui64ARB(proH, 0, myGL->bloomC_node.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 1, myGL->lumaAdapt[myGL->currLum].tex1_64);
+                glProgramUniformHandleui64ARB(proH, 2, myGL->simp_Giz_64);
+
+                glUniform1f(glGetUniformLocation(proH, "expo"), log(myWin.myFSQ->expo->val_f));
+                glUniform1i(glGetUniformLocation(proH, "adaptAuto"), myWin.myFSQ->adaptAuto->val_b);
+//                glUniform1i(glGetUniformLocation(proH, "vignette"), myWin.myFSQ->vignette->val_b);
+                glUniform1f(glGetUniformLocation(proH, "vignetteD"), myWin.myFSQ->vignetteD->val_f);
+            }
+
+            else if (proN == "pFxaa")
+            {
+                glProgramUniformHandleui64ARB(proH, 0, myGL->tonemap_node.tex1_64);
+
+                glUniform1f(glGetUniformLocation(proH, "fxaaSubPix"), myWin.myFSQ->fxaaSubPix->val_f);
+                glUniform1f(glGetUniformLocation(proH, "fxaaEdgeThr"), myWin.myFSQ->fxaaEdgeThr->val_f);
+                glUniform1f(glGetUniformLocation(proH, "fxaaEdgeThrMin"), myWin.myFSQ->fxaaEdgeThrMin->val_f);
+
+                glUniform2fv(glGetUniformLocation(proH, "texelSize"), 1, &myGL->texelSize.r);
             }
 
             else if (proN == "pFinal")
@@ -1378,11 +1316,13 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
             }
 
             //GIZ
-            else if (proN == "pGiz_side_over")
-                glProgramUniformHandleui64ARB(proH, 0, myGL->rttGizSide_64);
+            else if (proN == "pGiz")
+                glUniform3fv(glGetUniformLocation(proH, "Cgiz"), 1, &Cgiz.r);
 
             else if (proN == "pGiz_circ")
             {
+                glUniform3fv(glGetUniformLocation(proH, "Cgiz"), 1, &Cgiz.r);
+
                 if (type == "GIZ_CIRC")
                 {
                     glUniform3fv(glGetUniformLocation(proH, "circRight"), 1, &myGL->selCamLi->rightO.x);
@@ -1454,25 +1394,6 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                 glUniform3fv(glGetUniformLocation(proH, "CstencilHi"), 1, &myWin.glslTable->Csel->val_3.r);
             }
 
-            else if (proN == "pSSAO")
-            {
-                glProgramUniformHandleui64ARB(proH, 0, myGL->rttP_64);
-                glProgramUniformHandleui64ARB(proH, 1, myGL->rttN_64);
-
-                for (unsigned int j = 0; j < myWin.myGLWidgetSh->allTex.size(); ++j)
-                {
-                    if (myWin.myGLWidgetSh->allTex[j].name == "rand")
-                        glProgramUniformHandleui64ARB(proH, 2, myWin.myGLWidgetSh->allTex[j].tex_64);
-                }
-
-                glProgramUniformHandleui64ARB(proH, 3, myGL->ssaoMask_64);
-
-                glUniform1f(glGetUniformLocation(proH, "ssaoBias"), ssaoBias->val_f);
-                glUniform1f(glGetUniformLocation(proH, "ssaoInten"), ssaoInten->val_f);
-                glUniform1f(glGetUniformLocation(proH, "ssaoRad"), ssaoRad->val_f);
-                glUniform1i(glGetUniformLocation(proH, "ssaoRand"), ssaoRand->val_i);
-            }
-
             else if (proN == "pTxt")
             {
                 for (unsigned int j = 0; j < myWin.myGLWidgetSh->allTex.size(); ++j)
@@ -1498,6 +1419,8 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
 
             else if (proN == "pVolumeLight")
             {
+                glUniformMatrix4fv(glGetUniformLocation(proH, "MV"), 1, GL_FALSE, &MV[0][0]);
+
                 glm::vec3 volTip = parentTo->t->val_3;
                 glm::vec3 volTipView = glm::vec3(VM * glm::vec4(parentTo->t->val_3, 1.f));
 
@@ -1511,77 +1434,49 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
     }
 }
 
-void Object::shadowPass(GLuint proH)
+void Object::shadowPass(GLuint /*proH*/)
 {
-    //READING FROM MULTIPLE LIGHTS
-    int lightIter = 1;
+//    //READING FROM MULTIPLE LIGHTS
+//    int lightIter = 1;
 
-    stringstream ss;
-    ss << "myLightType[" << 0 << "]";
-    glUniform1i(glGetUniformLocation(proH, ss.str().c_str()), 999);
-    ss.str(""); ss.clear();
+//    stringstream ss;
+//    ss << "myLightType[" << 0 << "]";
+//    glUniform1i(glGetUniformLocation(proH, ss.str().c_str()), 999);
+//    ss.str(""); ss.clear();
 
-    for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
-    {
-        if (myWin.allObj[i]->v->val_b && myWin.allObj[i]->camLiTypeGet("light"))
-        {
-            ss << "myLightType[" << lightIter << "]";
-            int myLightType;
-            if (myWin.allObj[i]->camLiType->val_s == "AREA") myLightType = 0;
-            else if (myWin.allObj[i]->camLiType->val_s == "DIR") myLightType = 1;
-            else if (myWin.allObj[i]->camLiType->val_s == "POINT") myLightType = 2;
-            else if (myWin.allObj[i]->camLiType->val_s == "SPOT") myLightType = 3;
-            glUniform1i(glGetUniformLocation(proH, ss.str().c_str()), myLightType);
-            ss.str(""); ss.clear();
+//    for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
+//    {
+//        if (myWin.allObj[i]->v->val_b && myWin.allObj[i]->camLiTypeGet("light"))
+//        {
+//            //SHADOW
+//            glm::mat4 PM_shadow, VM_shadow;
 
-            ss << "liIn" << lightIter << ".lDirRot";
-            glm::vec3 lDirRot = -glm::normalize(glm::vec3(VM * myWin.allObj[i]->MM * glm::vec4(0.f, 0.f, -1.f, 0.f)));
-            glUniform3fv(glGetUniformLocation(proH, ss.str().c_str()), 1, &lDirRot.x);
-            ss.str(""); ss.clear();
+//            if (myWin.allObj[i]->camLiType->val_s == "DIR")
+//            {
+//                PM_shadow = glm::ortho(-10.f, 10.f, -10.f, 10.f, -10.f, 20.f);
+//                VM_shadow = glm::inverse(myWin.allObj[i]->RM);
+//            }
 
-            ss << "liIn" << lightIter << ".lP";
-            glUniform3fv(glGetUniformLocation(proH, ss.str().c_str()), 1, &myWin.allObj[i]->t->val_3.x);
-            ss.str(""); ss.clear();
+//            else if (myWin.allObj[i]->camLiType->val_s == "POINT")
+//            {
+//                PM_shadow = glm::perspective(glm::radians(90.f), 1.f, myWin.allObj[i]->nearShadow->val_f, myWin.allObj[i]->farShadow->val_f);
+//                VM_shadow = myWin.allObj[i]->VM;
+//            }
 
-            ss << "liIn" << lightIter << ".Cl";
-            glm::vec3 Cl = myWin.allObj[i]->Cl->val_3;
-            glUniform3fv(glGetUniformLocation(proH, ss.str().c_str()), 1, &Cl.r);
-            ss.str(""); ss.clear();
+//            else if (myWin.allObj[i]->camLiType->val_s == "SPOT")
+//            {
+//                PM_shadow = glm::perspective(glm::radians(50.f), 1.f, myWin.allObj[i]->nearShadow->val_f, myWin.allObj[i]->farShadow->val_f);
+//                VM_shadow = myWin.allObj[i]->VM;
+//            }
 
-            ss << "liIn" << lightIter << ".fall";
-            glm::vec4 fall = glm::vec4(myWin.allObj[i]->lInten->val_f, cos(glm::radians(myWin.allObj[i]->lSpotI->val_f)), cos(glm::radians(myWin.allObj[i]->lSpotO->val_f)), 0.f);
-            glUniform4fv(glGetUniformLocation(proH, ss.str().c_str()), 1, &fall.r);
-            ss.str(""); ss.clear();
+//            ss << "depthBiasMVP" << lightIter;
+//            glm::mat4 depthBiasMVP = biasM * PM_shadow * VM_shadow * MM;
+//            glUniformMatrix4fv(glGetUniformLocation(proH, ss.str().c_str()), 1, GL_FALSE, &depthBiasMVP[0][0]);
+//            ss.str(""); ss.clear();
 
-            //SHADOW
-            glm::mat4 PM_shadow, VM_shadow;
-
-            if (myWin.allObj[i]->camLiType->val_s == "DIR")
-            {
-                PM_shadow = glm::ortho(-10.f, 10.f, -10.f, 10.f, -10.f, 20.f);
-                VM_shadow = glm::inverse(myWin.allObj[i]->RM);
-            }
-
-            else if (myWin.allObj[i]->camLiType->val_s == "POINT")
-            {
-                PM_shadow = glm::perspective(glm::radians(90.f), 1.f, myWin.allObj[i]->nearShadow->val_f, myWin.allObj[i]->farShadow->val_f);
-                VM_shadow = myWin.allObj[i]->VM;
-            }
-
-            else if (myWin.allObj[i]->camLiType->val_s == "SPOT")
-            {
-                PM_shadow = glm::perspective(glm::radians(50.f), 1.f, myWin.allObj[i]->nearShadow->val_f, myWin.allObj[i]->farShadow->val_f);
-                VM_shadow = myWin.allObj[i]->VM;
-            }
-
-            ss << "depthBiasMVP" << lightIter;
-            glm::mat4 depthBiasMVP = biasM * PM_shadow * VM_shadow * MM;
-            glUniformMatrix4fv(glGetUniformLocation(proH, ss.str().c_str()), 1, GL_FALSE, &depthBiasMVP[0][0]);
-            ss.str(""); ss.clear();
-
-            lightIter++;
-        }
-    }
+//            lightIter++;
+//        }
+//    }
 }
 
 void Object::render(shared_ptr<GLWidget> myGL)
@@ -1720,7 +1615,7 @@ void Object::render(shared_ptr<GLWidget> myGL)
     }
 }
 
-glm::vec3 Object::genColorID()
+glm::vec4 Object::genColorID()
 {
     bool preExist = 0;
 
@@ -1729,11 +1624,11 @@ glm::vec3 Object::genColorID()
     int g = (myRand & 0x0000FF00) >>  8;
     int b = (myRand & 0x00FF0000) >> 16;
 
-    glm::vec3 colorID(r / 255.f, g / 255.f, b / 255.f);
+    glm::vec4 myColorID(r / 255.f, g / 255.f, b / 255.f, 1.f);
 
     for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
     {
-        if (myWin.allObj[i]->Crand == colorID)
+        if (myWin.allObj[i]->Crand == myColorID)
             preExist = 1;
     }
 
@@ -1741,11 +1636,11 @@ glm::vec3 Object::genColorID()
     {
         genColorID();
 
-        return glm::vec3(1.f);
+        return glm::vec4(1.f);
     }
 
     else
-        return colorID;
+        return myColorID;
 }
 
 void Object::glErrorPrint(const char *msg)

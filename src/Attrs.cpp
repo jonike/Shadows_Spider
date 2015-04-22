@@ -1231,8 +1231,7 @@ void Attrs::colorPick()
                     myWin.myCPopWin->myCPop->val = toHSV.valueF();
                     myWin.myCPopWin->myCPop->changedManip = 1;
 
-                    if (!myWin.CPopWinTgl) // if !visible
-                        myWin.TglCPopWin();
+                    myWin.TglCPopWin();
 
                     myWin.myCPopWin->myCPop->drawHueRect();
                     myWin.myCPopWin->myCPop->update();
@@ -1323,6 +1322,7 @@ void Attrs::changeEnum(QString text)
                                 myWin.lightCt = myWin.countLights();
                                 myWin.myGLWidgetSh->addDeleteShadows("refresh");
                                 myWin.setLightsDirty();
+                                myWin.myGLWidgetSh->UBO_light_needsUp = 1; //
                             }
 
                             else if (changeEnumName == "cubeM")
@@ -1441,6 +1441,9 @@ void Attrs::writeActions(QString type, QString name, unsigned int idxO, unsigned
             for (unsigned int k = 0; k < myWin.allGL.size(); ++k)
                 myWin.allGL[k]->resizeGL(myWin.allGL[k]->width(), myWin.allGL[k]->height());
         }
+
+        else if (name == "lInten" || name == "lSpotI" || name == "lSpotO")
+            myWin.myGLWidgetSh->UBO_light_needsUp = 1;
     }
 
     else if (type == "int")

@@ -21,21 +21,29 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450 core
 
-#extension GL_ARB_bindless_texture : require
+layout(location = 0) in vec3 pE;
+layout(location = 1) in vec2 uvE;
+layout(location = 2) in vec3 tE;
+layout(location = 3) in vec3 bE;
+layout(location = 4) in vec3 nE;
 
-in Vert
+uniform mat3 NM;
+uniform mat4 MVP, MV, MM;
+
+out Vert
 {
-    vec2 uv;
+    vec2 UV;
+    vec3 P_view, T_view, N_view;
 } v;
-
-layout(bindless_sampler, location = 0) uniform sampler2D gizSideT;
-
-out vec4 Ci;
 
 void main()
 {
-    Ci.rgb = texture(gizSideT, v.uv).rgb;
-    Ci.a = texture(gizSideT, v.uv).a;
+    gl_Position = MVP * vec4(pE, 1.f);
+    v.P_view = vec3(MV * vec4(pE, 1.f));
+//    v.P_view = vec4(pE, 1.f).rgb;
 
-    Ci = texture(gizSideT, v.uv);
+    v.T_view = normalize(NM * tE);
+    v.N_view = normalize(NM * nE);
+
+    v.UV = uvE;
 }

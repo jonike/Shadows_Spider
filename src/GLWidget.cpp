@@ -149,7 +149,10 @@ void GLWidget::keyReleaseEvent(QKeyEvent *e)
     else if (e->key() == Qt::Key_4) myWin.selMode = "OBJ";
     else if (e->key() == Qt::Key_5) wireOverTgl_();
 
-    else if (e->key() == Qt::Key_F3) rttVizTgl_();
+    else if (e->key() == Qt::Key_F3)
+    {
+        myWin.myFSQ->vignette->val_b = !myWin.myFSQ->vignette->val_b;
+    }
 
     else if (e->key() == Qt::Key_F5)
     {
@@ -392,14 +395,6 @@ bool GLWidget::jumpSwitch()
     switchGL_layout();
 
     return 1;
-}
-
-void GLWidget::fogTglAll()
-{
-    myWin.fogTgl = !myWin.fogTgl;
-
-    for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
-        myWin.allObj[i]->fogTgl = myWin.fogTgl;
 }
 
 void GLWidget::mousePressEvent(QMouseEvent *e)
@@ -780,7 +775,7 @@ void GLWidget::paintGL()
 //                if (name == "teapot")
 //                {
 //                    myWin.allObj[i]->t->val_3.y = myWin.myAnim->dynAnim("cycle") * 10.f;
-////                    myWin.allObj[i]->r->val_3.z = myWin.myAnim->dynAnim("accelDecel") * 500.f;
+//                    myWin.allObj[i]->r->val_3.z = myWin.myAnim->dynAnim("accelDecel") * 500.f;
 //                    myWin.allObj[i]->shadowCast->val_b = 0;
 //                }
             }
@@ -808,24 +803,10 @@ void GLWidget::paintGL()
         }
     }
 
-//    myWin.myGLWidgetSh->glUseProgram2("pGBuffer");
-//    for (int i = 0; i < myWin.allObj.size(); ++i)
-//    {
-//        if (!myWin.allObj[i]->selected)
-//        {
-//            if (myWin.allObj[i]->type == "OBJ" && !myWin.allObj[i]->bb->val_b && myWin.searchUp(myWin.allObj[i]))
-//            {
-//                if (myWin.allObj[i]->backface->val_b)
-//                    glDisable(GL_CULL_FACE);
+    if (myWin.myGLWidgetSh->UBO_light_needsUp) //
+        myWin.myGLWidgetSh->UBO_update();
 
-//                myWin.allObj[i]->render(myWin.allGL[GLidx]);
-
-//                glEnable(GL_CULL_FACE);
-//            }
-//        }
-//    }
-
-    glBindFramebuffer(GL_FRAMEBUFFER, main_node.fbo1);
+    glBindFramebuffer(GL_FRAMEBUFFER, simp_node.fbo1);
     glViewport(0, 0, width(), height());
     glClearColor(0.f, 0.f, 0.f, 0.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -841,26 +822,9 @@ void GLWidget::paintGL()
     glEnable(GL_BLEND);
 
     glDisable(GL_DEPTH_TEST);
-    if (myWin.myFSQ->cubeM->val_s == "atmos") myWin.myGLWidgetSh->glUseProgram2("pAtmos");
-    else myWin.myGLWidgetSh->glUseProgram2("pSky");
+    myWin.myGLWidgetSh->glUseProgram2("pSky");
     myWin.myFSQ->render(myWin.allGL[GLidx]);
     glEnable(GL_DEPTH_TEST);
-
-    if (gizSideTgl)
-    {
-        glViewport(0, 0, myWin.glslTable->gizSideS->val_3.x, myWin.glslTable->gizSideS->val_3.y);
-        myWin.myGLWidgetSh->glUseProgram2("pGiz_side");
-        glDisable(GL_DEPTH_TEST);
-
-        for (unsigned int i = 0; i < myWin.allGizSide.size(); ++i)
-        {
-            myWin.allGizSide[i]->mvpGet(myWin.allGL[GLidx]);
-            myWin.allGizSide[i]->render(myWin.allGL[GLidx]);
-        }
-
-        glEnable(GL_DEPTH_TEST);
-        glViewport(0, 0, width(), height());
-    }
 
     if (selCamLi->gridV)
     {
@@ -873,57 +837,24 @@ void GLWidget::paintGL()
         }
     }
 
-    for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
+    myWin.myGLWidgetSh->glUseProgram2("pGiz");
+    if (gizSideTgl)
     {
-        if (myWin.allObj[i]->selected && !myWin.allObj[i]->bb->val_b && myWin.searchUp(myWin.allObj[i]))
+        glViewport(0, 0, myWin.glslTable->gizSideS->val_3.x, myWin.glslTable->gizSideS->val_3.y);
+
+        for (unsigned int i = 0; i < myWin.allGizSide.size(); ++i)
         {
-            if (myWin.allObj[i]->nType > 0) // nViz
-            {
-                myWin.myGLWidgetSh->glUseProgram2("pNViz");
-                myWin.allObj[i]->render(myWin.allGL[GLidx]);
-
-                myWin.myGLWidgetSh->glUseProgram2("pBase");
-                myWin.allObj[i]->render(myWin.allGL[GLidx]);
-            }
-
-            else if (myWin.allObj[i]->nType == 0 && myWin.selMode == "OBJ")
-            {
-                glClearStencil(0);
-                glClear(GL_STENCIL_BUFFER_BIT);
-                glEnable(GL_STENCIL_TEST); //
-
-                //RENDER MESH
-                glStencilFunc(GL_ALWAYS, 1, 0xFF); // -1
-                glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-
-                myWin.myGLWidgetSh->glUseProgram2("pBase");
-                if (myWin.allObj[i]->backface->val_b) glDisable(GL_CULL_FACE);
-                myWin.allObj[i]->render(myWin.allGL[GLidx]); //
-                glEnable(GL_CULL_FACE);
-
-                //THICK WIRE VERSION
-                glStencilFunc(GL_NOTEQUAL, 1, -1);
-                glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-                glLineWidth(7.f);
-
-                glPolygonMode(GL_FRONT, GL_LINE);
-                myWin.myGLWidgetSh->glUseProgram2("pStencilHi");
-                myWin.allObj[i]->render(myWin.allGL[GLidx]);
-                glDisable(GL_STENCIL_TEST);
-
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-                glLineWidth(1.f);
-            }
+            myWin.allGizSide[i]->mvpGet(myWin.allGL[GLidx]);
+            myWin.allGizSide[i]->render(myWin.allGL[GLidx]);
         }
+
+        glViewport(0, 0, width(), height());
     }
 
-    myWin.myGLWidgetSh->glUseProgram2("pGiz");
     if (myWin.myPivot->v->val_b)
     {
-        glDisable(GL_DEPTH_TEST);
         myWin.myPivot->mvpGet(myWin.allGL[GLidx]);
         myWin.myPivot->render(myWin.allGL[GLidx]);
-        glEnable(GL_DEPTH_TEST);
     }
 
     for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
@@ -937,7 +868,6 @@ void GLWidget::paintGL()
                 //wireframe already, change color only
                 glm::vec3 Cgiz_temp = myWin.allObj[i]->Cgiz;
                 myWin.allObj[i]->Cgiz = myWin.glslTable->Csel->val_3;
-                myWin.myGLWidgetSh->glUseProgram2("pGiz");
                 myWin.allObj[i]->render(myWin.allGL[GLidx]);
                 myWin.allObj[i]->Cgiz = Cgiz_temp;
             }
@@ -949,7 +879,6 @@ void GLWidget::paintGL()
             {
                 glDisable(GL_DEPTH_TEST);
                 glDisable(GL_CULL_FACE);
-
                 myWin.allObj[i]->render(myWin.allGL[GLidx]);
                 glEnable(GL_DEPTH_TEST);
                 glEnable(GL_CULL_FACE);
@@ -978,50 +907,90 @@ void GLWidget::paintGL()
             myWin.allObj[i]->render(myWin.allGL[GLidx]);
     }
 
-    myWin.myGLWidgetSh->glUseProgram2("pBase");
     for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
     {
-        if (!myWin.allObj[i]->selected)
+        if (myWin.allObj[i]->type == "OBJ" && !myWin.allObj[i]->bb->val_b && myWin.searchUp(myWin.allObj[i]))
         {
-            if (myWin.allObj[i]->type == "OBJ" && !myWin.allObj[i]->bb->val_b && myWin.searchUp(myWin.allObj[i]))
+            if (wireOverTgl)
             {
-                if (myWin.allObj[i]->backface->val_b)
-                    glDisable(GL_CULL_FACE);
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+                myWin.myGLWidgetSh->glUseProgram2("pWireframe");
                 myWin.allObj[i]->render(myWin.allGL[GLidx]);
 
-                glEnable(GL_CULL_FACE);
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
         }
     }
 
     for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
     {
-        if (myWin.allObj[i]->type == "CAMLI" && myWin.allObj[i]->camLiType->val_s == "SPOT" && myWin.allObj[i]->volCone->val_b)
+        if (myWin.allObj[i]->type == "OBJ" && !myWin.allObj[i]->bb->val_b && myWin.allObj[i]->selected && myWin.searchUp(myWin.allObj[i]))
         {
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-            glEnable(GL_BLEND);
+            if (myWin.allObj[i]->nType > 0) // nViz
+            {
+                myWin.myGLWidgetSh->glUseProgram2("pNViz");
+                myWin.allObj[i]->render(myWin.allGL[GLidx]);
+            }
 
-            glDisable(GL_CULL_FACE);
-            glDepthMask(0);
+            else if (myWin.allObj[i]->nType == 0 && myWin.selMode == "OBJ")
+            {
+                glClearStencil(0);
+                glClear(GL_STENCIL_BUFFER_BIT);
+                glEnable(GL_STENCIL_TEST);
 
-            myWin.myVolCone->parentTo = myWin.allObj[i];
-            myWin.myVolCone->s->val_3 = myWin.allObj[i]->volS->val_3;
-            myWin.myVolCone->mvpGet(myWin.allGL[GLidx]);
-            myWin.myGLWidgetSh->glUseProgram2("pVolumeLight");
-            myWin.myVolCone->render(myWin.allGL[GLidx]);
+                //RENDER MESH
+                glStencilFunc(GL_ALWAYS, 1, 0xFF); // -1
+                glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
-            glDepthMask(1);
+                myWin.myGLWidgetSh->glUseProgram2("pStencilGeo");
+                if (myWin.allObj[i]->backface->val_b) glDisable(GL_CULL_FACE);
+                myWin.allObj[i]->render(myWin.allGL[GLidx]);
+                glEnable(GL_CULL_FACE);
 
-            glEnable(GL_CULL_FACE);
+                //THICK WIRE VERSION
+                glStencilFunc(GL_NOTEQUAL, 1, -1);
+                glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+                glLineWidth(7.f);
+
+                glPolygonMode(GL_FRONT, GL_LINE);
+                myWin.myGLWidgetSh->glUseProgram2("pStencilHi");
+                myWin.allObj[i]->render(myWin.allGL[GLidx]);
+                glDisable(GL_STENCIL_TEST);
+
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                glLineWidth(1.f);
+            }
         }
     }
 
-//    if (debugBool)
-//    {
-//        qDebug() << "in paintSlow()";
-//        myWin.myGLWidgetSh->paintSlow(myWin.allGL[GLidx]); //
-//    }
+    /* DEFERRED */
+    glBindFramebuffer(GL_FRAMEBUFFER, gbuf_node.fbo1);
+    glViewport(0, 0, gbuf_node.width, gbuf_node.height);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glClearColor(0.f, 0.f, 0.f, 0.f);
+
+    glShadeModel(GL_SMOOTH);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glFrontFace(GL_CCW);
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
+    glDisable(GL_BLEND);
+
+    myWin.myGLWidgetSh->glUseProgram2("pBaseDef");
+    for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
+    {
+        if (myWin.allObj[i]->type == "OBJ" && !myWin.allObj[i]->bb->val_b && myWin.searchUp(myWin.allObj[i]))
+        {
+            if (myWin.allObj[i]->backface->val_b) glDisable(GL_CULL_FACE);
+            myWin.allObj[i]->render(myWin.allGL[GLidx]);
+            glEnable(GL_CULL_FACE);
+        }
+    }
 
     /* COMP */
     glDisable(GL_BLEND);
@@ -1029,7 +998,6 @@ void GLWidget::paintGL()
     glDisable(GL_CULL_FACE);
 
     myWin.myPP->postFX(myWin.allGL[GLidx]); //
-
     overlay2D();
 
     tick_oldFPS = tick_newFPS;
@@ -1058,9 +1026,6 @@ void GLWidget::overlay2D()
     glDisable(GL_CULL_FACE);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
-
-    myWin.myGLWidgetSh->glUseProgram2("pGiz_side_over");
-    myWin.myFSQ->render(myWin.allGL[GLidx]);
 
     if (rezGateTgl || rezGateTgl_sel) //REZGATE
     {
@@ -1233,7 +1198,6 @@ void GLWidget::radPop_GL(QString type)
         pop.push_back( { "persp", "RAD", 75, 50 } );
 
         //per-obj tgls
-        pop.push_back( { "fog", "E", 150, 65, 350, -300 } );
         pop.push_back( { "rtt", "E", 150, 65, 350, -300 } );
 
         pop.push_back( { "gizSpace", "S", 150, 50 } );
@@ -1376,13 +1340,13 @@ bool GLWidget::checkForHits() //READPIXELS
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
 
+    myWin.myGLWidgetSh->glUseProgram2("pBB"); //get Crand
+
     for (unsigned int j = 0; j < myWin.allObj.size(); ++j)
     {
         QString type = myWin.allObj[j]->type;
         if ((type == "CAMLI" || type == "OBJ") && myWin.searchUp(myWin.allObj[j]))
         {
-            myWin.myGLWidgetSh->glUseProgram2("pBB");
-
             myWin.allObj[j]->mvpGet(myWin.allGL[GLidx]);
             myWin.allObj[j]->render(myWin.allGL[GLidx]);
         }
@@ -1409,7 +1373,7 @@ bool GLWidget::checkForHits() //READPIXELS
             int g = (pickedID & 0x0000FF00) >> 8;
             int b = (pickedID & 0x00FF0000) >> 16;
 
-            glm::vec3 compareID(r / 255.f, g / 255.f, b / 255.f);
+            glm::vec4 compareID(r / 255.f, g / 255.f, b / 255.f, 1.f);
 
             for (unsigned int j = 0; j < myWin.allObj.size(); ++j)
             {

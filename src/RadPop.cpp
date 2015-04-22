@@ -318,8 +318,7 @@ void RadPop::hitFind(QString hit)
             }
         }
 
-        if (hit == "fog") myGL.get()->fogTglAll();
-        else if (hit == "gizSpace") myGL.get()->gizSpaceTgl_();
+        if (hit == "gizSpace") myGL.get()->gizSpaceTgl_();
         else if (hit == "mpf") myGL.get()->mpfTgl_();
         else if (hit == "rez") myGL.get()->rezGateTgl_();
         else if (hit == "rtt") myGL.get()->rttVizTgl_();

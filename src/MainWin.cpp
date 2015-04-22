@@ -42,7 +42,7 @@ MainWin::MainWin(QWidget *parent) : QMainWindow(parent)
 
     setStyleSheet(myStyle); //
 
-    CPopWinTgl = PrefWinTgl = fogTgl = 0;
+    CPopWinTgl = PrefWinTgl = 0;
     lastScene = "";
     menuSmallF = QFont("DejaVu Sans Mono", 10, 75);
 
@@ -140,6 +140,7 @@ void MainWin::progressAdd_init()
     }
 
     myGLWidgetSh->addDeleteShadows("add");
+    myGLWidgetSh->UBO_init();
 //    myGLWidgetSh->cubeFBO_node = myGLWidgetSh->cubeDynNode_create("cube", 1024, 1024);
 
     lightCt = countLights();
@@ -179,7 +180,6 @@ void MainWin::gridInit()
             loadO[j]->deletable = 0;
             loadO[j]->selectable = 0;
             loadO[j]->ignoreOutliner = 1;
-            loadO[j]->ssaoTgl->val_b = 0;
 
             loadO[j]->r->val_3 = myGridSetup[i].r;
             loadO[j]->s->val_3 = glm::vec3(attrTable->gridSize->val_f);
@@ -288,7 +288,6 @@ void MainWin::objInit()
         loadO[i]->ignoreOutliner = 1;
         loadO[i]->selectable = 0;
         loadO[i]->v->val_b = 0;
-        loadO[i]->ssaoTgl->val_b = 0;
         allObj.push_back(loadO[i]);
         myBB = loadO[i];
     }
@@ -299,7 +298,6 @@ void MainWin::objInit()
         loadO[i]->deletable = 0;
         loadO[i]->ignoreOutliner = 1;
         loadO[i]->selectable = 0;
-        loadO[i]->ssaoTgl->val_b = 0;
 
         for (unsigned int j = 0; j < myGLWidgetSh->allTex.size(); ++j)
         {
@@ -363,20 +361,36 @@ void MainWin::objInit()
 //    startupScene("cubemapDebug");
 //    startupScene("ddsDebug_sphere");
 //    startupScene("lotsOfSpheres");
+//    startupScene("lotsOfSpheres2");
     startupScene("teapotPlane");
 
-    //DEFAULT LIGHTS
+    /* DEFAULT LIGHTS */
     loadO = myGLWidgetSh->VBOup(0, "SPOT", "light", 0);
-//    loadO = myGLWidgetSh->VBOup(0, "POINT", "light", 0);
+    //    loadO = myGLWidgetSh->VBOup(0, "POINT", "light", 0);
     for (unsigned int i = 0; i < loadO.size(); ++i)
     {
         loadO[i]->t->val_3 = glm::vec3(0.f, 10.f, .1f);
         loadO[i]->piv->val_3 = loadO[i]->t->val_3;
         loadO[i]->Cgiz = glm::vec3(1.f, 0.f, 0.f);
         loadO[i]->setTarg(loadO[i]->targO, 0.f);
-        loadO[i]->lSpotO->val_f = 60.f;
-        loadO[i]->lInten->val_f = 20.f;
-//        loadO[i]->lInten->val_f = 1.f;
+//        loadO[i]->lSpotO->val_f = 40.f;
+//        loadO[i]->lInten->val_f = 20.f;
+        loadO[i]->lInten->val_f = 1.f;
+
+        allObj.push_back(loadO[i]);
+    }
+
+    loadO = myGLWidgetSh->VBOup(0, "SPOT", "light", 0);
+    for (unsigned int i = 0; i < loadO.size(); ++i)
+    {
+//        loadO[i]->t->val_3 = glm::vec3(10.f);
+        loadO[i]->t->val_3 = glm::vec3(8.f);
+        loadO[i]->piv->val_3 = loadO[i]->t->val_3;
+        loadO[i]->Cgiz = glm::vec3(1.f, 0.f, 0.f);
+        loadO[i]->setTarg(loadO[i]->targO, 0.f);
+//        loadO[i]->lSpotO->val_f = 40.f;
+//        loadO[i]->lInten->val_f = 20.f;
+        loadO[i]->lInten->val_f = 1.f;
 
         allObj.push_back(loadO[i]);
     }
@@ -435,7 +449,6 @@ void MainWin::objInit()
     loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "cone.obj", "VOL", "volCone", 0);
     for (unsigned int i = 0; i < loadO.size(); ++i)
     {
-        loadO[i]->ssaoTgl->val_b = 0;
         loadO[i]->ignoreOutliner = 1;
         loadO[i]->selectable = 0;
         allObj.push_back(loadO[i]);
@@ -455,10 +468,31 @@ void MainWin::startupScene(QString name)
             for (unsigned int i = 0; i < loadO.size(); ++i)
             {
                 loadO[i]->t->val_3 = glm::vec3(n + (n - .75f) - 15.f, 0.f, 0.f);
-//                loadO[i]->t->val_3 = glm::vec3(n + .5f, 0.f, 0.f);
+                //                loadO[i]->t->val_3 = glm::vec3(n + .5f, 0.f, 0.f);
                 loadO[i]->piv->val_3 = loadO[i]->t->val_3;
                 loadO[i]->s->val_3 = glm::vec3(1.f);
                 allObj.push_back(loadO[i]);
+            }
+        }
+    }
+
+    else if (name == "lotsOfSpheres2")
+    {
+        for (int w = 0; w < 20; ++w)
+        {
+            for (int n = 0; n < 20; ++n)
+            {
+                loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "sphere.obj", "OBJ", "sphere", 0);
+                for (unsigned int i = 0; i < loadO.size(); ++i)
+                {
+                    loadO[i]->t->val_3 = glm::vec3(n + (n - .75f) - 15.f, 0.f, w + (w - .75f));
+//                    loadO[i]->t->val_3 = glm::vec3(n + (n - .75f) - 15.f, 0.f, w);
+//                    loadO[i]->t->val_3 = glm::vec3(n + (n - .75f) - 15.f, 0.f, 0.f);
+    //                loadO[i]->t->val_3 = glm::vec3(n + .5f, 0.f, 0.f);
+                    loadO[i]->piv->val_3 = loadO[i]->t->val_3;
+                    loadO[i]->s->val_3 = glm::vec3(1.f);
+                    allObj.push_back(loadO[i]);
+                }
             }
         }
     }
@@ -557,14 +591,14 @@ void MainWin::startupScene(QString name)
 
     else if (name == "teapotPlane")
     {
-        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "teapot.obj", "OBJ", "teapot", 0);
-        for (unsigned int i = 0; i < loadO.size(); ++i)
-        {
-            loadO[i]->t->val_3 = glm::vec3(3.f, 0.f, 0.f);
-            loadO[i]->r->val_3 = glm::vec3(0.f, 90.f, 0.f);
-            loadO[i]->s->val_3 = glm::vec3(1.5f);
-            allObj.push_back(loadO[i]);
-        }
+//        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "teapot.obj", "OBJ", "teapot", 0);
+//        for (unsigned int i = 0; i < loadO.size(); ++i)
+//        {
+//            loadO[i]->t->val_3 = glm::vec3(3.f, 0.f, 0.f);
+//            loadO[i]->r->val_3 = glm::vec3(0.f, 90.f, 0.f);
+//            loadO[i]->s->val_3 = glm::vec3(1.5f);
+//            allObj.push_back(loadO[i]);
+//        }
 
         loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "teapot.obj", "OBJ", "teapot", 0);
         for (unsigned int i = 0; i < loadO.size(); ++i)
@@ -590,7 +624,6 @@ void MainWin::startupScene(QString name)
         {
             loadO[i]->r->val_3 = glm::vec3(0.f, 90.f, 0.f);
             loadO[i]->s->val_3 = glm::vec3(4.f);
-//            loadO[i]->Kr->val_f = 1.f;
             allObj.push_back(loadO[i]);
         }
     }
@@ -936,7 +969,14 @@ glm::vec3 MainWin::gammaCsel()
 
 void MainWin::TglCPopWin()
 {
-    if (!CPopWinTgl)
+    if (CPopWinTgl)
+    {
+        myCPopWin->hide();
+        CPopWinTgl = 0;
+        myCPopWin->myCPop->targetAttr = 0;
+    }
+
+    else
     {
         glm::vec2 popP = toVec2(QCursor::pos());
         glm::vec2 showCPopP(popP.x - (myCPopWin->width() / 2), popP.y - (myCPopWin->height() / 2));
@@ -945,14 +985,27 @@ void MainWin::TglCPopWin()
 
         CPopWinTgl = 1;
     }
-
-    else
-    {
-        myCPopWin->hide();
-        CPopWinTgl = 0;
-        myCPopWin->myCPop->targetAttr = 0;
-    }
 }
+
+//void MainWin::TglCPopWin()
+//{
+//    if (!CPopWinTgl)
+//    {
+//        glm::vec2 popP = toVec2(QCursor::pos());
+//        glm::vec2 showCPopP(popP.x - (myCPopWin->width() / 2), popP.y - (myCPopWin->height() / 2));
+//        myCPopWin->move(toQP(showCPopP));
+//        myCPopWin->show();
+
+//        CPopWinTgl = 1;
+//    }
+
+//    else
+//    {
+//        myCPopWin->hide();
+//        CPopWinTgl = 0;
+//        myCPopWin->myCPop->targetAttr = 0;
+//    }
+//}
 
 void MainWin::PrefWinOpen()
 {
@@ -1122,7 +1175,6 @@ void MainWin::gizInit()
             loadO[j]->r->val_3 = myGizSetup[i].r;
             loadO[j]->t->val_3 = myGizSetup[i].t;
             loadO[j]->piv->val_3 = myGizSetup[i].t;
-            loadO[j]->ssaoTgl->val_b = 0;
             loadO[j]->deletable = 0;
             loadO[j]->selectable = 0;
             loadO[j]->ignoreOutliner = 1;
@@ -1147,7 +1199,6 @@ void MainWin::gizInit()
         {
             loadO[j]->Cgiz = myGizSetupSide[i].Cgiz;
             loadO[j]->Cgiz_stored = myGizSetupSide[i].Cgiz;
-            loadO[j]->ssaoTgl->val_b = 0;
             loadO[j]->deletable = 0;
             loadO[j]->selectable = 0;
             loadO[j]->ignoreOutliner = 1;

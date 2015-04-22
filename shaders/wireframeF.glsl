@@ -21,26 +21,11 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450 core
 
-layout(location = 0) in vec3 pE;
-layout(location = 1) in vec2 uvE;
-layout(location = 2) in vec3 tE;
-layout(location = 3) in vec3 bE;
-layout(location = 4) in vec3 nE;
+layout(location = 1) out vec4 rttGiz;
 
-uniform mat3 NM;
-uniform mat4 MVP, MV, VM;
-
-out Vert
-{
-    vec2 uv;
-    vec3 p, n;
-} v;
+uniform vec4 Cwire;
 
 void main()
 {
-    gl_Position = MVP * vec4(pE, 1.f);
-
-    v.p = vec3(MV * vec4(pE, 1.f));
-    v.uv = uvE;
-    v.n = normalize(NM * nE);
+    rttGiz = Cwire;
 }

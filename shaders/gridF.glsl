@@ -22,14 +22,10 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 #version 450 core
 
 layout(location = 0) out vec4 rttC;
-layout(location = 4) out vec4 ssaoMask;
 
-uniform bool ssaoTgl;
 uniform vec3 Cgrid;
 
 void main()
 {
     rttC = vec4(Cgrid, 1.f);
-
-    ssaoMask = (ssaoTgl) ? vec4(1.f) : vec4(0.f);
 }

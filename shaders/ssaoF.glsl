@@ -34,19 +34,19 @@ in Vert
     vec2 uv;
 } v;
 
-layout(bindless_sampler, location = 0) uniform sampler2D rttP;
-layout(bindless_sampler, location = 1) uniform sampler2D rttN;
+layout(bindless_sampler, location = 0) uniform sampler2D gbuf0_64; //P_view;
+layout(bindless_sampler, location = 1) uniform usampler2D gbuf2_64; //N_obj;
 layout(bindless_sampler, location = 2) uniform sampler2D nRandT;
-layout(bindless_sampler, location = 3) uniform sampler2D ssaoMask;
 layout(location = 0) out float Ci;
 
+uniform bool vignette;
 uniform float ssaoBias, ssaoInten, ssaoRad;
 uniform int ssaoRand;
-vec2 screenSize = textureSize(rttN, 0);
+vec2 screenSize = textureSize(gbuf0_64, 0);
 
 vec3 getPos(in vec2 UV)
 {
-    return texture(rttP, UV).rgb;
+    return texture(gbuf0_64, UV).rgb;
 }
 
 float doSSAO(in vec2 tcoord, in vec2 uv, in vec3 p, in vec3 cnorm)
@@ -61,28 +61,28 @@ float doSSAO(in vec2 tcoord, in vec2 uv, in vec3 p, in vec3 cnorm)
 float ssao()
 {
     vec3 P = getPos(v.uv);
-    vec3 N = normalize(texture(rttN, v.uv).rgb);
+
+    uvec4 data2 = texelFetch(gbuf2_64, ivec2(gl_FragCoord.xy), 0);
+    vec3 N = vec3(unpackHalf2x16(data2.y).y, unpackHalf2x16(data2.z));
+
     vec2 nRand = normalize(texture(nRandT, screenSize * v.uv / ssaoRand).xy * 2.f - 1.f);
 
-    const vec2 vec[16] = vec2[](vec2(0.53812504, 0.18565957), vec2(0.13790712, 0.24864247), vec2(0.33715037, 0.56794053), vec2(-0.6999805, -0.04511441), vec2(0.06896307, -0.15983082), vec2(0.056099437, 0.006954967), vec2(-0.014653638, 0.14027752), vec2(0.010019933, -0.1924225), vec2(-0.35775623, -0.5301969), vec2(-0.3169221, 0.106360726), vec2(0.010350345, -0.58698344), vec2(-0.08972908, -0.49408212), vec2(0.7119986, -0.0154690035), vec2(-0.053382345, 0.059675813), vec2(0.035267662, -0.063188605), vec2(-0.47761092, 0.2847911));
+    const vec2 samples[16] = vec2[](vec2(0.53812504, 0.18565957), vec2(0.13790712, 0.24864247), vec2(0.33715037, 0.56794053), vec2(-0.6999805, -0.04511441), vec2(0.06896307, -0.15983082), vec2(0.056099437, 0.006954967), vec2(-0.014653638, 0.14027752), vec2(0.010019933, -0.1924225), vec2(-0.35775623, -0.5301969), vec2(-0.3169221, 0.106360726), vec2(0.010350345, -0.58698344), vec2(-0.08972908, -0.49408212), vec2(0.7119986, -0.0154690035), vec2(-0.053382345, 0.059675813), vec2(0.035267662, -0.063188605), vec2(-0.47761092, 0.2847911));
 
     float ao = 0.f;
     float rad = ssaoRad / P.z;
 
     for (int i = 0; i < 16; ++i)
     {
-        vec2 newCoord = reflect(vec[i], nRand) * rad;
+        vec2 newCoord = reflect(samples[i], nRand) * rad;
 
         ao += doSSAO(v.uv, newCoord, P, N);
     }
 
-    return ao / 16.f;
+    return 1.f - (ao / 16.f);
 }
 
 void main()
 {
-    float mask = texture(ssaoMask, v.uv).a;
-
-    if (ssaoInten > 0.f)
-        Ci = ssao() * mask;
+    Ci = ssao();
 }

@@ -35,9 +35,7 @@ public:
     QImage HSV_image;
     glm::vec2 CPopManipLeft, CPopManipRight, CPopManipTop; //
     bool changedManip, ctrlTgl, mmbTgl, setInitPos;
-
     shared_ptr<MultiAttr> targetAttr;
-
 
     void drawHueRect();
 
@@ -51,7 +49,6 @@ protected:
     void wheelEvent(QWheelEvent *);
     void paintEvent(QPaintEvent *);
     void resizeEvent(QResizeEvent *);
-
 };
 
 #endif // CPOP_H

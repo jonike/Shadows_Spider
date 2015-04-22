@@ -48,6 +48,57 @@ GLWidgetSh::GLWidgetSh(MainWin &myWinTemp, QWidget *parent) : QGLWidget(parent),
 //    cubeFBO_node = cubeDynNode_create("cube", 1024, 1024);
 }
 
+void GLWidgetSh::UBO_init()
+{
+    int MAX_LIGHTS = 50;
+    glCreateBuffers(1, &ubo_lights);
+    glNamedBufferData(ubo_lights, MAX_LIGHTS * sizeof(lightUBO), 0, GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo_lights);
+}
+
+void GLWidgetSh::UBO_update()
+{
+    int lightIter = 0;
+
+    for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
+    {
+        if (myWin.allObj[i]->v->val_b && myWin.allObj[i]->camLiTypeGet("light"))
+        {
+            lightUBO myNewUBO;
+
+            /* AUTO UPDATE - DONE */
+            float type;
+            if (myWin.allObj[i]->camLiType->val_s == "AREA") type = 0.f;
+            else if (myWin.allObj[i]->camLiType->val_s == "DIR") type = 1.f;
+            else if (myWin.allObj[i]->camLiType->val_s == "POINT") type = 2.f;
+            else if (myWin.allObj[i]->camLiType->val_s == "SPOT") type = 3.f;
+
+            myNewUBO.Cl_type = glm::vec4(myWin.allObj[i]->Cl->val_3, type);
+
+            myNewUBO.falloff = glm::vec4(myWin.allObj[i]->lInten->val_f, cos(glm::radians(myWin.allObj[i]->lSpotI->val_f)), cos(glm::radians(myWin.allObj[i]->lSpotO->val_f)), 0.f);
+
+            /* TO DO */
+            //glm::vec4 lDirRot = -glm::normalize(VM * myWin.allObj[i]->MM * glm::vec4(0.f, 0.f, -1.f, 0.f)); //ref
+            myNewUBO.lDirRot = myWin.allObj[i]->MM * glm::vec4(0.f, 0.f, -1.f, 0.f);
+
+            myNewUBO.lP = glm::vec4(myWin.allObj[i]->t->val_3, 0.f);
+
+//            qDebug() << "lightIter = " << lightIter << "name = " << myWin.allObj[i]->name->val_s;
+//            cout << "myNewUBO.Cl_type = " << glm::to_string(myNewUBO.Cl_type) << endl;
+//            cout << "myNewUBO.falloff = " << glm::to_string(myNewUBO.falloff) << endl;
+//            cout << "myNewUBO.lDirRot = " << glm::to_string(myNewUBO.lDirRot) << endl;
+//            cout << "myNewUBO.lP = " << glm::to_string(myNewUBO.lP) << endl;
+//            cout << endl;
+
+            glNamedBufferSubData(ubo_lights, lightIter * sizeof(myNewUBO), sizeof(myNewUBO), &myNewUBO);
+
+            lightIter++;
+        }
+    }
+
+    UBO_light_needsUp = 0;
+}
+
 void GLWidgetSh::initializeGL()
 {
     glewExperimental = GL_TRUE;
@@ -148,7 +199,7 @@ void GLWidgetSh::cubemapGen()
         {
             if (myWin.allObj[j]->type == "OBJ" && myWin.searchUp(myWin.allObj[j]))
             {
-                myWin.myGLWidgetSh->glUseProgram2("pBase");
+                myWin.myGLWidgetSh->glUseProgram2("pBaseDef");
 //                myWin.allObj[j]->render(myWin.allGL[GLidx]);
                 myWin.allObj[j]->render(myWin.allGL[4]);
             }
@@ -362,7 +413,7 @@ void GLWidgetSh::paintSlow(shared_ptr<GLWidget> myGL)
     GLubyte *img = stbi_load(path, &imgW, &imgH, &chan, 0);
 
     float data[4];
-    glNamedFramebufferReadBuffer(myGL->main_node.fbo1, GL_COLOR_ATTACHMENT2);
+    glNamedFramebufferReadBuffer(myGL->simp_node.fbo1, GL_COLOR_ATTACHMENT2);
     glReadPixels(myGL->pNew.x, myGL->height() - myGL->pNew.y, 1, 1, GL_RGBA, GL_FLOAT, data); //
 
     float uu = data[0];
@@ -470,72 +521,6 @@ GLuint GLWidgetSh::dds16fUp(string pathIn)
     return texNew;
 }
 
-
-//GLuint GLWidgetSh::dds16fUp(string pathIn)
-//{
-//    string pathTex;
-//    pathTex = "C:/users/aleks/desktop/tex/";
-//    string pathTemp = pathTex + pathIn;
-//    const char *path = pathTemp.c_str();
-
-//    FILE *myFile = fopen(path, "rb");
-//    char filecode[4];
-//    fread(filecode, 1, 4, myFile);
-
-//    ddsHeader myHeader;
-//    fread(&myHeader, sizeof(ddsHeader), 1, myFile);
-
-//    vector<uint8_t*> _data;
-
-//    for (int i = 0; i < 6; ++i)
-//    {
-//        int w = myHeader.dwWidth;
-//        int h = myHeader.dwHeight;
-
-//        for (unsigned int j = 0; j < myHeader.dwMipMapCount; ++j)
-//        {
-//            int size = w * h * 8;
-//            uint8_t *pixels = new uint8_t[size];
-
-//            fread(pixels, size, 1, myFile);
-//            _data.push_back(pixels);
-
-//            w = (w > 1) ? w >> 1 : 1;
-//            h = (h > 1) ? h >> 1 : 1;
-//        }
-//    }
-
-//    fclose(myFile);
-
-//    GLuint texNew;
-//    glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &texNew);
-
-//    for (int i = 0; i < 6; ++i)
-//    {
-//        int w = myHeader.dwWidth;
-//        int h = myHeader.dwHeight;
-
-//        for (unsigned int j = 0; j < myHeader.dwMipMapCount; ++j)
-//        {
-//            void* texData = _data[i * myHeader.dwMipMapCount + j];
-
-//            glTextureImage2DEXT(texNew, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, j, GL_RGBA16F, w, h, 0, GL_RGBA, GL_HALF_FLOAT, texData);
-
-//            w >>= 1;
-//            h >>= 1;
-//            w = w ? w : 1;
-//            h = h ? h : 1;
-//        }
-//    }
-
-//    glTextureParameteri(texNew, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-//    glTextureParameteri(texNew, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-//    glTextureParameteri(texNew, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-//    glTextureParameteri(texNew, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-
-//    return texNew;
-//}
-
 GLuint GLWidgetSh::texUp(string pathIn)
 {
     string pathTex = myWin.pathTable->pathTex->val_s.toStdString();
@@ -634,29 +619,20 @@ void GLWidgetSh::up64T(GLuint &tex32, GLuint64 &tex64, bool up)
 
 void GLWidgetSh::proUp()
 {
-    allPro.push_back( { "pBase1", createProg("base1V.glsl", "base1G.glsl", "base1F.glsl") } );
-    allPro.push_back( { "pBase2", createProg("base2V.glsl", "base2G.glsl", "base2F.glsl") } );
-    allPro.push_back( { "pBase3", createProg("base3V.glsl", "base3G.glsl", "base3F.glsl") } );
+    allPro.push_back( { "pBaseDef", createProg("baseDefV.glsl", "baseDefG.glsl", "baseDefF.glsl") } );
+    allPro.push_back( { "pDef", createProg("fboV.glsl", "", "defF.glsl") } );
     allPro.push_back( { "pBB", createProg("bbV.glsl", "", "bbF.glsl") } );
-    allPro.push_back( { "pGBuffer", createProg("gBufferV.glsl", "", "gBufferF.glsl") } );
     allPro.push_back( { "pGiz", createProg("gizV.glsl", "", "gizF.glsl") } );
     allPro.push_back( { "pGiz_circ", createProg("giz_circV.glsl", "", "gizF.glsl") } );
-    allPro.push_back( { "pGiz_side", createProg("gizV.glsl", "", "giz_sideF.glsl") } );
-    allPro.push_back( { "pGiz_side_over", createProg("fboV.glsl", "", "giz_side_overF.glsl") } );
     allPro.push_back( { "pGrid", createProg("gizV.glsl", "", "gridF.glsl") } );
     allPro.push_back( { "pNViz", createProg("nVizV.glsl", "nVizG.glsl", "nVizF.glsl") } );
-
     allPro.push_back( { "pTxt", createProg("txtV.glsl", "txtG.glsl", "txtF.glsl") } );
     allPro.push_back( { "pVolumeLight", createProg("volumeLightV.glsl", "", "volumeLightF.glsl") } );
-
-    allPro.push_back( { "pAtmos", createProg("fboV.glsl", "", "atmosF.glsl") } );
     allPro.push_back( { "pSky", createProg("skyV.glsl", "", "skyF.glsl") } );
-
     allPro.push_back( { "pShadow", createProg("shadowV.glsl", "", "shadowF.glsl") } );
     allPro.push_back( { "pRtt", createProg("rttV.glsl", "", "rttF.glsl") } );
     allPro.push_back( { "pSelRect", createProg("selRectV.glsl", "", "selRectF.glsl") } );
-
-    allPro.push_back( { "pAoBloomC", createProg("fboV.glsl", "", "aoBloomCF.glsl") } );
+    allPro.push_back( { "pBloomC", createProg("fboV.glsl", "", "bloomCF.glsl") } );
     allPro.push_back( { "pBloom", createProg("fboV.glsl", "", "bloomF.glsl") } );
     allPro.push_back( { "pDown", createProg("downV.glsl", "", "downF.glsl") } );
     allPro.push_back( { "pFinal", createProg("fboV.glsl", "", "finalF.glsl") } );
@@ -666,25 +642,17 @@ void GLWidgetSh::proUp()
     allPro.push_back( { "pLumaAdapt", createProg("fboV.glsl", "", "lumaAdaptF.glsl") } );
     allPro.push_back( { "pLumaAdapt_viz", createProg("fboV.glsl", "", "lumaAdapt_vizF.glsl") } );
     allPro.push_back( { "pStencilHi", createProg("stencilHiV.glsl", "", "stencilHiF.glsl") } );
+    allPro.push_back( { "pStencilGeo", createProg("stencilGeoV.glsl", "", "stencilGeoF.glsl") } );
     allPro.push_back( { "pSSAO", createProg("fboV.glsl", "", "ssaoF.glsl") } );
     allPro.push_back( { "pTonemap", createProg("fboV.glsl", "", "tonemapF.glsl") } );
+    allPro.push_back( { "pWireframe", createProg("wireframeV.glsl", "", "wireframeF.glsl") } );
 }
 
 void GLWidgetSh::glUseProgram2(QString name)
 {
     for (unsigned int i = 0; i < allPro.size(); ++i)
     {
-        if (name == "pBase") //get num visible lights to choose shader
-        {
-            stringstream ss;
-            ss << "pBase" << myWin.lightCt;
-            QString pWithCount = QString::fromStdString(ss.str());
-
-            if (allPro[i].name == pWithCount)
-                pro = allPro[i].pro;
-        }
-
-        else if (allPro[i].name == name)
+        if (allPro[i].name == name)
             pro = allPro[i].pro;
     }
 
@@ -723,7 +691,6 @@ vector<shared_ptr<Object>> GLWidgetSh::VBOup(QString path, QString type, QString
             obj->type = "CAMLI";
             obj->camLiType->val_s = type;
             obj->rotOrder->val_s = "YZX";
-            obj->ssaoTgl->val_b = 0;
         }
 
         else
@@ -1105,9 +1072,7 @@ vector<shared_ptr<Object>> GLWidgetSh::VBOup(QString path, QString type, QString
                 ++it;
         }
 
-        GLDataSh.push_back(
-        { newO[i],
-          VBO_P, VBO_UV, VBO_T, VBO_B, VBO_N, VBO_IDX } );
+        GLDataSh.push_back( { newO[i], VBO_P, VBO_UV, VBO_T, VBO_B, VBO_N, VBO_IDX } );
 
         VAOup(newO[i]);
     }

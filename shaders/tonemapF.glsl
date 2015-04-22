@@ -29,9 +29,9 @@ in Vert
     vec2 uv;
 } v;
 
-layout(bindless_sampler, location = 0) uniform sampler2D bloomC;
-layout(bindless_sampler, location = 1) uniform sampler2D lumaT;
-layout(bindless_sampler, location = 2) uniform sampler2D gizT;
+layout(bindless_sampler, location = 0) uniform sampler2D bloomC_64;
+layout(bindless_sampler, location = 1) uniform sampler2D luma_64;
+layout(bindless_sampler, location = 2) uniform sampler2D giz_64;
 layout(location = 0) out vec3 Ci;
 
 uniform bool adaptAuto, vignette;
@@ -61,22 +61,31 @@ float vignetteOverlay(vec2 pos, float inner, float outer)
     return 1.f - smoothstep(inner, outer, r);
 }
 
+//void main()
+//{
+//    vec4 bloomC = texture(bloomC_64, v.uv);
+//    Ci = bloomC.rgb;
+
+//    vec4 giz = texture(giz_64, v.uv);
+//    Ci = mix(Ci.rgb, giz.rgb, giz.a);
+//}
+
 void main()
 {
-    vec4 bloom = texture(bloomC, v.uv);
-    float lum = max(exp(textureLod(lumaT, v.uv, 10.f).r), .0001f);
+    vec4 bloomC = texture(bloomC_64, v.uv);
+    float lum = max(exp(textureLod(luma_64, v.uv, 10.f).r), .0001f);
 
     if (vignette)
-        bloom.rgb *= vignetteOverlay(v.uv * 2.f - 1.f, .55f, vignetteD);
+        bloomC.rgb *= vignetteOverlay(v.uv * 2.f - 1.f, .55f, vignetteD);
 
     float expoAdapt = expo;
 
     if (adaptAuto)
         expoAdapt = 1.03f - (2.f / (2.f + log10(lum + 1.f)));
 
-    Ci = bloom.rgb * expoAdapt / lum;
+    Ci = bloomC.rgb * expoAdapt / lum;
     Ci = filmicHabel(Ci) / filmicHabel(vec3(11.2f));
 
-    vec4 giz = texture(gizT, v.uv);
+    vec4 giz = texture(giz_64, v.uv);
     Ci = mix(Ci.rgb, giz.rgb, giz.a);
 }

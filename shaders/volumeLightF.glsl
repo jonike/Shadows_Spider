@@ -34,10 +34,8 @@ in Vert
 } v;
 
 layout(location = 0) out vec4 rttC;
-layout(location = 4) out vec4 ssaoMask;
 out vec4 Ci;
 
-uniform bool ssaoTgl;
 uniform float volDist;
 uniform vec3 volTip, volTipView;
 
@@ -54,7 +52,4 @@ void main()
     atten = clamp(atten, 0.f, 1.f);
 
     rttC = vec4(v.parentCl * atten * softEdge, 1.f);
-
-    //RTT
-    ssaoMask = (ssaoTgl) ? vec4(1.f) : vec4(0.f);
 }

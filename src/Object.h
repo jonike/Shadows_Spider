@@ -44,7 +44,7 @@ public:
     shared_ptr<MultiAttr> name, transformSep, t, r, s, v, bb;
     shared_ptr<MultiAttr> shaderSep, albedoM, alphaM, cubeM, lensM, metallicM, normalM, ruffM;
     shared_ptr<MultiAttr> Kr, Ko, ruffA, ruffD, ior, anisoTgl;
-    shared_ptr<MultiAttr> shadowCast, ssaoTgl, backface, Cwire, normVLen, normWeight, piv, rotOrder;
+    shared_ptr<MultiAttr> shadowCast, backface, Cwire, normVLen, normWeight, piv, rotOrder;
     shared_ptr<MultiAttr> tileSep, albTile, normTile, ruffTile;
 
     shared_ptr<MultiAttr> camLiType;
@@ -53,8 +53,6 @@ public:
     shared_ptr<MultiAttr> lightSep, Cl, lInten, lSpotI, lSpotO;
     shared_ptr<MultiAttr> volSep, volCone, volDist, volS;
 
-    shared_ptr<MultiAttr> Cfog, fogDen;
-    shared_ptr<MultiAttr> atmosSep, atmosSun;
     shared_ptr<MultiAttr> bloomSep, bloomI, bloomLensI;
     shared_ptr<MultiAttr> hdrSep, adaptTime, adaptAuto, expo, vignette, vignetteD;
         shared_ptr<MultiAttr> fxaaSep, fxaaBlur, fxaaSubPix, fxaaEdgeThr, fxaaEdgeThrMin;
@@ -62,15 +60,14 @@ public:
 
     //CAM
     float distO;
-    glm::vec3 lookO, rightO, upO, targO;
-    glm::vec3 lookFPS, rightFPS, upFPS;
+    glm::vec3 lookO, rightO, upO, targO, lookFPS, rightFPS, upFPS;
 
     //UPDATE
     bool dirtyShadow, dirtyVM;
     QString savedShader;
 
     //ETC
-    bool expand, fogTgl, ignoreOutliner, ref, selected;
+    bool expand, ignoreOutliner, ref, selected;
     bool deletable, gridV, selectable;
 
     int vertsOnObj;
@@ -79,13 +76,12 @@ public:
 
     //GLSL
     glm::mat4 biasM;
-    glm::vec3 Crand;
+    glm::vec4 Crand;
     bool showN;
     int gaussStage, nType;
 
     //GIZ
-    glm::vec3 Cgiz;
-    glm::vec3 Cgiz_stored;
+    glm::vec3 Cgiz, Cgiz_stored;
     string gizType;
     bool gizSideObj = 0;
 
@@ -122,7 +118,7 @@ public:
 protected:
     void proUse(shared_ptr<GLWidget>);
 
-    glm::vec3 genColorID();
+    glm::vec4 genColorID();
     string getIncName(string);
 
 };

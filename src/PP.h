@@ -35,7 +35,8 @@ public:
     bool fboPrep(shared_ptr<GLWidget>); //ep
     void bloomBufferCreate();
     AbjNode gaussNode_create(QString, GLenum, int, int);
-    AbjNode mainNode_create();
+    AbjNode gbuffer_node_create();
+    AbjNode simp_node_create();
     AbjNode singleNode_create(QString, GLenum, int, int);
 
     void bloomRender();

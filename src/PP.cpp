@@ -27,10 +27,14 @@ bool PP::fboPrep(shared_ptr<GLWidget> myGLin)
 {
     myGL = myGLin;
 
-    myGL->main_node = mainNode_create();
+    myGL->gbuf_node = gbuffer_node_create();
+    myGL->simp_node = simp_node_create();
 
-    myGL->aoBloomC_node = singleNode_create("bloomC", GL_RGBA16F, myGL->width(), myGL->height());
-    myWin.myGLWidgetSh->up64N(myGL->aoBloomC_node, 1);
+    myGL->deferred_node = singleNode_create("def", GL_RGBA16F, myGL->width(), myGL->height());
+    myWin.myGLWidgetSh->up64N(myGL->deferred_node, 1);
+
+    myGL->bloomC_node = singleNode_create("bloomC", GL_RGBA16F, myGL->width(), myGL->height());
+    myWin.myGLWidgetSh->up64N(myGL->bloomC_node, 1);
 
     myGL->fxaa_node = singleNode_create("fxaa", GL_RGB16F, myGL->width(), myGL->height());
     myWin.myGLWidgetSh->up64N(myGL->fxaa_node, 1);
@@ -116,7 +120,7 @@ AbjNode PP::gaussNode_create(QString name, GLenum format, int widthIn, int heigh
     return { name, widthIn, heightIn, gaussNew[0], setupRTT[0], 0, gaussNew[1], setupRTT[1], 0 };
 }
 
-AbjNode PP::mainNode_create()
+AbjNode PP::gbuffer_node_create()
 {
     GLuint fboNew;
     glCreateFramebuffers(1, &fboNew);
@@ -129,7 +133,6 @@ AbjNode PP::mainNode_create()
         GL_COLOR_ATTACHMENT3,
         GL_COLOR_ATTACHMENT4,
         GL_COLOR_ATTACHMENT5,
-        GL_COLOR_ATTACHMENT6,
     };
 
     const int cAttachNum = arraySize(DrawBuffers);
@@ -140,12 +143,79 @@ AbjNode PP::mainNode_create()
 
     for (int i = 0; i < cAttachNum; ++i)
     {
-        if (i == 3) //rttP needs to be 32F for ssao
+        if (i == 0 || i == 1)
             glTextureStorage2D(setupRTT[i], 1, GL_RGBA32F, myGL->width(), myGL->height());
 
         else
-            glTextureStorage2D(setupRTT[i], 1, GL_RGBA16F, myGL->width(), myGL->height());
+            glTextureStorage2D(setupRTT[i], 1, GL_RGBA32UI, myGL->width(), myGL->height());
 
+        glTextureParameteri(setupRTT[i], GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(setupRTT[i], GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        glTextureParameteri(setupRTT[i], GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTextureParameteri(setupRTT[i], GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        glNamedFramebufferTexture(fboNew, DrawBuffers[i], setupRTT[i], 0);
+    }
+
+    myGL->gbuf0_32 = setupRTT[0];
+    myWin.myGLWidgetSh->up64T(myGL->gbuf0_32, myGL->gbuf0_64, 1);
+
+    myGL->gbuf1_32 = setupRTT[1];
+    myWin.myGLWidgetSh->up64T(myGL->gbuf1_32, myGL->gbuf1_64, 1);
+
+    myGL->gbuf2_32 = setupRTT[2];
+    myWin.myGLWidgetSh->up64T(myGL->gbuf2_32, myGL->gbuf2_64, 1);
+
+    myGL->gbuf3_32 = setupRTT[3];
+    myWin.myGLWidgetSh->up64T(myGL->gbuf3_32, myGL->gbuf3_64, 1);
+
+    myGL->gbuf4_32 = setupRTT[4];
+    myWin.myGLWidgetSh->up64T(myGL->gbuf4_32, myGL->gbuf4_64, 1);
+
+    myGL->gbuf5_32 = setupRTT[5];
+    myWin.myGLWidgetSh->up64T(myGL->gbuf5_32, myGL->gbuf5_64, 1);
+
+    //DEPTH STEN
+    glCreateTextures(GL_TEXTURE_2D, 1, &myGL->gbuf_DS_32);
+
+    glTextureStorage2D(myGL->gbuf_DS_32, 1, GL_DEPTH32F_STENCIL8, myGL->width(), myGL->height());
+    glTextureParameteri(myGL->gbuf_DS_32, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(myGL->gbuf_DS_32, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(myGL->gbuf_DS_32, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTextureParameteri(myGL->gbuf_DS_32, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glNamedFramebufferTexture(fboNew, GL_DEPTH_STENCIL_ATTACHMENT, myGL->gbuf_DS_32, 0);
+    glNamedFramebufferDrawBuffers(fboNew, cAttachNum, DrawBuffers);
+
+    myWin.myGLWidgetSh->up64T(myGL->gbuf_DS_32, myGL->gbuf_DS_64, 1);
+
+    if (glCheckNamedFramebufferStatus(fboNew, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        qDebug() << "error with gbuffer_node_create";
+
+    return { "def", myGL->width(), myGL->height(), fboNew, myGL->gbuf1_32 };
+}
+
+AbjNode PP::simp_node_create()
+{
+    GLuint fboNew;
+    glCreateFramebuffers(1, &fboNew);
+
+    GLenum DrawBuffers[] =
+    {
+        GL_COLOR_ATTACHMENT0,
+        GL_COLOR_ATTACHMENT1,
+    };
+
+    const int cAttachNum = arraySize(DrawBuffers);
+
+    GLuint setupRTT[cAttachNum];
+
+    glCreateTextures(GL_TEXTURE_2D, cAttachNum, setupRTT);
+
+    for (int i = 0; i < cAttachNum; ++i)
+    {
+        glTextureStorage2D(setupRTT[i], 1, GL_RGBA16F, myGL->width(), myGL->height());
         glTextureParameteri(setupRTT[i], GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTextureParameteri(setupRTT[i], GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
@@ -164,45 +234,30 @@ AbjNode PP::mainNode_create()
         glNamedFramebufferTexture(fboNew, DrawBuffers[i], setupRTT[i], 0);
     }
 
-    myGL->rttC_32 = setupRTT[0];
-    myWin.myGLWidgetSh->up64T(myGL->rttC_32, myGL->rttC_64, 1);
+    myGL->simp_sky_32 = setupRTT[0];
+    myWin.myGLWidgetSh->up64T(myGL->simp_sky_32, myGL->simp_sky_64, 1);
 
-    myGL->rttN_32 = setupRTT[1];
-    myWin.myGLWidgetSh->up64T(myGL->rttN_32, myGL->rttN_64, 1);
-
-    myGL->rttUV_32 = setupRTT[2];
-    myWin.myGLWidgetSh->up64T(myGL->rttUV_32, myGL->rttUV_64, 1);
-
-    myGL->rttP_32 = setupRTT[3];
-    myWin.myGLWidgetSh->up64T(myGL->rttP_32, myGL->rttP_64, 1);
-
-    myGL->ssaoMask_32 = setupRTT[4];
-    myWin.myGLWidgetSh->up64T(myGL->ssaoMask_32, myGL->ssaoMask_64, 1);
-
-    myGL->rttGiz_32 = setupRTT[5];
-    myWin.myGLWidgetSh->up64T(myGL->rttGiz_32, myGL->rttGiz_64, 1);
-
-    myGL->rttGizSide_32 = setupRTT[6];
-    myWin.myGLWidgetSh->up64T(myGL->rttGizSide_32, myGL->rttGizSide_64, 1);
+    myGL->simp_Giz_32 = setupRTT[1];
+    myWin.myGLWidgetSh->up64T(myGL->simp_Giz_32, myGL->simp_Giz_64, 1);
 
     //DEPTH STEN
-    glCreateTextures(GL_TEXTURE_2D, 1, &myGL->rttDS_32);
+    glCreateTextures(GL_TEXTURE_2D, 1, &myGL->simp_DS_32);
 
-    glTextureStorage2D(myGL->rttDS_32, 1, GL_DEPTH32F_STENCIL8, myGL->width(), myGL->height());
-    glTextureParameteri(myGL->rttDS_32, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTextureParameteri(myGL->rttDS_32, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTextureParameteri(myGL->rttDS_32, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTextureParameteri(myGL->rttDS_32, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTextureStorage2D(myGL->simp_DS_32, 1, GL_DEPTH32F_STENCIL8, myGL->width(), myGL->height());
+    glTextureParameteri(myGL->simp_DS_32, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(myGL->simp_DS_32, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(myGL->simp_DS_32, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTextureParameteri(myGL->simp_DS_32, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    glNamedFramebufferTexture(fboNew, GL_DEPTH_STENCIL_ATTACHMENT, myGL->rttDS_32, 0);
+    glNamedFramebufferTexture(fboNew, GL_DEPTH_STENCIL_ATTACHMENT, myGL->simp_DS_32, 0);
     glNamedFramebufferDrawBuffers(fboNew, cAttachNum, DrawBuffers);
 
-    myWin.myGLWidgetSh->up64T(myGL->rttDS_32, myGL->rttDS_64, 1);
+    myWin.myGLWidgetSh->up64T(myGL->simp_DS_32, myGL->simp_DS_64, 1);
 
     if (glCheckNamedFramebufferStatus(fboNew, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        qDebug() << "error with mainNode_create";
+        qDebug() << "error with simp_node_create";
 
-    return { "main", myGL->width(), myGL->height(), fboNew, myGL->rttC_32 };
+    return { "main", myGL->width(), myGL->height(), fboNew, myGL->simp_sky_32 };
 }
 
 AbjNode PP::singleNode_create(QString name, GLenum format, int widthIn, int heightIn)
@@ -318,7 +373,7 @@ void PP::bloomRender()
 
     for (int i = 0; i < 6; ++i) //DOWNSAMP
     {
-        if (i == 0) downSampRender(myGL->main_node, myGL->down_node[i], 2);
+        if (i == 0) downSampRender(myGL->deferred_node, myGL->down_node[i], 2);
         else downSampRender(myGL->down_node[i - 1], myGL->down_node[i], 2);
     }
 
@@ -339,25 +394,6 @@ void PP::postFX(shared_ptr<GLWidget> myGLin)
 {
     myGL = myGLin;
 
-    //luma init
-    glBindFramebuffer(GL_FRAMEBUFFER, myGL->lumaInit.fbo1);
-    glViewport(0, 0, myGL->lumaInit.width, myGL->lumaInit.height);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glClearColor(0.f, 0.f, 0.f, 0.f);
-    myWin.myGLWidgetSh->glUseProgram2("pLumaInit");
-    myWin.myFSQ->render(myGL);
-    myWin.myGLWidgetSh->up64T(myGL->lumaInit.tex1, myGL->lumaInit.tex1_64, 1);
-
-    //adapt luma
-    glBindFramebuffer(GL_FRAMEBUFFER, myGL->lumaAdapt[myGL->currLum].fbo1);
-    glViewport(0, 0, myGL->lumaAdapt[myGL->currLum].width, myGL->lumaAdapt[myGL->currLum].height);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glClearColor(0.f, 0.f, 0.f, 0.f);
-    myWin.myGLWidgetSh->glUseProgram2("pLumaAdapt");
-    myWin.myFSQ->render(myGL);
-    glGenerateTextureMipmap(myGL->lumaAdapt[myGL->currLum].tex1);
-    myWin.myGLWidgetSh->up64T(myGL->lumaAdapt[myGL->currLum].tex1, myGL->lumaAdapt[myGL->currLum].tex1_64, 1);
-
     //SSAO
     glBindFramebuffer(GL_FRAMEBUFFER, myGL->ssao_node.fbo1);
     glViewport(0, 0, myGL->ssao_node.width, myGL->ssao_node.height);
@@ -371,13 +407,40 @@ void PP::postFX(shared_ptr<GLWidget> myGLin)
     myGL->ssao_gauss_node.tex2_64 = glGetTextureHandleARB(gaussianBlur(myGL->ssao_node, myGL->ssao_gauss_node, myWin.myFSQ->ssaoBlur->val_b));
     glMakeTextureHandleResidentARB(myGL->ssao_gauss_node.tex2_64);
 
-    //AO * (BLOOM + C)
+    //DEFERRED LIGHTING
+    glBindFramebuffer(GL_FRAMEBUFFER, myGL->deferred_node.fbo1);
+    glViewport(0, 0, myGL->deferred_node.width, myGL->deferred_node.height);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glClearColor(0.f, 0.f, 0.f, 0.f);
+    myWin.myGLWidgetSh->glUseProgram2("pDef");
+    myWin.myFSQ->render(myGL);
+
+    //LUMA INIT
+    glBindFramebuffer(GL_FRAMEBUFFER, myGL->lumaInit.fbo1);
+    glViewport(0, 0, myGL->lumaInit.width, myGL->lumaInit.height);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glClearColor(0.f, 0.f, 0.f, 0.f);
+    myWin.myGLWidgetSh->glUseProgram2("pLumaInit");
+    myWin.myFSQ->render(myGL);
+    myWin.myGLWidgetSh->up64T(myGL->lumaInit.tex1, myGL->lumaInit.tex1_64, 1);
+
+    //ADAPT LUMA
+    glBindFramebuffer(GL_FRAMEBUFFER, myGL->lumaAdapt[myGL->currLum].fbo1);
+    glViewport(0, 0, myGL->lumaAdapt[myGL->currLum].width, myGL->lumaAdapt[myGL->currLum].height);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glClearColor(0.f, 0.f, 0.f, 0.f);
+    myWin.myGLWidgetSh->glUseProgram2("pLumaAdapt");
+    myWin.myFSQ->render(myGL);
+    glGenerateTextureMipmap(myGL->lumaAdapt[myGL->currLum].tex1);
+    myWin.myGLWidgetSh->up64T(myGL->lumaAdapt[myGL->currLum].tex1, myGL->lumaAdapt[myGL->currLum].tex1_64, 1);
+
+    //BLOOM + C
     bloomRender();
 
-    glBindFramebuffer(GL_FRAMEBUFFER, myGL->aoBloomC_node.fbo1);
-    glViewport(0, 0, myGL->aoBloomC_node.width, myGL->aoBloomC_node.height);
+    glBindFramebuffer(GL_FRAMEBUFFER, myGL->bloomC_node.fbo1);
+    glViewport(0, 0, myGL->bloomC_node.width, myGL->bloomC_node.height);
     glClear(GL_COLOR_BUFFER_BIT);
-    myWin.myGLWidgetSh->glUseProgram2("pAoBloomC");
+    myWin.myGLWidgetSh->glUseProgram2("pBloomC");
     myWin.myFSQ->render(myGL);
 
     //TONEMAP EXPOSURE
@@ -412,24 +475,29 @@ void PP::postFX(shared_ptr<GLWidget> myGLin)
     myGL->currLum = !myGL->currLum;
 }
 
-
 void PP::resizeTexClearMem(shared_ptr<GLWidget> myGLin)
 {
     myGL = myGLin;
 
-    //MAIN FBO
-    myWin.myGLWidgetSh->up64T(myGL->rttC_32, myGL->rttC_64, 0);
-    myWin.myGLWidgetSh->up64T(myGL->rttN_32, myGL->rttN_64, 0);
-    myWin.myGLWidgetSh->up64T(myGL->rttUV_32, myGL->rttUV_64, 0);
-    myWin.myGLWidgetSh->up64T(myGL->rttP_32, myGL->rttP_64, 0);
-    myWin.myGLWidgetSh->up64T(myGL->ssaoMask_32, myGL->ssaoMask_64, 0);
-    myWin.myGLWidgetSh->up64T(myGL->rttGiz_32, myGL->rttGiz_64, 0);
-    myWin.myGLWidgetSh->up64T(myGL->rttGizSide_32, myGL->rttGizSide_64, 0);
-    myWin.myGLWidgetSh->up64T(myGL->rttDS_32, myGL->rttDS_64, 0);
-    glDeleteFramebuffers(1, &myGL->main_node.fbo1);
+    //GBUF FBO
+    myWin.myGLWidgetSh->up64T(myGL->gbuf0_32, myGL->gbuf0_64, 0);
+    myWin.myGLWidgetSh->up64T(myGL->gbuf1_32, myGL->gbuf1_64, 0);
+    myWin.myGLWidgetSh->up64T(myGL->gbuf2_32, myGL->gbuf2_64, 0);
+    myWin.myGLWidgetSh->up64T(myGL->gbuf3_32, myGL->gbuf3_64, 0);
+    myWin.myGLWidgetSh->up64T(myGL->gbuf4_32, myGL->gbuf4_64, 0);
+    myWin.myGLWidgetSh->up64T(myGL->gbuf5_32, myGL->gbuf5_64, 0);
+    myWin.myGLWidgetSh->up64T(myGL->gbuf_DS_32, myGL->gbuf_DS_64, 0);
+    glDeleteFramebuffers(1, &myGL->gbuf_node.fbo1);
 
+    //SIMPLE FBO
+    myWin.myGLWidgetSh->up64T(myGL->simp_sky_32, myGL->simp_sky_64, 0);
+    myWin.myGLWidgetSh->up64T(myGL->simp_Giz_32, myGL->simp_Giz_64, 0);
+    myWin.myGLWidgetSh->up64T(myGL->simp_DS_32, myGL->simp_DS_64, 0);
+    glDeleteFramebuffers(1, &myGL->simp_node.fbo1);
+
+    myWin.myGLWidgetSh->up64N(myGL->deferred_node, 0);
     myWin.myGLWidgetSh->up64N(myGL->bloom_node, 0);
-    myWin.myGLWidgetSh->up64N(myGL->aoBloomC_node, 0);
+    myWin.myGLWidgetSh->up64N(myGL->bloomC_node, 0);
     myWin.myGLWidgetSh->up64N(myGL->fxaa_node, 0);
     myWin.myGLWidgetSh->up64N(myGL->ssao_node, 0);
     myWin.myGLWidgetSh->up64N(myGL->ssao_gauss_node, 0);
