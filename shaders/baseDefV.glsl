@@ -33,17 +33,15 @@ uniform mat4 MVP, MV, MM;
 out Vert
 {
     vec2 UV;
-    vec3 P_view, T_view, N_view;
+    vec3 T_VS, N_VS;
 } v;
 
 void main()
 {
     gl_Position = MVP * vec4(pE, 1.f);
-    v.P_view = vec3(MV * vec4(pE, 1.f));
-//    v.P_view = vec4(pE, 1.f).rgb;
 
-    v.T_view = normalize(NM * tE);
-    v.N_view = normalize(NM * nE);
+    v.T_VS = normalize(NM * tE);
+    v.N_VS = normalize(NM * nE);
 
     v.UV = uvE;
 }

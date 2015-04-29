@@ -27,6 +27,8 @@ reference:
     http://www.gamedev.net/page/resources/_/technical/graphics-programming-and-theory/a-simple-and-practical-approach-to-ssao-r2753
 
     http://anki3d.org/screen-space-ambient-occlusion/
+
+    https://mynameismjp.wordpress.com/2009/03/10/reconstructing-position-from-depth/
 */
 
 in Vert
@@ -34,36 +36,41 @@ in Vert
     vec2 uv;
 } v;
 
-layout(bindless_sampler, location = 0) uniform sampler2D gbuf0_64; //P_view;
-layout(bindless_sampler, location = 1) uniform usampler2D gbuf2_64; //N_obj;
+layout(bindless_sampler, location = 0) uniform usampler2D gbuf2_64; //N_VS;
+layout(bindless_sampler, location = 1) uniform sampler2D gbuf_DS_64;
 layout(bindless_sampler, location = 2) uniform sampler2D nRandT;
 layout(location = 0) out float Ci;
 
-uniform bool vignette;
 uniform float ssaoBias, ssaoInten, ssaoRad;
 uniform int ssaoRand;
-vec2 screenSize = textureSize(gbuf0_64, 0);
+vec2 screenSize = textureSize(gbuf2_64, 0);
+uniform mat4 PMinv;
 
-vec3 getPos(in vec2 UV)
+vec3 getP(vec2 UV)
 {
-    return texture(gbuf0_64, UV).rgb;
+    vec4 vProjectedPos = vec4(1.f);
+    vProjectedPos.xy = UV * 2.f - 1.f;
+    vProjectedPos.z = texture(gbuf_DS_64, UV).x * 2.f - 1.f;
+    vec4 vPositionVS = PMinv * vProjectedPos;
+
+    return vPositionVS.xyz / vPositionVS.w;
 }
 
-float doSSAO(in vec2 tcoord, in vec2 uv, in vec3 p, in vec3 cnorm)
+float doSSAO(vec2 tcoord, vec2 uv, vec3 p, vec3 cnorm)
 {
-    vec3 diff = getPos(tcoord + uv) - p;
+    vec3 diff = getP(tcoord + uv) - p;
     vec3 v = normalize(diff);
     float d = length(diff);
 
     return max(0.f, dot(cnorm, v) - ssaoBias) * (ssaoInten / (1.f + d));
 }
 
-float ssao()
+void main()
 {
-    vec3 P = getPos(v.uv);
+    vec3 P = getP(v.uv);
 
     uvec4 data2 = texelFetch(gbuf2_64, ivec2(gl_FragCoord.xy), 0);
-    vec3 N = vec3(unpackHalf2x16(data2.y).y, unpackHalf2x16(data2.z));
+    vec3 N_VS = vec3(unpackHalf2x16(data2.y).y, unpackHalf2x16(data2.z));
 
     vec2 nRand = normalize(texture(nRandT, screenSize * v.uv / ssaoRand).xy * 2.f - 1.f);
 
@@ -76,13 +83,8 @@ float ssao()
     {
         vec2 newCoord = reflect(samples[i], nRand) * rad;
 
-        ao += doSSAO(v.uv, newCoord, P, N);
+        ao += doSSAO(v.uv, newCoord, P, N_VS);
     }
 
-    return 1.f - (ao / 16.f);
-}
-
-void main()
-{
-    Ci = ssao();
+    Ci = 1.f - (ao / 16.f);
 }

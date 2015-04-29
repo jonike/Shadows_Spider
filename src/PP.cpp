@@ -151,7 +151,6 @@ AbjNode PP::gbuffer_node_create()
 
         glTextureParameteri(setupRTT[i], GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTextureParameteri(setupRTT[i], GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
         glTextureParameteri(setupRTT[i], GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTextureParameteri(setupRTT[i], GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -178,12 +177,12 @@ AbjNode PP::gbuffer_node_create()
 
     //DEPTH STEN
     glCreateTextures(GL_TEXTURE_2D, 1, &myGL->gbuf_DS_32);
-
     glTextureStorage2D(myGL->gbuf_DS_32, 1, GL_DEPTH32F_STENCIL8, myGL->width(), myGL->height());
+
     glTextureParameteri(myGL->gbuf_DS_32, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTextureParameteri(myGL->gbuf_DS_32, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTextureParameteri(myGL->gbuf_DS_32, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTextureParameteri(myGL->gbuf_DS_32, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTextureParameteri(myGL->gbuf_DS_32, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTextureParameteri(myGL->gbuf_DS_32, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     glNamedFramebufferTexture(fboNew, GL_DEPTH_STENCIL_ATTACHMENT, myGL->gbuf_DS_32, 0);
     glNamedFramebufferDrawBuffers(fboNew, cAttachNum, DrawBuffers);

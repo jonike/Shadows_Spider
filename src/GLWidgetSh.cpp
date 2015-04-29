@@ -64,35 +64,22 @@ void GLWidgetSh::UBO_update()
     {
         if (myWin.allObj[i]->v->val_b && myWin.allObj[i]->camLiTypeGet("light"))
         {
-            lightUBO myNewUBO;
+            lightUBO newUBO;
 
-            /* AUTO UPDATE - DONE */
             float type;
             if (myWin.allObj[i]->camLiType->val_s == "AREA") type = 0.f;
             else if (myWin.allObj[i]->camLiType->val_s == "DIR") type = 1.f;
             else if (myWin.allObj[i]->camLiType->val_s == "POINT") type = 2.f;
             else if (myWin.allObj[i]->camLiType->val_s == "SPOT") type = 3.f;
 
-            myNewUBO.Cl_type = glm::vec4(myWin.allObj[i]->Cl->val_3, type);
+            newUBO.Cl_type = glm::vec4(myWin.allObj[i]->Cl->val_3, type);
+            newUBO.falloff = glm::vec4(myWin.allObj[i]->lInten->val_f, cos(glm::radians(myWin.allObj[i]->lSpotI->val_f)), cos(glm::radians(myWin.allObj[i]->lSpotO->val_f)), 0.f);
+            newUBO.lDirRot = myWin.allObj[i]->MM * glm::vec4(0.f, 0.f, -1.f, 0.f);
+            newUBO.lP = glm::vec4(myWin.allObj[i]->t->val_3, 0.f);
 
-            myNewUBO.falloff = glm::vec4(myWin.allObj[i]->lInten->val_f, cos(glm::radians(myWin.allObj[i]->lSpotI->val_f)), cos(glm::radians(myWin.allObj[i]->lSpotO->val_f)), 0.f);
+            glNamedBufferSubData(ubo_lights, lightIter * sizeof(newUBO), sizeof(newUBO), &newUBO);
 
-            /* TO DO */
-            //glm::vec4 lDirRot = -glm::normalize(VM * myWin.allObj[i]->MM * glm::vec4(0.f, 0.f, -1.f, 0.f)); //ref
-            myNewUBO.lDirRot = myWin.allObj[i]->MM * glm::vec4(0.f, 0.f, -1.f, 0.f);
-
-            myNewUBO.lP = glm::vec4(myWin.allObj[i]->t->val_3, 0.f);
-
-//            qDebug() << "lightIter = " << lightIter << "name = " << myWin.allObj[i]->name->val_s;
-//            cout << "myNewUBO.Cl_type = " << glm::to_string(myNewUBO.Cl_type) << endl;
-//            cout << "myNewUBO.falloff = " << glm::to_string(myNewUBO.falloff) << endl;
-//            cout << "myNewUBO.lDirRot = " << glm::to_string(myNewUBO.lDirRot) << endl;
-//            cout << "myNewUBO.lP = " << glm::to_string(myNewUBO.lP) << endl;
-//            cout << endl;
-
-            glNamedBufferSubData(ubo_lights, lightIter * sizeof(myNewUBO), sizeof(myNewUBO), &myNewUBO);
-
-            lightIter++;
+            ++lightIter;
         }
     }
 
@@ -155,6 +142,11 @@ void GLWidgetSh::texInit()
     //LENS
     allTex.push_back( { "BLANK", "LENS", texUp("lens/BLANK_black_256.png") } );
     allTex.push_back( { "abjLens1", "LENS", texUp("lens/abjLens1.png") } );
+
+    //SSS
+    allTex.push_back( { "BLANK", "SSS", texUp("single/BLANK_black_256.tga") } );
+    allTex.push_back( { "WHITE", "SSS", texUp("single/BLANK_white_256.tga") } );
+    allTex.push_back( { "sssLookup", "SSS_ref", texUp("sss/lookUp.png") } );
 
     for (unsigned int i = 0; i < allTex.size(); ++i) //up64
         up64T(allTex[i].tex_32, allTex[i].tex_64, 1);
@@ -562,6 +554,8 @@ GLuint GLWidgetSh::texUp(string pathIn)
 
     glTextureParameteri(tex, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTextureParameteri(tex, GL_TEXTURE_WRAP_T, GL_REPEAT);
+//    glTextureParameteri(tex, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//    glTextureParameteri(tex, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     //ANISOTROPIC FILTERING
     GLfloat maxAniso = 0.f;

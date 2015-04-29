@@ -27,13 +27,13 @@ layout(triangle_strip, max_vertices = 3) out;
 in Vert
 {
     vec2 UV;
-    vec3 P_view, T_view, N_view;
+    vec3 T_VS, N_VS;
 } v[];
 
 out Geo
 {
     vec2 UV;
-    vec3 P_view, T_view, N_view;
+    vec3 T_VS, N_VS;
 } g;
 
 void main()
@@ -41,14 +41,12 @@ void main()
     for (int i = 0; i < 3; ++i)
     {
         g.UV = v[i].UV;
-        g.P_view = v[i].P_view;
-        g.T_view = v[i].T_view;
-        g.N_view = v[i].N_view;
+        g.T_VS = v[i].T_VS;
+        g.N_VS = v[i].N_VS;
 
         gl_Position = gl_in[i].gl_Position;
         EmitVertex();
     }
 
     EndPrimitive();
-
 }

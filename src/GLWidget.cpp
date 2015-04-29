@@ -676,6 +676,7 @@ void GLWidget::VMup(shared_ptr<Object> obj)
     }
 
     obj->dirtyVM = 0;
+    myWin.myGLWidgetSh->UBO_light_needsUp = 1;
 }
 
 void GLWidget::fpsCtrls()
@@ -774,8 +775,9 @@ void GLWidget::paintGL()
 
 //                if (name == "teapot")
 //                {
-//                    myWin.allObj[i]->t->val_3.y = myWin.myAnim->dynAnim("cycle") * 10.f;
-//                    myWin.allObj[i]->r->val_3.z = myWin.myAnim->dynAnim("accelDecel") * 500.f;
+//                    myWin.allObj[i]->r->val_3.y = myWin.myAnim->dynAnim("cycle") * 50.f;
+//                    myWin.allObj[i]->r->val_3.x = myWin.myAnim->dynAnim("cycle") * 10.f;
+//                    myWin.allObj[i]->t->val_3.z = myWin.myAnim->dynAnim("cycle") * 3.f;
 //                    myWin.allObj[i]->shadowCast->val_b = 0;
 //                }
             }
@@ -968,7 +970,6 @@ void GLWidget::paintGL()
     glBindFramebuffer(GL_FRAMEBUFFER, gbuf_node.fbo1);
     glViewport(0, 0, gbuf_node.width, gbuf_node.height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     glClearColor(0.f, 0.f, 0.f, 0.f);
 
     glShadeModel(GL_SMOOTH);

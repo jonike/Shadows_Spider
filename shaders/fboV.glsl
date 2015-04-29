@@ -37,4 +37,3 @@ void main()
     gl_Position = vertices[gl_VertexID];
     v.uv = vertices[gl_VertexID].xy * .5f + .5f;
 }
-
