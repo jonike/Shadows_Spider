@@ -90,67 +90,71 @@ float eta = 1.f / ior;
 float ruffD = unpackHalf2x16(data4.y).x;
 float Ko = unpackHalf2x16(data4.y).y;
 vec2 ruffA = unpackHalf2x16(data4.z);
-float anisoTgl = unpackHalf2x16(data4.w).x;
-float shadowCast = unpackHalf2x16(data4.w).y;
+float shadowCast = unpackHalf2x16(data4.w).x;
 
 uvec4 data5 = texelFetch(gbuf5_64, ivec2(gl_FragCoord.xy), 0);
 float Ksss = unpackHalf2x16(data5.x).x;
 float sssSpread = unpackHalf2x16(data5.x).y;
 float sssM = unpackHalf2x16(data5.y).x;
+float anisoM = unpackHalf2x16(data5.z).x;
 
 vec3 N_TS = texture(gbuf1_64, v.uv).rgb;
 vec3 N_TS_mip = vec3(unpackHalf2x16(data2.w), unpackHalf2x16(data5.y).y);
 vec3 P_VS = getP(v.uv);
 
 mat3 TBN = mat3(T_VS, B_VS, N_VS);
-vec3 incident_eye = normalize(P_VS) * TBN;
-vec3 V = normalize(vec3(dot(-P_VS, T_VS), dot(-P_VS, B_VS), dot(-P_VS, N_VS)));
-float NdotV = dot(N_TS, V);
+vec3 eye_TS = normalize(P_VS) * TBN;
+vec3 eye_VS = normalize(P_VS);
+vec3 V_TS = normalize(vec3(dot(-P_VS, T_VS), dot(-P_VS, B_VS), dot(-P_VS, N_VS)));
+vec3 V_VS = -P_VS;
+float NdotV_TS = dot(N_TS, V_TS);
+float NdotV_VS = dot(N_VS, V_VS);
+const float PI = 3.1416f;
 
-float schlick(float myEta, float NdotV)
+float schlick(float myEta)
 {
-    return myEta + (1.f - myEta) * pow(1.f - NdotV, 5.f);
+    return myEta + (1.f - myEta) * pow(1.f - NdotV_TS, 5.f);
 }
 
-float ggx(float NdotL, float NdotV, float HdotT, float HdotB, float HdotN, float HdotV)
+float ggx(float NdotL, float HdotN)
 {
-    float PI = 3.1416f;
     float ruffR2 = Kr * Kr;
 
     float v1i = 1.f / (NdotL + sqrt(ruffR2 + (1 - ruffR2) * NdotL * NdotL));
-    float v1o = 1.f / (NdotV + sqrt(ruffR2 + (1 - ruffR2) * NdotV * NdotV));
+    float v1o = 1.f / (NdotV_TS + sqrt(ruffR2 + (1 - ruffR2) * NdotV_TS * NdotV_TS));
     float G = v1i * v1o;
 
-    float D;
-
-    if (anisoTgl == 1.f)
-    {
-        float HdotX2 = pow(HdotT / ruffA.x, 2.f);
-        float HdotY2 = pow(HdotB / ruffA.y, 2.f);
-
-        float dDenom = (HdotX2 + HdotY2 / Kr) + (HdotN * HdotN);
-        D = (1.f / PI) * (1.f / ruffR2) * (1.f / (dDenom * dDenom));
-
-        return clamp(D * G, 0.f, 10.f);
-    }
-
-    else
-    {
-        D = ruffR2 / (PI * pow(((HdotN * HdotN) * (ruffR2 - 1.f) + 1.f), 2.f));
-        D *= schlick(eta, NdotV);
-    }
+    float D = ruffR2 / (PI * pow(((HdotN * HdotN) * (ruffR2 - 1.f) + 1.f), 2.f));
+    D *= schlick(eta);
 
     return D * G;
 }
 
-float oren(float NdotL, float NdotV, vec3 L)
+float ggxAniso(float NdotL, float HdotT, float HdotB, float HdotN)
+{
+    float ruffR2 = Kr * Kr;
+
+    float v1i = 1.f / (NdotL + sqrt(ruffR2 + (1 - ruffR2) * NdotL * NdotL));
+    float v1o = 1.f / (NdotV_VS + sqrt(ruffR2 + (1 - ruffR2) * NdotV_VS * NdotV_VS));
+    float G = v1i * v1o;
+
+    float HdotT2 = pow(HdotT / ruffA.x, 2.f);
+    float HdotB2 = pow(HdotB / ruffA.y, 2.f);
+
+    float dDenom = (HdotT2 + HdotB2 / Kr) + (HdotN * HdotN);
+    float D = (1.f / PI) * (1.f / ruffR2) * (1.f / (dDenom * dDenom));
+
+    return clamp(D * G, 0.f, 25.f);
+}
+
+float oren(float NdotL, vec3 L)
 {
     float ruffD2 = ruffD * ruffD;
     float A = 1.f - .5f * (ruffD2 / (ruffD2 + .33f));
     float B = .45f * (ruffD2 / (ruffD2 + .09f));
-    float acosNdotV = acos(NdotV);
+    float acosNdotV = acos(NdotV_TS);
 
-    vec3 VperpN = normalize(V - N_TS * NdotV);
+    vec3 VperpN = normalize(V_TS - N_TS * NdotV_TS);
     float cos_phi = max(0.f, dot(VperpN, normalize(L - N_TS * NdotL)));
     float acosNdotL = acos(NdotL);
     float alpha = max(acosNdotL, acosNdotV);
@@ -159,14 +163,19 @@ float oren(float NdotL, float NdotV, vec3 L)
     return NdotL * (A + B * cos_phi * sin(alpha) * tan(beta));
 }
 
-vec3 cubeRefl()
+vec3 cubeRefl_TS()
 {
-    return VMinv * TBN * reflect(incident_eye, N_TS);
+    return VMinv * TBN * reflect(eye_TS, N_TS);
+}
+
+vec3 cubeRefl_VS()
+{
+    return VMinv * reflect(eye_VS, N_VS);
 }
 
 vec3 cubeRefr(float ca)
 {
-    return VMinv * TBN * refract(incident_eye, N_TS, eta + ca);
+    return VMinv * TBN * refract(eye_TS, N_TS, eta + ca);
 }
 
 float calcSpot(vec3 dist, vec3 LDirRot, vec3 falloff)
@@ -195,88 +204,116 @@ vec3 calcSSS(float NdotL, vec3 myCl)
 
 void main()
 {
-    float sumShadow;
+    float sumShadow = 1.f;
     vec3 sumDirect, sumIndirect;
 
     /* DIRECT */
     for (int i = 0; i < NUM_LIGHTS; ++i)
     {
-        float shadowRead = 1.f;
+        float shadowRead = 0.f;
 
-        if (light[i].Cl_type.w == 1 || light[i].Cl_type.w == 3) //spot / dir
-        {
-            if (i == 1)
-            {
-//                light[i].ShadowCoord = aasdsad;
-//                shadowRead = textureProj(shadow1T, light[i].ShadowCoord);
-            }
-        }
+//        if (light[i].Cl_type.w == 1 || light[i].Cl_type.w == 3) //spot / dir
+//        {
+//            if (i == 1)
+//            {
+////                light[i].ShadowCoord = aasdsad;
+////                shadowRead = textureProj(shadow1T, light[i].ShadowCoord);
+//            }
+//        }
 
-        vec3 L = vec3(VM * vec4(light[i].lP.xyz, 1.f)) - P_VS;
+        vec3 L_VS = vec3(VM * vec4(light[i].lP.xyz, 1.f)) - P_VS;
         vec4 myLDirRot = -normalize(VM * light[i].lDirRot);
 
-        float myAtten = light[i].falloff.x * 1.f / dot(L, L);
+        float myAtten = light[i].falloff.x * 1.f / dot(L_VS, L_VS);
         float atten = 1.f;
 
-        if      (light[i].Cl_type.w == 1.f) L = myLDirRot.xyz; //DIR
+        if      (light[i].Cl_type.w == 1.f) L_VS = myLDirRot.xyz; //DIR
         else if (light[i].Cl_type.w == 2.f) atten = myAtten; //POINT
-        else if (light[i].Cl_type.w == 3.f) atten = calcSpot(L, myLDirRot.xyz, light[i].falloff.xyz) * myAtten; //SPOT
-
+        else if (light[i].Cl_type.w == 3.f) atten = calcSpot(L_VS, myLDirRot.xyz, light[i].falloff.xyz) * myAtten; //SPOT
         vec3 atten2 = atten * light[i].Cl_type.rgb;
 
-        L = normalize(vec3(dot(L, T_VS), dot(L, B_VS), dot(L, N_VS)));
-        vec3 H = normalize(L + V);
-        float HdotL = dot(H, L);
-        float HdotN = dot(H, N_TS);
-        float HdotV = dot(H, V);
-        float HdotT = dot(H, T_VS);
-        float HdotB = dot(H, B_VS);
-        float NdotL = dot(N_TS, L);
+        L_VS = normalize(L_VS);
+        vec3 L_TS = normalize(vec3(dot(L_VS, T_VS), dot(L_VS, B_VS), dot(L_VS, N_VS)));
+        vec3 H_TS = normalize(L_TS + V_TS);
+        vec3 H_VS = normalize(L_VS + V_VS);
+        float HdotL = dot(H_TS, L_TS);
+        float HdotN_TS = dot(H_TS, N_TS);
+        float HdotN_VS = dot(H_VS, N_VS);
+        float NdotL_TS = dot(N_TS, L_TS);
+        float NdotL_VS = dot(N_VS, L_VS);
+
+        float HdotT = dot(H_TS, T_VS);
+        float HdotB = dot(H_TS, B_VS);
 
         vec3 metallicTint = (metallicM == 1.f) ? albedoM : vec3(1.f);
         vec3 directDiff, directSpec;
 
-        if (NdotL > 0.f)
+        if (anisoM == -2.f && NdotL_TS > 0.f)
         {
-            directDiff = oren(NdotL, NdotV, L) * albedoM * (1.f - metallicM);
-            directSpec = ggx(NdotL, NdotV, HdotT, HdotB, HdotN, HdotV) * metallicTint;
-            //sumShadow += shadowRead; //
+            directDiff = oren(NdotL_TS, L_TS) * albedoM * (1.f - metallicM);
+            vec3 sss = calcSSS(NdotL_TS, light[i].Cl_type.rgb);
+            directDiff = mix(directDiff, sss, sssM);
+
+            directSpec = ggx(NdotL_TS, HdotN_TS) * metallicTint;
+            sumShadow += shadowRead; //
         }
 
-        vec3 sss = calcSSS(NdotL, light[i].Cl_type.rgb);
+        else if (anisoM != -2.f && NdotL_VS > 0.f)
+        {
+            vec3 T_VS_use = T_VS;
+            vec3 B_VS_use = B_VS;
 
-        directDiff = mix(directDiff, sss, sssM);
-        sumDirect += atten2 * (directSpec + directDiff);
-        //sumDirect += atten2 * sumShadow * (directSpec + directDiff); //
+            if (anisoM != -1.f)
+            {
+                vec3 anisoDir = vec3(1.f - anisoM, anisoM, 0.f);
+                T_VS_use = normalize(cross(N_VS, vec3(anisoDir)));
+                B_VS_use = normalize(cross(N_VS, T_VS_use));
+            }
+
+            float HdotT_VS = dot(H_VS, T_VS_use);
+            float HdotB_VS = dot(H_VS, B_VS_use);
+
+            directDiff = vec3(0.f);
+            directSpec = ggxAniso(NdotL_VS, HdotT_VS, HdotB_VS, HdotN_VS) * metallicTint;
+        }
+
+        sumDirect += atten2 * sumShadow * (directSpec + directDiff); //
     }
 
     /* INDIRECT */
+    vec3 indirDiff_TS, indirDiff_VS, indirSpec_TS, indirRefr;
     float mipIdx = Kr * (textureQueryLevels(cubeSpecMs) - 1.f);
-    float fresnelRefl_PMREM = eta + (max(1.f -  Kr, eta) - eta) * pow(1.f - NdotV, 5.f);
-
+    float fresnelRefl_PMREM = eta + (max(1.f -  Kr, eta) - eta) * pow(1.f - NdotV_TS, 5.f);
     float ssao = clamp(texture(ssao_64, v.uv).r, 0.f, 1.f);
-    vec3 indirDiff = texture(cubeIrrMs, cubeRefl()).rgb * albedoM * (1.f - metallicM) * ssao;
-    vec3 indirSpec = fresnelRefl_PMREM * textureLod(cubeSpecMs, cubeRefl(), mipIdx).rgb;
-    vec3 indirRefr = textureLod(cubeSpecMs, cubeRefr(0.f), mipIdx).rgb;
 
     if (alphaM == 0.f)
     {
-        indirDiff = vec3(0.f);
-        indirSpec = vec3(0.f);
-        indirRefr = vec3(0.f);
-    }
-
-    if (shadowCast == 1.f)
-    {
-        sumShadow = 1.f; //
-        sumIndirect = sumShadow * (indirDiff + indirSpec);
+        indirDiff_TS = vec3(0.f);
+        indirDiff_VS = vec3(0.f);
+        indirSpec_TS = vec3(0.f);
+//        indirRefr = vec3(0.f);
     }
 
     else
-        sumIndirect = (indirDiff + indirSpec);
+    {
+        indirDiff_TS = texture(cubeIrrMs, cubeRefl_TS()).rgb * albedoM * (1.f - metallicM) * ssao;
+        indirDiff_VS = texture(cubeIrrMs, cubeRefl_VS()).rgb * albedoM * (1.f - metallicM) * ssao;
+        indirSpec_TS = fresnelRefl_PMREM * textureLod(cubeSpecMs, cubeRefl_TS(), mipIdx).rgb;
+//        indirRefr = textureLod(cubeSpecMs, cubeRefr(0.f), mipIdx).rgb;
+    }
 
-//    Ci = vec4(sumDirect + sumIndirect, alphaM);
-    Ci = vec4(sumDirect, alphaM);
+    if (shadowCast == 1.f)
+        sumIndirect = sumShadow * (indirDiff_TS + indirSpec_TS);
+
+    else
+        sumIndirect = (indirDiff_TS + indirSpec_TS);
+
+//    Ci = vec4(sumDirect, alphaM);
+    Ci = vec4(sumDirect + sumIndirect, alphaM);
+
+    if (anisoM != -2.f)
+        Ci = vec4(vec3(sumDirect) + (indirDiff_VS * .2f), alphaM);
+
 
     vec4 myCubeBG = texture(simp_sky_64, v.uv);
     Ci.rgb = mix(myCubeBG.rgb, Ci.rgb, Ci.a);

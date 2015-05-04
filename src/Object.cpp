@@ -84,6 +84,13 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     alphaM->val_s = "BLANK";
     multiObj.push_back(alphaM);
 
+    anisoM = make_shared<MultiAttr>();
+    anisoM->name = "anisoM";
+    anisoM->type = "enum";
+    anisoM->typeX = "OBJ";
+    anisoM->val_s = "BLANK";
+    multiObj.push_back(anisoM);
+
     cubeM = make_shared<MultiAttr>();
     cubeM->name = "cubeM";
     cubeM->type = "enum";
@@ -164,13 +171,6 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     Ko->max = 1.f;
     multiObj.push_back(Ko);
 
-    anisoTgl = make_shared<MultiAttr>();
-    anisoTgl->name = "aniso";
-    anisoTgl->type = "bool";
-    anisoTgl->typeX = "OBJ";
-    anisoTgl->val_b = 0;
-    multiObj.push_back(anisoTgl);
-
     ior = make_shared<MultiAttr>();
     ior->name = "ior";
     ior->type = "float";
@@ -184,7 +184,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     ruffA->name = "ruffA";
     ruffA->type = "vec2";
     ruffA->typeX = "OBJ";
-    ruffA->val_2 = glm::vec2(.08f, .4f);
+    ruffA->val_2 = glm::vec2(.3f, .07f);
     ruffA->min = .001f;
     ruffA->max = 1.f;
     multiObj.push_back(ruffA);
@@ -638,6 +638,7 @@ Object::Object(const Object &obj) : myWin(obj.myWin) //COPY CONSTRUCTOR
             else if (multiObj[i]->name == "shader") shaderSep = multiObj[i];
             else if (multiObj[i]->name == "albedoM") albedoM = multiObj[i];
             else if (multiObj[i]->name == "alphaM") alphaM = multiObj[i];
+            else if (multiObj[i]->name == "anisoM") anisoM = multiObj[i];
             else if (multiObj[i]->name == "metallicM") metallicM = multiObj[i];
             else if (multiObj[i]->name == "normalM") normalM = multiObj[i];
             else if (multiObj[i]->name == "ruffM") ruffM = multiObj[i];
@@ -646,6 +647,7 @@ Object::Object(const Object &obj) : myWin(obj.myWin) //COPY CONSTRUCTOR
                 //sep
                 else if (multiObj[i]->name == "tile") tileSep = multiObj[i];
                 else if (multiObj[i]->name == "albTile") albTile = multiObj[i];
+                else if (multiObj[i]->name == "anisoTile") anisoTile = multiObj[i];
                 else if (multiObj[i]->name == "normTile") normTile = multiObj[i];
                 else if (multiObj[i]->name == "ruffTile") ruffTile = multiObj[i];
                 else if (multiObj[i]->name == "sssTile") sssTile = multiObj[i];
@@ -654,7 +656,6 @@ Object::Object(const Object &obj) : myWin(obj.myWin) //COPY CONSTRUCTOR
             else if (multiObj[i]->name == "Kr") Kr = multiObj[i];
             else if (multiObj[i]->name == "Ksss") Ksss = multiObj[i];
             else if (multiObj[i]->name == "Ko") Ko = multiObj[i];
-            else if (multiObj[i]->name == "aniso") anisoTgl = multiObj[i];
             else if (multiObj[i]->name == "ior") ior = multiObj[i];
             else if (multiObj[i]->name == "ruffA") ruffA = multiObj[i];
             else if (multiObj[i]->name == "ruffD") ruffD = multiObj[i];
@@ -1176,14 +1177,12 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
             else if (proN == "pBaseDef")
             {
                 glUniformMatrix4fv(glGetUniformLocation(proH, "MV"), 1, GL_FALSE, &MV[0][0]);
-//                glUniformMatrix4fv(glGetUniformLocation(proH, "MM"), 1, GL_FALSE, &MM[0][0]);
 
                 glm::vec4 matPrefs0(Kr->val_f, ior->val_f, ruffD->val_f, Ko->val_f);
                 glUniform4fv(glGetUniformLocation(proH, "matPrefs0"), 1, &matPrefs0.r);
 
-                float anisoTglF = (anisoTgl->val_b) ? 1.f : 0.f;
                 float shadowCastF = (shadowCast->val_b) ? 1.f : 0.f;
-                glm::vec4 matPrefs1(ruffA->val_2, anisoTglF, shadowCastF);
+                glm::vec4 matPrefs1(ruffA->val_2, shadowCastF, 0.f);
                 glUniform4fv(glGetUniformLocation(proH, "matPrefs1"), 1, &matPrefs1.r);
 
                 glm::vec4 sssSend(Ksss->val_f, sssSpread->val_f, 0.f, 0.f);
@@ -1199,17 +1198,30 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                     else if (myWin.myGLWidgetSh->allTex[j].name == alphaM->val_s && myWin.myGLWidgetSh->allTex[j].type == "ALPHA")
                         glProgramUniformHandleui64ARB(proH, 1, myWin.myGLWidgetSh->allTex[j].tex_64);
 
-                    else if (myWin.myGLWidgetSh->allTex[j].name == metallicM->val_s && myWin.myGLWidgetSh->allTex[j].type == "METALLIC")
-                        glProgramUniformHandleui64ARB(proH, 2, myWin.myGLWidgetSh->allTex[j].tex_64);
+                    else if (myWin.myGLWidgetSh->allTex[j].name == anisoM->val_s && myWin.myGLWidgetSh->allTex[j].type == "ANISO")
+                    {
+                        int anisoType;
 
-                    else if (myWin.myGLWidgetSh->allTex[j].name == normalM->val_s && myWin.myGLWidgetSh->allTex[j].type == "NORMAL")
+                        if (anisoM->val_s == "BLANK") anisoType = -2; //0
+                        else if (anisoM->val_s == "VIEW") anisoType = -1;
+                        else anisoType = 1;
+
+                        glUniform1i(glGetUniformLocation(proH, "anisoType"), anisoType);
+
+                        glProgramUniformHandleui64ARB(proH, 2, myWin.myGLWidgetSh->allTex[j].tex_64);
+                    }
+
+                    else if (myWin.myGLWidgetSh->allTex[j].name == metallicM->val_s && myWin.myGLWidgetSh->allTex[j].type == "METALLIC")
                         glProgramUniformHandleui64ARB(proH, 3, myWin.myGLWidgetSh->allTex[j].tex_64);
 
-                    else if (myWin.myGLWidgetSh->allTex[j].name == ruffM->val_s && myWin.myGLWidgetSh->allTex[j].type == "RUFF")
+                    else if (myWin.myGLWidgetSh->allTex[j].name == normalM->val_s && myWin.myGLWidgetSh->allTex[j].type == "NORMAL")
                         glProgramUniformHandleui64ARB(proH, 4, myWin.myGLWidgetSh->allTex[j].tex_64);
 
-                    else if (myWin.myGLWidgetSh->allTex[j].name == sssM->val_s && myWin.myGLWidgetSh->allTex[j].type == "SSS")
+                    else if (myWin.myGLWidgetSh->allTex[j].name == ruffM->val_s && myWin.myGLWidgetSh->allTex[j].type == "RUFF")
                         glProgramUniformHandleui64ARB(proH, 5, myWin.myGLWidgetSh->allTex[j].tex_64);
+
+                    else if (myWin.myGLWidgetSh->allTex[j].name == sssM->val_s && myWin.myGLWidgetSh->allTex[j].type == "SSS")
+                        glProgramUniformHandleui64ARB(proH, 6, myWin.myGLWidgetSh->allTex[j].tex_64);
                 }
 
 //                glUniform1i(glGetUniformLocation(proH, "vignette"), myWin.myFSQ->vignette->val_b);
@@ -1296,8 +1308,6 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                 glUniformMatrix4fv(glGetUniformLocation(proH, "PMinv"), 1, GL_FALSE, &PMinv[0][0]);
 
                 glUniformMatrix4fv(glGetUniformLocation(proH, "VM"), 1, GL_FALSE, &VM[0][0]);
-                glUniformMatrix4fv(glGetUniformLocation(proH, "MV"), 1, GL_FALSE, &MV[0][0]);
-                glUniformMatrix4fv(glGetUniformLocation(proH, "MM"), 1, GL_FALSE, &MM[0][0]);
 
                 glm::mat3 VMinv = glm::inverse(glm::mat3(myGL->selCamLi->VM));
                 glUniformMatrix3fv(glGetUniformLocation(proH, "VMinv"), 1, GL_FALSE, &VMinv[0][0]);
@@ -1321,8 +1331,6 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                 }
 
                 glUniform1i(glGetUniformLocation(proH, "vignette"), myWin.myFSQ->vignette->val_b);
-
-                //qDebug() << "NUM_LIGHTS = " << myWin.lightCt;
                 glUniform1i(glGetUniformLocation(proH, "NUM_LIGHTS"), myWin.lightCt);
             }
 
@@ -1778,7 +1786,7 @@ void Object::tileMaps(GLuint proH, QString mode)
 {
     if (mode == "get")
     {
-        glm::vec4 normalTile, albedoAlphaTile, metallicRuffTile, sssTile;
+        glm::vec4 albedoAlphaTile, metallicRuffTile, normalTile, anisoSssTile;
 
         for (unsigned int i = 0; i < multiObj.size(); ++i)
         {
@@ -1795,6 +1803,19 @@ void Object::tileMaps(GLuint proH, QString mode)
                 {
                     albedoAlphaTile.z = multiObj[i].get()->val_2.x;
                     albedoAlphaTile.w = multiObj[i].get()->val_2.y;
+                }
+
+                //anisoSss
+                else if (multiObj[i].get()->name == "anisoT")
+                {
+                    anisoSssTile.x = multiObj[i].get()->val_2.x;
+                    anisoSssTile.y = multiObj[i].get()->val_2.y;
+                }
+
+                else if (multiObj[i].get()->name == "sssT")
+                {
+                    anisoSssTile.z = multiObj[i].get()->val_2.x;
+                    anisoSssTile.w = multiObj[i].get()->val_2.y;
                 }
 
                 //metallicRuff
@@ -1817,20 +1838,13 @@ void Object::tileMaps(GLuint proH, QString mode)
                     normalTile.y = multiObj[i].get()->val_2.y;
                     normalTile.z = normWeight->val_f;
                 }
-
-                //sss
-                else if (multiObj[i].get()->name == "sssT")
-                {
-                    sssTile.x = multiObj[i].get()->val_2.x;
-                    sssTile.y = multiObj[i].get()->val_2.y;
-                }
             }
         }
 
         glUniform4fv(glGetUniformLocation(proH, "albedoAlphaTile"), 1, &albedoAlphaTile.r);
         glUniform4fv(glGetUniformLocation(proH, "metallicRuffTile"), 1, &metallicRuffTile.r);
         glUniform4fv(glGetUniformLocation(proH, "normalTile"), 1, &normalTile.r);
-        glUniform4fv(glGetUniformLocation(proH, "sssTile"), 1, &sssTile.r);
+        glUniform4fv(glGetUniformLocation(proH, "anisoSssTile"), 1, &anisoSssTile.r);
     }
 
     else if (mode == "set")

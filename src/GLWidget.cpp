@@ -979,7 +979,6 @@ void GLWidget::paintGL()
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-
     glDisable(GL_BLEND);
 
     myWin.myGLWidgetSh->glUseProgram2("pBaseDef");

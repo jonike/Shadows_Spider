@@ -108,6 +108,13 @@ void GLWidgetSh::texInit()
     //ALPHA
     allTex.push_back( { "BLANK", "ALPHA", texUp("single/BLANK_white_256.tga") } );
 
+    //ANISO
+    allTex.push_back( { "BLANK", "ANISO", texUp("single/BLANK_white_256.tga") } );
+    allTex.push_back( { "VIEW", "ANISO", texUp("single/BLANK_white_256.tga") } );
+    allTex.push_back( { "rot1", "ANISO", texUp("aniso/rot1.jpg") } );
+    allTex.push_back( { "rot2", "ANISO", texUp("aniso/rot2.jpg") } );
+    allTex.push_back( { "rot3", "ANISO", texUp("aniso/rot3.jpg") } );
+
     //CUBE IRRADIANCE / SPECULAR
     allTex.push_back( { "ennis", "CUBE", dds16fUp("cube/ennis_cube_specular.dds") } );
     allTex.push_back( { "glacier", "CUBE", dds16fUp("cube/glacier_cube_specular.dds") } );

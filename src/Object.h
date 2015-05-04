@@ -42,10 +42,10 @@ public:
     vector<shared_ptr<MultiAttr>> multiObj;
 
     shared_ptr<MultiAttr> name, transformSep, t, r, s, v, bb;
-    shared_ptr<MultiAttr> shaderSep, albedoM, alphaM, cubeM, lensM, metallicM, normalM, ruffM, sssM;
-    shared_ptr<MultiAttr> Kr, Ksss, Ko, anisoTgl, ior, ruffA, ruffD, sssSpread;
+    shared_ptr<MultiAttr> shaderSep, albedoM, alphaM, anisoM, cubeM, lensM, metallicM, normalM, ruffM, sssM;
+    shared_ptr<MultiAttr> Kr, Ksss, Ko, ior, ruffA, ruffD, sssSpread;
     shared_ptr<MultiAttr> shadowCast, backface, Cwire, normVLen, normWeight, piv, rotOrder;
-    shared_ptr<MultiAttr> tileSep, albTile, normTile, ruffTile, sssTile;
+    shared_ptr<MultiAttr> tileSep, albTile, anisoTile, normTile, ruffTile, sssTile;
 
     shared_ptr<MultiAttr> camLiType;
     shared_ptr<MultiAttr> camSep, fov, nearClip, farClip, nearShadow, farShadow, orthoFree, orthoType, orthoZoom;

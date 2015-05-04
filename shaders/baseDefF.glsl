@@ -30,10 +30,11 @@ in Geo
 
 layout(bindless_sampler, location = 0) uniform sampler2D albedoMs;
 layout(bindless_sampler, location = 1) uniform sampler2D alphaMs;
-layout(bindless_sampler, location = 2) uniform sampler2D metallicMs;
-layout(bindless_sampler, location = 3) uniform sampler2D normalMs;
-layout(bindless_sampler, location = 4) uniform sampler2D ruffMs;
-layout(bindless_sampler, location = 5) uniform sampler2D sssMs;
+layout(bindless_sampler, location = 2) uniform sampler2D anisoMs;
+layout(bindless_sampler, location = 3) uniform sampler2D metallicMs;
+layout(bindless_sampler, location = 4) uniform sampler2D normalMs;
+layout(bindless_sampler, location = 5) uniform sampler2D ruffMs;
+layout(bindless_sampler, location = 6) uniform sampler2D sssMs;
 
 //layout(location = 0) out vec4 gbuf0;
 layout(location = 1) out vec4 gbuf1;
@@ -42,18 +43,29 @@ layout(location = 3) out uvec4 gbuf3;
 layout(location = 4) out uvec4 gbuf4;
 layout(location = 5) out uvec4 gbuf5;
 
-uniform vec4 albedoAlphaTile, metallicRuffTile, normalTile, sssTile;
+uniform int anisoType;
+uniform vec4 albedoAlphaTile, metallicRuffTile, normalTile, anisoSssTile;
 uniform vec4 matPrefs0; //(Kr->val_f, eta, ruffD->val_f, Ko->val_f);
-uniform vec4 matPrefs1; //(ruffA->val_2, anisoTglF, shadowCastF);
+uniform vec4 matPrefs1; //(ruffA->val_2, shadowCastF, 0.f);
 uniform vec4 matPrefs2; //(Ksss->val_f, sssSpread->val_f, 0.f, 0.f);
+
+float getAniso()
+{
+    if (anisoType == -2) return -2.f;
+    else if (anisoType == -1) return -1.f;
+    else return texture(anisoMs, anisoSssTile.xy * g.UV).r;
+
+    return 0;
+}
 
 void main()
 {
     vec3 albedoM = texture(albedoMs, albedoAlphaTile.xy * g.UV).rgb;
+    float anisoM  = getAniso();
     float alphaM = texture(alphaMs, albedoAlphaTile.zw * g.UV).a * matPrefs0.w;
     float metallicM = texture(metallicMs, metallicRuffTile.xy * g.UV).r;
     float ruffM = texture(ruffMs, metallicRuffTile.zw * g.UV).r;
-    float sssM = texture(sssMs, sssTile.xy * g.UV).r;
+    float sssM = texture(sssMs, anisoSssTile.zw * g.UV).r;
 
     vec3 N_TS = normalize(texture(normalMs, normalTile.xy * g.UV).rgb * 2.f - 1.f);
     N_TS = vec3(N_TS.r, -N_TS.g, N_TS.b);
@@ -84,6 +96,6 @@ void main()
 
     gbuf5.x = packHalf2x16(vec2(matPrefs2.xy));
     gbuf5.y = packHalf2x16(vec2(sssM, N_TS_mip.z));
-//    gbuf5.z = packHalf2x16(vec2(0.f, 0.f));
+    gbuf5.z = packHalf2x16(vec2(anisoM, 0.f));
 //    gbuf5.w = packHalf2x16(vec2(0.f, 0.f));
 }

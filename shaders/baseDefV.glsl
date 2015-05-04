@@ -28,7 +28,7 @@ layout(location = 3) in vec3 bE;
 layout(location = 4) in vec3 nE;
 
 uniform mat3 NM;
-uniform mat4 MVP, MV, MM;
+uniform mat4 MVP, MV;
 
 out Vert
 {

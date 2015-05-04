@@ -374,8 +374,7 @@ void MainWin::objInit()
         loadO[i]->Cgiz = glm::vec3(1.f, 0.f, 0.f);
         loadO[i]->setTarg(loadO[i]->targO, 0.f);
 //        loadO[i]->lSpotO->val_f = 40.f;
-//        loadO[i]->lInten->val_f = 20.f;
-        loadO[i]->lInten->val_f = 1.f;
+        loadO[i]->lInten->val_f = 5.f;
 
         allObj.push_back(loadO[i]);
     }
@@ -389,8 +388,7 @@ void MainWin::objInit()
         loadO[i]->Cgiz = glm::vec3(1.f, 0.f, 0.f);
         loadO[i]->setTarg(loadO[i]->targO, 0.f);
 //        loadO[i]->lSpotO->val_f = 40.f;
-//        loadO[i]->lInten->val_f = 20.f;
-        loadO[i]->lInten->val_f = 1.f;
+        loadO[i]->lInten->val_f = 5.f;
 
         allObj.push_back(loadO[i]);
     }
@@ -468,7 +466,7 @@ void MainWin::startupScene(QString name)
             for (unsigned int i = 0; i < loadO.size(); ++i)
             {
                 loadO[i]->t->val_3 = glm::vec3(n + (n - .75f) - 15.f, 0.f, 0.f);
-                //                loadO[i]->t->val_3 = glm::vec3(n + .5f, 0.f, 0.f);
+//                loadO[i]->t->val_3 = glm::vec3(n + .5f, 0.f, 0.f);
                 loadO[i]->piv->val_3 = loadO[i]->t->val_3;
                 loadO[i]->s->val_3 = glm::vec3(1.f);
                 allObj.push_back(loadO[i]);
@@ -591,15 +589,6 @@ void MainWin::startupScene(QString name)
 
     else if (name == "teapotPlane")
     {
-//        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "teapot.obj", "OBJ", "teapot", 0);
-//        for (unsigned int i = 0; i < loadO.size(); ++i)
-//        {
-//            loadO[i]->t->val_3 = glm::vec3(3.f, 0.f, 0.f);
-//            loadO[i]->r->val_3 = glm::vec3(0.f, 90.f, 0.f);
-//            loadO[i]->s->val_3 = glm::vec3(1.5f);
-//            allObj.push_back(loadO[i]);
-//        }
-
         loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "teapot.obj", "OBJ", "teapot", 0);
         for (unsigned int i = 0; i < loadO.size(); ++i)
         {
@@ -609,12 +598,12 @@ void MainWin::startupScene(QString name)
             allObj.push_back(loadO[i]);
         }
 
-        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "plane.obj", "OBJ", "planeD", 0);
-        for (unsigned int i = 0; i < loadO.size(); ++i)
-        {
-            loadO[i]->s->val_3 = glm::vec3(20.f);
-            allObj.push_back(loadO[i]);
-        }
+//        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "plane.obj", "OBJ", "planeD", 0);
+//        for (unsigned int i = 0; i < loadO.size(); ++i)
+//        {
+//            loadO[i]->s->val_3 = glm::vec3(20.f);
+//            allObj.push_back(loadO[i]);
+//        }
     }
 
     else if (name == "ddsDebug_sphere")
