@@ -359,10 +359,10 @@ void MainWin::objInit()
     }
 
 //    startupScene("cubemapDebug");
-//    startupScene("ddsDebug_sphere");
 //    startupScene("lotsOfSpheres");
 //    startupScene("lotsOfSpheres2");
-    startupScene("teapotPlane");
+//    startupScene("teapotPlane");
+    startupScene("parentOffset");
 
     /* DEFAULT LIGHTS */
     loadO = myGLWidgetSh->VBOup(0, "SPOT", "light", 0);
@@ -606,15 +606,22 @@ void MainWin::startupScene(QString name)
 //        }
     }
 
-    else if (name == "ddsDebug_sphere")
+    else if (name == "parentOffset")
     {
-        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "sphere.obj", "OBJ", "sphere", 0);
+        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "torus.obj", "OBJ", "torus", 0);
         for (unsigned int i = 0; i < loadO.size(); ++i)
         {
-            loadO[i]->r->val_3 = glm::vec3(0.f, 90.f, 0.f);
-            loadO[i]->s->val_3 = glm::vec3(4.f);
+            loadO[i]->s->val_3 = glm::vec3(1.5f);
             allObj.push_back(loadO[i]);
         }
+
+        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "plane.obj", "OBJ", "plane", 0);
+        for (unsigned int i = 0; i < loadO.size(); ++i)
+        {
+            loadO[i]->s->val_3 = glm::vec3(20.f);
+            allObj.push_back(loadO[i]);
+        }
+
     }
 }
 
@@ -1708,13 +1715,19 @@ void MainWin::parent()
                 if (allObj[i]->parentTo && allObj[i]->parentTo != selB)
                 {
                     if (allObj[i] != selB)
+                    {
                         allObj[i]->parentTo = selB;
+                        allObj[i]->s->val_3 /= allObj[i]->parentTo->s->val_3;
+                    }
                 }
 
                 else
                 {
                     if (allObj[i] != selB)
+                    {
                         allObj[i]->parentTo = selB;
+                        allObj[i]->s->val_3 /= allObj[i]->parentTo->s->val_3;
+                    }
                 }
             }
         }
@@ -1729,7 +1742,10 @@ void MainWin::parentWorld()
     for (unsigned int i = 0; i < allObj.size(); ++i)
     {
         if (allObj[i]->selected)
+        {
+            allObj[i]->s->val_3 *= allObj[i]->parentTo->s->val_3;
             allObj[i]->parentTo = 0;
+        }
     }
 
     myOutliner->refreshOutliner(0);
