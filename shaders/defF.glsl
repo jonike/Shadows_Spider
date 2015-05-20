@@ -56,12 +56,13 @@ layout(bindless_sampler, location = 11) uniform sampler2D sssLookup_64;
 layout(bindless_sampler, location = 12) uniform sampler2D gbuf_DS_64;
 layout(location = 0) out vec4 Ci;
 
-uniform bool vignette;
+uniform bool vign;
+uniform float Kgi;
 uniform int NUM_LIGHTS;
 uniform mat3 VMinv;
 uniform mat4 PMinv, VM, MV;
 
-vec3 getP(vec2 UV)
+vec3 reconstructP(vec2 UV)
 {
     vec4 vProjectedPos = vec4(1.f);
     vProjectedPos.xy = UV * 2.f - 1.f;
@@ -100,7 +101,7 @@ float anisoM = unpackHalf2x16(data5.z).x;
 
 vec3 N_TS = texture(gbuf1_64, v.uv).rgb;
 vec3 N_TS_mip = vec3(unpackHalf2x16(data2.w), unpackHalf2x16(data5.y).y);
-vec3 P_VS = getP(v.uv);
+vec3 P_VS = reconstructP(v.uv);
 
 mat3 TBN = mat3(T_VS, B_VS, N_VS);
 vec3 eye_TS = normalize(P_VS) * TBN;
@@ -290,30 +291,28 @@ void main()
     {
         indirDiff_TS = vec3(0.f);
         indirDiff_VS = vec3(0.f);
-        indirSpec_TS = vec3(0.f);
 //        indirRefr = vec3(0.f);
+        indirSpec_TS = vec3(0.f);
     }
 
     else
     {
         indirDiff_TS = texture(cubeIrrMs, cubeRefl_TS()).rgb * albedoM * (1.f - metallicM) * ssao;
         indirDiff_VS = texture(cubeIrrMs, cubeRefl_VS()).rgb * albedoM * (1.f - metallicM) * ssao;
-        indirSpec_TS = fresnelRefl_PMREM * textureLod(cubeSpecMs, cubeRefl_TS(), mipIdx).rgb;
 //        indirRefr = textureLod(cubeSpecMs, cubeRefr(0.f), mipIdx).rgb;
+        indirSpec_TS = fresnelRefl_PMREM * textureLod(cubeSpecMs, cubeRefl_TS(), mipIdx).rgb;
     }
 
     if (shadowCast == 1.f)
-        sumIndirect = sumShadow * (indirDiff_TS + indirSpec_TS);
+        sumIndirect = sumShadow * (indirDiff_TS + indirSpec_TS) * Kgi;
 
     else
-        sumIndirect = (indirDiff_TS + indirSpec_TS);
+        sumIndirect = (indirDiff_TS + indirSpec_TS) * Kgi;
 
-//    Ci = vec4(sumDirect, alphaM);
-    Ci = vec4(sumDirect + sumIndirect, alphaM);
+    Ci = vec4(sumDirect + (sumIndirect), alphaM);
 
     if (anisoM != -2.f)
-        Ci = vec4(vec3(sumDirect) + (indirDiff_VS * .2f), alphaM);
-
+        Ci = vec4(vec3(sumDirect) + (indirDiff_VS), alphaM);
 
     vec4 myCubeBG = texture(simp_sky_64, v.uv);
     Ci.rgb = mix(myCubeBG.rgb, Ci.rgb, Ci.a);

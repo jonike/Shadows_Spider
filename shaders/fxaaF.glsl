@@ -22,7 +22,7 @@ in Vert
     vec2 uv;
 } v;
 
-layout(bindless_sampler, location = 0) uniform sampler2D aliasedT;
+layout(bindless_sampler, location = 0) uniform sampler2D aliased_64;
 layout(location = 0) out vec3 Ci;
 
 uniform float fxaaSubPix, fxaaEdgeThr, fxaaEdgeThrMin;
@@ -501,5 +501,5 @@ vec4 FxaaPixelShader(
 
 void main()
 {
-    Ci = FxaaPixelShader(aliasedT, v.uv, texelSize, fxaaSubPix, fxaaEdgeThr, fxaaEdgeThrMin).rgb;
+    Ci = FxaaPixelShader(aliased_64, v.uv, texelSize, fxaaSubPix, fxaaEdgeThr, fxaaEdgeThrMin).rgb;
 }

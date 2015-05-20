@@ -362,7 +362,7 @@ void MainWin::objInit()
 //    startupScene("lotsOfSpheres");
 //    startupScene("lotsOfSpheres2");
 //    startupScene("teapotPlane");
-    startupScene("parentOffset");
+    startupScene("SSR");
 
     /* DEFAULT LIGHTS */
     loadO = myGLWidgetSh->VBOup(0, "SPOT", "light", 0);
@@ -598,19 +598,26 @@ void MainWin::startupScene(QString name)
             allObj.push_back(loadO[i]);
         }
 
-//        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "plane.obj", "OBJ", "planeD", 0);
-//        for (unsigned int i = 0; i < loadO.size(); ++i)
-//        {
-//            loadO[i]->s->val_3 = glm::vec3(20.f);
-//            allObj.push_back(loadO[i]);
-//        }
+        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "plane.obj", "OBJ", "planeD", 0);
+        for (unsigned int i = 0; i < loadO.size(); ++i)
+        {
+            loadO[i]->s->val_3 = glm::vec3(20.f);
+            allObj.push_back(loadO[i]);
+        }
     }
 
-    else if (name == "parentOffset")
+    else if (name == "SSR")
     {
+//        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "teapot.obj", "OBJ", "teapot", 0);
         loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "torus.obj", "OBJ", "torus", 0);
         for (unsigned int i = 0; i < loadO.size(); ++i)
         {
+//            loadO[i]->normalM->val_s = "voronoi";
+//            loadO[i]->albedoM->val_s = "brush5";
+
+            loadO[i]->Kr->val_f = .008f;
+            loadO[i]->t->val_3.y = 3.5f;
+//            loadO[i]->t->val_3.y = 10.f;
             loadO[i]->s->val_3 = glm::vec3(1.5f);
             allObj.push_back(loadO[i]);
         }
@@ -618,10 +625,20 @@ void MainWin::startupScene(QString name)
         loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "plane.obj", "OBJ", "plane", 0);
         for (unsigned int i = 0; i < loadO.size(); ++i)
         {
+            loadO[i]->Kr->val_f = .008f;
             loadO[i]->s->val_3 = glm::vec3(20.f);
             allObj.push_back(loadO[i]);
         }
 
+        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "plane.obj", "OBJ", "plane", 0);
+        for (unsigned int i = 0; i < loadO.size(); ++i)
+        {
+            loadO[i]->Kr->val_f = .008f;
+            loadO[i]->r->val_3 = glm::vec3(90.f, 0.f, 0.f);
+            loadO[i]->t->val_3 = glm::vec3(0.f, 10.f, -5.f);
+            loadO[i]->s->val_3 = glm::vec3(20.f);
+            allObj.push_back(loadO[i]);
+        }
     }
 }
 

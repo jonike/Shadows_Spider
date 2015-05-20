@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
     srand(static_cast<int>(time(0)));
 
     MainWin *w = new MainWin();
-    w->setWindowTitle("abj - untitled");
+    w->setWindowTitle("Shadow's Spider - Untitled");
 
     return a.exec();
 }

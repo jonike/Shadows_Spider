@@ -109,6 +109,9 @@ DISTFILES += \
     shaders/stencilGeoV.glsl \
     shaders/wireframeF.glsl \
     shaders/wireframeV.glsl \
-    shaders/bloomCF.glsl
+    shaders/bloomCF.glsl \
+    shaders/ssrF.glsl \
+    shaders/depthRevF.glsl \
+    shaders/depthRevV.glsl
 
 

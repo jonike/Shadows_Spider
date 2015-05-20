@@ -43,7 +43,7 @@ layout(bindless_sampler, location = 7) uniform sampler2D lens;
 
 layout(location = 0) out vec4 Ci;
 
-uniform float bloomI, bloomLensI;
+uniform float bloomInten, bloomLensInten;
 
 void main()
 {
@@ -60,9 +60,9 @@ void main()
     vec3 bloom = (b0*.5f + b1*.6f + b2*.6f + b3*.45f + b4*.35f + b5*.23f) / 2.2f;
     vec3 lensBloom = (b0 + b1*.8f + b2*.6f + b3*.45f + b4*.35f + b5*.23f) / 3.2f;
 
-    Ci.rgb = mix(Ci.rgb, bloom, bloomI);
+    Ci.rgb = mix(Ci.rgb, bloom, bloomInten);
 
-    Ci.r = mix(Ci.r, lensBloom.r, lensT.r * bloomLensI);
-    Ci.g = mix(Ci.g, lensBloom.g, lensT.g * bloomLensI);
-    Ci.b = mix(Ci.b, lensBloom.b, lensT.b * bloomLensI);
+    Ci.r = mix(Ci.r, lensBloom.r, lensT.r * bloomLensInten);
+    Ci.g = mix(Ci.g, lensBloom.g, lensT.g * bloomLensInten);
+    Ci.b = mix(Ci.b, lensBloom.b, lensT.b * bloomLensInten);
 }

@@ -151,7 +151,8 @@ void GLWidget::keyReleaseEvent(QKeyEvent *e)
 
     else if (e->key() == Qt::Key_F3)
     {
-        myWin.myFSQ->vignette->val_b = !myWin.myFSQ->vignette->val_b;
+        myWin.myFSQ->vign->val_b = !myWin.myFSQ->vign->val_b;
+        myWin.attrTable->refreshTable();
     }
 
     else if (e->key() == Qt::Key_F5)
@@ -773,12 +774,13 @@ void GLWidget::paintGL()
             {
                 myWin.allObj[i]->mvpGet(myWin.allGL[GLidx]);
 
-//                if (name == "teapot")
+//                if (name == "torus") //teapot
 //                {
-//                    myWin.allObj[i]->r->val_3.y = myWin.myAnim->dynAnim("cycle") * 50.f;
-//                    myWin.allObj[i]->r->val_3.x = myWin.myAnim->dynAnim("cycle") * 10.f;
-//                    myWin.allObj[i]->t->val_3.z = myWin.myAnim->dynAnim("cycle") * 3.f;
-//                    myWin.allObj[i]->shadowCast->val_b = 0;
+////                    myWin.allObj[i]->r->val_3.y = myWin.myAnim->dynAnim("cycle") * 50.f;
+//                    myWin.allObj[i]->r->val_3.x = myWin.myAnim->dynAnim("cycle") * 200.f;
+////                    myWin.allObj[i]->t->val_3.y = myWin.myAnim->dynAnim("cycle");
+//                    myWin.allObj[i]->t->val_3.y = myWin.myAnim->dynAnim("cycle") * 3.f + 7.f;
+////                    myWin.allObj[i]->shadowCast->val_b = 0;
 //                }
             }
         }
@@ -927,7 +929,7 @@ void GLWidget::paintGL()
 
     for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
     {
-        if (myWin.allObj[i]->type == "OBJ" && !myWin.allObj[i]->bb->val_b && myWin.allObj[i]->selected && myWin.searchUp(myWin.allObj[i]))
+        if (myWin.allObj[i]->selected && myWin.allObj[i]->type == "OBJ" && !myWin.allObj[i]->bb->val_b && myWin.searchUp(myWin.allObj[i]))
         {
             if (myWin.allObj[i]->nType > 0) // nViz
             {
@@ -963,6 +965,32 @@ void GLWidget::paintGL()
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                 glLineWidth(1.f);
             }
+        }
+    }
+
+    //REV DEPTH
+    glBindFramebuffer(GL_FRAMEBUFFER, depthRev_node.fbo1);
+    glViewport(0, 0, depthRev_node.width, depthRev_node.height);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClearColor(0.f, 0.f, 0.f, 0.f);
+
+    glShadeModel(GL_SMOOTH);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glFrontFace(GL_CCW);
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
+    glDisable(GL_BLEND);
+
+    myWin.myGLWidgetSh->glUseProgram2("pDepthRev");
+    for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
+    {
+        if (myWin.allObj[i]->type == "OBJ" && !myWin.allObj[i]->bb->val_b && myWin.searchUp(myWin.allObj[i]))
+        {
+            if (myWin.allObj[i]->backface->val_b) glDisable(GL_CULL_FACE);
+            myWin.allObj[i]->render(myWin.allGL[GLidx]);
+            glEnable(GL_CULL_FACE);
         }
     }
 

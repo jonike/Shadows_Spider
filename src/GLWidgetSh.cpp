@@ -186,7 +186,7 @@ void GLWidgetSh::cubemapGen()
 
     for (int i = 0; i < 6; ++i)
     {
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, cubeFBO_node.tex1, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, cubeFBO_node.tex1_32, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glm::vec3 targ = myCubeShadowTable[i].targ;
@@ -214,7 +214,7 @@ AbjNode GLWidgetSh::cubeDynNode_create(QString name, int widthIn, int heightIn)
 {
     //cubeFBO_node = cubeDynNode_create("cube", 1024, 1024);
     //glMakeTextureHandleNonResidentARB(myGL->cubeFBO_node.tex1_64);
-    //glDeleteTextures(1, &cubeFBO_node.tex1);
+    //glDeleteTextures(1, &cubeFBO_node.tex1_32);
     //glDeleteFramebuffers(1, &cubeFBO_node.fbo1);
 
     GLuint texNew;
@@ -254,7 +254,7 @@ AbjNode GLWidgetSh::cubeDynNode_create(QString name, int widthIn, int heightIn)
     if (glCheckNamedFramebufferStatus(fboNew, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         qDebug() << "error with FBO2_shadowCube_create";
 
-    return { name, widthIn, heightIn, fboNew, texNew, 0, 0, 0, 0 };
+    return { name, widthIn, heightIn, fboNew, texNew };
 }
 
 /* SHADOWS */
@@ -270,11 +270,11 @@ void GLWidgetSh::addDeleteShadows(string type)
                 AbjNode shadow_no = shadowNode_create(myWin.allObj[i]->name->val_s, shadowSize, shadowSize);
 
                 glMakeTextureHandleNonResidentARB(shadow_no.tex1_64);
-                shadow_no.tex1_64 = glGetTextureHandleARB(shadow_no.tex1);
+                shadow_no.tex1_64 = glGetTextureHandleARB(shadow_no.tex1_32);
                 glMakeTextureHandleResidentARB(shadow_no.tex1_64);
 
                 glMakeTextureHandleNonResidentARB(shadow_no.tex2_64);
-                shadow_no.tex2_64 = glGetTextureHandleARB(shadow_no.tex2);
+                shadow_no.tex2_64 = glGetTextureHandleARB(shadow_no.tex2_32);
                 glMakeTextureHandleResidentARB(shadow_no.tex2_64);
 
                 allShadow.push_back(shadow_no);
@@ -288,11 +288,11 @@ void GLWidgetSh::addDeleteShadows(string type)
         for (unsigned int i = 0; i < allShadow.size(); ++i)
         {
             glMakeTextureHandleNonResidentARB(allShadow[i].tex1_64);
-            glDeleteTextures(1, &allShadow[i].tex1);
+            glDeleteTextures(1, &allShadow[i].tex1_32);
             glDeleteFramebuffers(1, &allShadow[i].fbo1);
 
             glMakeTextureHandleNonResidentARB(allShadow[i].tex2_64);
-            glDeleteTextures(1, &allShadow[i].tex2);
+            glDeleteTextures(1, &allShadow[i].tex2_32);
             glDeleteFramebuffers(1, &allShadow[i].fbo2);
         }
 
@@ -397,7 +397,7 @@ AbjNode GLWidgetSh::shadowNode_create(QString name, int widthIn, int heightIn)
     if (glCheckNamedFramebufferStatus(fboNew2, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         qDebug() << "error with shadowNode_create FBO2";
 
-    return { name, widthIn, heightIn, fboNew, texNew, 0, fboNew2, texNew2, 0 };
+    return { name, widthIn, heightIn, fboNew, texNew, 0, fboNew2, texNew2 };
 }
 
 void GLWidgetSh::paintSlow(shared_ptr<GLWidget> myGL)
@@ -579,49 +579,54 @@ GLuint GLWidgetSh::texUp(string pathIn)
 
 void GLWidgetSh::up64N(AbjNode &node, bool up)
 {
+    glMakeTextureHandleNonResidentARB(node.DS_64);
+    glMakeTextureHandleNonResidentARB(node.tex1_64);
+    glMakeTextureHandleNonResidentARB(node.tex2_64);
+
     if (up)
     {
-        glMakeTextureHandleNonResidentARB(node.tex1_64);
-        node.tex1_64 = glGetTextureHandleARB(node.tex1);
+        node.tex1_64 = glGetTextureHandleARB(node.tex1_32);
         glMakeTextureHandleResidentARB(node.tex1_64);
 
-        glMakeTextureHandleNonResidentARB(node.tex2_64);
-        node.tex2_64 = glGetTextureHandleARB(node.tex2);
+        node.tex2_64 = glGetTextureHandleARB(node.tex2_32);
         glMakeTextureHandleResidentARB(node.tex2_64);
+
+        node.DS_64 = glGetTextureHandleARB(node.DS_32);
+        glMakeTextureHandleResidentARB(node.DS_64);
     }
 
     else
     {
-        glMakeTextureHandleNonResidentARB(node.tex1_64);
-        glDeleteTextures(1, &node.tex1);
+        glDeleteTextures(1, &node.DS_32);
+
+        glDeleteTextures(1, &node.tex1_32);
         glDeleteFramebuffers(1, &node.fbo1);
 
-        glMakeTextureHandleNonResidentARB(node.tex2_64);
-        glDeleteTextures(1, &node.tex2);
+        glDeleteTextures(1, &node.tex2_32);
         glDeleteFramebuffers(1, &node.fbo2);
     }
 }
 
 void GLWidgetSh::up64T(GLuint &tex32, GLuint64 &tex64, bool up)
 {
+    glMakeTextureHandleNonResidentARB(tex64);
+
     if (up)
     {
-        glMakeTextureHandleNonResidentARB(tex64);
         tex64 = glGetTextureHandleARB(tex32);
         glMakeTextureHandleResidentARB(tex64);
     }
 
     else
-    {
-        glMakeTextureHandleNonResidentARB(tex64);
         glDeleteTextures(1, &tex32);
-    }
 }
+
 
 void GLWidgetSh::proUp()
 {
     allPro.push_back( { "pBaseDef", createProg("baseDefV.glsl", "baseDefG.glsl", "baseDefF.glsl") } );
     allPro.push_back( { "pDef", createProg("fboV.glsl", "", "defF.glsl") } );
+    allPro.push_back( { "pDepthRev", createProg("depthRevV.glsl", "", "depthRevF.glsl") } );
     allPro.push_back( { "pBB", createProg("bbV.glsl", "", "bbF.glsl") } );
     allPro.push_back( { "pGiz", createProg("gizV.glsl", "", "gizF.glsl") } );
     allPro.push_back( { "pGiz_circ", createProg("giz_circV.glsl", "", "gizF.glsl") } );
@@ -645,6 +650,7 @@ void GLWidgetSh::proUp()
     allPro.push_back( { "pStencilHi", createProg("stencilHiV.glsl", "", "stencilHiF.glsl") } );
     allPro.push_back( { "pStencilGeo", createProg("stencilGeoV.glsl", "", "stencilGeoF.glsl") } );
     allPro.push_back( { "pSSAO", createProg("fboV.glsl", "", "ssaoF.glsl") } );
+    allPro.push_back( { "pSSR", createProg("fboV.glsl", "", "ssrF.glsl") } );
     allPro.push_back( { "pTonemap", createProg("fboV.glsl", "", "tonemapF.glsl") } );
     allPro.push_back( { "pWireframe", createProg("wireframeV.glsl", "", "wireframeF.glsl") } );
 }
@@ -1002,14 +1008,15 @@ vector<shared_ptr<Object>> GLWidgetSh::VBOup(QString path, QString type, QString
         vector<glm::vec3> vertices;
         vector<glm::vec2> uvs;
         vector<glm::vec3> normals;
+        vector<glm::vec3> bE;
 
         if (loadOBJ(pathC, vertices, uvs, normals))
         {
             vector<glm::vec3> tangents;
             vector<glm::vec3> bitangents;
-            computeTangentBasis(vertices, uvs, normals,tangents, bitangents);
 
-            indexVBO_TBN(vertices, uvs, normals, tangents, bitangents, obj->idxE, obj->pE, obj->uvE, obj->nE, obj->tE, obj->bE);
+            computeTangentBasis(vertices, uvs, normals,tangents, bitangents);
+            indexVBO_TBN(vertices, uvs, normals, tangents, bitangents, obj->idxE, obj->pE, obj->uvE, obj->nE, obj->tE, bE);
 
             newO.push_back(obj);
         }
@@ -1017,7 +1024,7 @@ vector<shared_ptr<Object>> GLWidgetSh::VBOup(QString path, QString type, QString
 
     for (unsigned int i = 0; i < newO.size(); ++i)
     {
-        GLuint VBO_P, VBO_UV, VBO_T, VBO_B, VBO_N, VBO_IDX;
+        GLuint VBO_P, VBO_UV, VBO_T, VBO_N, VBO_IDX;
 
         if (!newO[i]->pE.empty() || newO[i]->type == "TXT")
         {
@@ -1030,31 +1037,25 @@ vector<shared_ptr<Object>> GLWidgetSh::VBOup(QString path, QString type, QString
             }
 
             else
-                glNamedBufferData(VBO_P, newO[i]->pE.size() * 12, &newO[i]->pE[0], GL_STATIC_DRAW);
+                glNamedBufferData(VBO_P, newO[i]->pE.size() * 12, &newO[i]->pE[0], GL_STATIC_DRAW); //0
         }
 
         if (!newO[i]->uvE.empty())
         {
             glCreateBuffers(1, &VBO_UV);
-            glNamedBufferData(VBO_UV, newO[i]->uvE.size() * 8, &newO[i]->uvE[0], GL_STATIC_DRAW);
+            glNamedBufferData(VBO_UV, newO[i]->uvE.size() * 8, &newO[i]->uvE[0], GL_STATIC_DRAW); // 1
         }
 
         if (!newO[i]->tE.empty())
         {
             glCreateBuffers(1, &VBO_T);
-            glNamedBufferData(VBO_T, newO[i]->tE.size() * 12, &newO[i]->tE[0], GL_STATIC_DRAW);
-        }
-
-        if (!newO[i]->bE.empty())
-        {
-            glCreateBuffers(1, &VBO_B);
-            glNamedBufferData(VBO_B, newO[i]->bE.size() * 12, &newO[i]->bE[0], GL_STATIC_DRAW);
+            glNamedBufferData(VBO_T, newO[i]->tE.size() * 12, &newO[i]->tE[0], GL_STATIC_DRAW); // 2
         }
 
         if (!newO[i]->nE.empty())
         {
             glCreateBuffers(1, &VBO_N);
-            glNamedBufferData(VBO_N, newO[i]->nE.size() * 12, &newO[i]->nE[0], GL_STATIC_DRAW);
+            glNamedBufferData(VBO_N, newO[i]->nE.size() * 12, &newO[i]->nE[0], GL_STATIC_DRAW); // 4
         }
 
         if (!newO[i]->idxE.empty())
@@ -1073,7 +1074,7 @@ vector<shared_ptr<Object>> GLWidgetSh::VBOup(QString path, QString type, QString
                 ++it;
         }
 
-        GLDataSh.push_back( { newO[i], VBO_P, VBO_UV, VBO_T, VBO_B, VBO_N, VBO_IDX } );
+        GLDataSh.push_back( { newO[i], VBO_P, VBO_UV, VBO_T, VBO_N, VBO_IDX } );
 
         VAOup(newO[i]);
     }
@@ -1198,14 +1199,14 @@ void GLWidgetSh::computeTangentBasis(vector<glm::vec3> &vertices, vector<glm::ve
     for (unsigned int i = 0; i < vertices.size(); i += 3)
     {
         // Shortcuts for vertices
-        glm::vec3 & v0 = vertices[i + 0];
-        glm::vec3 & v1 = vertices[i + 1];
-        glm::vec3 & v2 = vertices[i + 2];
+        glm::vec3 &v0 = vertices[i + 0];
+        glm::vec3 &v1 = vertices[i + 1];
+        glm::vec3 &v2 = vertices[i + 2];
 
         // Shortcuts for UVs
-        glm::vec2 & uv0 = uvs[i + 0];
-        glm::vec2 & uv1 = uvs[i + 1];
-        glm::vec2 & uv2 = uvs[i + 2];
+        glm::vec2 &uv0 = uvs[i + 0];
+        glm::vec2 &uv1 = uvs[i + 1];
+        glm::vec2 &uv2 = uvs[i + 2];
 
         // Edges of the triangle : postion delta
         glm::vec3 deltaPos1 = v1 - v0;
@@ -1225,14 +1226,14 @@ void GLWidgetSh::computeTangentBasis(vector<glm::vec3> &vertices, vector<glm::ve
         tangents.push_back(tangent);
         tangents.push_back(tangent);
 
-        // Same thing for binormals
+        // Same thing for bitangents
         bitangents.push_back(bitangent);
         bitangents.push_back(bitangent);
         bitangents.push_back(bitangent);
     }
 
     // See "Going Further"
-    for (unsigned int i = 0; i < vertices.size(); i += 1)
+    for (unsigned int i = 0; i < vertices.size(); ++i)
     {
         glm::vec3 &n = normals[i];
         glm::vec3 &t = tangents[i];
@@ -1293,7 +1294,8 @@ void GLWidgetSh::indexVBO_TBN(vector<glm::vec3> &in_vertices, vector<glm::vec2> 
         bool found = getSimilarVertexIndex(in_vertices[i], in_uvs[i], in_normals[i], out_vertices, out_uvs, out_normals, index);
 
         if (found)
-        { // A similar vertex is already in the VBO, use it instead !
+        {
+            // A similar vertex is already in the VBO, use it instead !
             out_indices.push_back(index);
 
             // Average the tangents and the bitangents
@@ -1302,7 +1304,8 @@ void GLWidgetSh::indexVBO_TBN(vector<glm::vec3> &in_vertices, vector<glm::vec2> 
         }
 
         else
-        { // If not, it needs to be added in the output data.
+        {
+            // If not, it needs to be added in the output data.
             out_vertices.push_back(in_vertices[i]);
             out_uvs.push_back(in_uvs[i]);
             out_normals.push_back(in_normals[i]);

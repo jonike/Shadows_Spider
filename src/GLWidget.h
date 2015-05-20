@@ -69,16 +69,12 @@ public:
     bool fboReady;
     int currLum = 0;
 
-    AbjNode gbuf_node, deferred_node;
     GLuint gbuf0_32, gbuf1_32, gbuf2_32, gbuf3_32, gbuf4_32, gbuf5_32, gbuf_DS_32;
     GLuint64 gbuf0_64, gbuf1_64, gbuf2_64, gbuf3_64, gbuf4_64, gbuf5_64, gbuf_DS_64;
 
-
-    GLuint simp_sky_32, simp_DS_32, simp_Giz_32;
-    GLuint64 simp_sky_64, simp_DS_64, simp_Giz_64;
     GLuint rttGaussIn32, tempGauss;
     GLuint64 rttGaussIn64, downSamp_64, extractHLfromSrc_64;
-    AbjNode bloomC_node, bloom_node, bloom_gauss_node[6], down_node[6], fxaa_node, lumaAdapt[2], lumaInit, simp_node, ssao_node, ssao_gauss_node, tonemap_node, tonemap_exposure_node;
+    AbjNode gbuf_node, bloomC_node, bloom_node, bloom_gauss_node[6], deferred_node, depthRev_node, down_node[6], fxaa_node, lumaAdapt[2], lumaInit, simp_node, ssao_node, ssao_gauss_node, ssr_node, tonemap_node, tonemap_exposure_node;
     glm::vec2 texelSize;
 
     bool storedPM = 0;
@@ -86,7 +82,6 @@ public:
 
     //DRAG DROP
     bool dragDrop = 0;
-
 
     void resizeGL(int, int);
     void changeCamLiType_();

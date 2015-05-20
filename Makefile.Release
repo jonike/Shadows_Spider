@@ -141,7 +141,10 @@ DIST          = shaders/bbF.glsl \
 		shaders/stencilGeoV.glsl \
 		shaders/wireframeF.glsl \
 		shaders/wireframeV.glsl \
-		shaders/bloomCF.glsl include\stb_image.h \
+		shaders/bloomCF.glsl \
+		shaders/ssrF.glsl \
+		shaders/depthRevF.glsl \
+		shaders/depthRevV.glsl include\stb_image.h \
 		src\Anim.h \
 		src\Attrs.h \
 		src\CamCombo.h \

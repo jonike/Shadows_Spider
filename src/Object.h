@@ -34,7 +34,7 @@ public:
     virtual Object* CloneImpl() const { return(new Object(*this)); }
 
     vector<DynVAO> dynVAO_perGL;
-    vector<glm::vec3> pE, nE, tE, bE;
+    vector<glm::vec3> pE, nE, tE;
     vector<glm::vec2> uvE;
     vector<GLushort> idxE;
     shared_ptr<Object> parentTo;
@@ -53,10 +53,11 @@ public:
     shared_ptr<MultiAttr> lightSep, Cl, lInten, lSpotI, lSpotO;
     shared_ptr<MultiAttr> volSep, volCone, volDist, volS;
 
-    shared_ptr<MultiAttr> bloomSep, bloomI, bloomLensI;
-    shared_ptr<MultiAttr> hdrSep, adaptTime, adaptAuto, expo, vignette, vignetteD;
+    shared_ptr<MultiAttr> bloomSep, bloomInten, bloomLensInten;
+    shared_ptr<MultiAttr> hdrSep, adaptTime, adaptAuto, expo, Kgi, vign, vignDist;
         shared_ptr<MultiAttr> fxaaSep, fxaaBlur, fxaaSubPix, fxaaEdgeThr, fxaaEdgeThrMin;
     shared_ptr<MultiAttr> ssaoSep, ssaoBias, ssaoBlur, ssaoInten, ssaoRad, ssaoRand;
+    shared_ptr<MultiAttr> ssrSep, ssrIter, ssrRefine, ssrPixStride, ssrPixZSize, ssrPixStrideZ, ssrMaxRayDist, ssrEdgeFade, ssrEyeFade0, ssrEyeFade1;
 
     //CAM
     float distO;

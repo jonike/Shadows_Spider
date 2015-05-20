@@ -19,7 +19,6 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-
 #version 450 core
 #extension GL_ARB_bindless_texture : require
 
@@ -28,9 +27,10 @@ in Vert
     vec2 uv;
 } v;
 
-layout(bindless_sampler, location = 0) uniform sampler2D fxaa;
+layout(bindless_sampler, location = 0) uniform sampler2D fxaa_64;
+layout(bindless_sampler, location = 1) uniform sampler2D ssr_64;
 
-uniform bool dragDrop, rezGateTgl;
+uniform bool dragDrop, rezGateTgl, vign;
 uniform vec2 rezGate_LD, rezGate_RU;
 
 out vec3 Ci;
@@ -48,7 +48,7 @@ float rezGateAlpha(vec2 uv, vec2 pLD, vec2 pRU, bool dragDrop)
 
 void main()
 {
-    Ci = texture(fxaa, v.uv).rgb;
+    Ci = texture(fxaa_64, v.uv).rgb + texture(ssr_64, v.uv).rgb;
 
     if (rezGateTgl || dragDrop)
         Ci *= rezGateAlpha(v.uv, rezGate_LD, rezGate_RU, dragDrop);

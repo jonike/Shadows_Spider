@@ -43,10 +43,11 @@ layout(location = 0) out float Ci;
 
 uniform float ssaoBias, ssaoInten, ssaoRad;
 uniform int ssaoRand;
-vec2 screenSize = textureSize(gbuf2_64, 0);
 uniform mat4 PMinv;
 
-vec3 getP(vec2 UV)
+vec2 screenSize = textureSize(gbuf2_64, 0);
+
+vec3 reconstructP(vec2 UV)
 {
     vec4 vProjectedPos = vec4(1.f);
     vProjectedPos.xy = UV * 2.f - 1.f;
@@ -58,7 +59,7 @@ vec3 getP(vec2 UV)
 
 float doSSAO(vec2 tcoord, vec2 uv, vec3 p, vec3 cnorm)
 {
-    vec3 diff = getP(tcoord + uv) - p;
+    vec3 diff = reconstructP(tcoord + uv) - p;
     vec3 v = normalize(diff);
     float d = length(diff);
 
@@ -67,7 +68,7 @@ float doSSAO(vec2 tcoord, vec2 uv, vec3 p, vec3 cnorm)
 
 void main()
 {
-    vec3 P = getP(v.uv);
+    vec3 P_VS = reconstructP(v.uv);
 
     uvec4 data2 = texelFetch(gbuf2_64, ivec2(gl_FragCoord.xy), 0);
     vec3 N_VS = vec3(unpackHalf2x16(data2.y).y, unpackHalf2x16(data2.z));
@@ -77,13 +78,13 @@ void main()
     const vec2 samples[16] = vec2[](vec2(0.53812504, 0.18565957), vec2(0.13790712, 0.24864247), vec2(0.33715037, 0.56794053), vec2(-0.6999805, -0.04511441), vec2(0.06896307, -0.15983082), vec2(0.056099437, 0.006954967), vec2(-0.014653638, 0.14027752), vec2(0.010019933, -0.1924225), vec2(-0.35775623, -0.5301969), vec2(-0.3169221, 0.106360726), vec2(0.010350345, -0.58698344), vec2(-0.08972908, -0.49408212), vec2(0.7119986, -0.0154690035), vec2(-0.053382345, 0.059675813), vec2(0.035267662, -0.063188605), vec2(-0.47761092, 0.2847911));
 
     float ao = 0.f;
-    float rad = ssaoRad / P.z;
+    float rad = ssaoRad / P_VS.z;
 
     for (int i = 0; i < 16; ++i)
     {
         vec2 newCoord = reflect(samples[i], nRand) * rad;
 
-        ao += doSSAO(v.uv, newCoord, P, N_VS);
+        ao += doSSAO(v.uv, newCoord, P_VS, N_VS);
     }
 
     Ci = 1.f - (ao / 16.f);

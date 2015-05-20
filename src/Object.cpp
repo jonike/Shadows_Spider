@@ -117,8 +117,8 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     normalM->name = "normalM";
     normalM->type = "enum";
     normalM->typeX = "OBJ";
-//    normalM->val_s = "BLANK";
-    normalM->val_s = "voronoi";
+    normalM->val_s = "BLANK";
+//    normalM->val_s = "voronoi";
     multiObj.push_back(normalM);
 
     ruffM = make_shared<MultiAttr>();
@@ -422,23 +422,23 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     bloomSep->typeX = "FBO";
     multiObj.push_back(bloomSep);
 
-    bloomI = make_shared<MultiAttr>();
-    bloomI->name = "bloomI";
-    bloomI->type = "float";
-    bloomI->typeX = "FBO";
-    bloomI->val_f = .1f;
-    bloomI->min = 0.f;
-    bloomI->max = 1.f;
-    multiObj.push_back(bloomI);
+    bloomInten = make_shared<MultiAttr>();
+    bloomInten->name = "inten";
+    bloomInten->type = "float";
+    bloomInten->typeX = "FBO";
+    bloomInten->val_f = .1f;
+    bloomInten->min = 0.f;
+    bloomInten->max = 1.f;
+    multiObj.push_back(bloomInten);
 
-    bloomLensI = make_shared<MultiAttr>();
-    bloomLensI->name = "bloomLensI";
-    bloomLensI->type = "float";
-    bloomLensI->typeX = "FBO";
-    bloomLensI->val_f = .2f;
-    bloomLensI->min = 0.f;
-    bloomLensI->max = 1.f;
-    multiObj.push_back(bloomLensI);
+    bloomLensInten = make_shared<MultiAttr>();
+    bloomLensInten->name = "lensInten";
+    bloomLensInten->type = "float";
+    bloomLensInten->typeX = "FBO";
+    bloomLensInten->val_f = .2f;
+    bloomLensInten->min = 0.f;
+    bloomLensInten->max = 1.f;
+    multiObj.push_back(bloomLensInten);
 
     // HDR
     hdrSep = make_shared<MultiAttr>();
@@ -470,20 +470,30 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     expo->min = 1.001f;
     multiObj.push_back(expo);
 
-    vignette = make_shared<MultiAttr>();
-    vignette->name = "vignette";
-    vignette->type = "bool";
-    vignette->typeX = "FBO";
-    vignette->val_b = 0;
-    multiObj.push_back(vignette);
+    Kgi = make_shared<MultiAttr>();
+    Kgi->name = "Kgi";
+    Kgi->type = "float";
+    Kgi->typeX = "FBO";
+//    Kgi->val_f = .2f;
+    Kgi->val_f = .3f;
+    Kgi->min = 0.f;
+    Kgi->max = 1.f;
+    multiObj.push_back(Kgi);
 
-    vignetteD = make_shared<MultiAttr>();
-    vignetteD->name = "vignetteD";
-    vignetteD->type = "float";
-    vignetteD->typeX = "FBO";
-    vignetteD->val_f = 1.5f;
-    vignetteD->min = 1.3f;
-    multiObj.push_back(vignetteD);
+    vign = make_shared<MultiAttr>();
+    vign->name = "vign";
+    vign->type = "bool";
+    vign->typeX = "FBO";
+    vign->val_b = 1;
+    multiObj.push_back(vign);
+
+    vignDist = make_shared<MultiAttr>();
+    vignDist->name = "vignDist";
+    vignDist->type = "float";
+    vignDist->typeX = "FBO";
+    vignDist->val_f = 1.5f;
+    vignDist->min = 1.3f;
+    multiObj.push_back(vignDist);
 
         // FXAA
         fxaaSep = make_shared<MultiAttr>();
@@ -494,7 +504,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
         multiObj.push_back(fxaaSep);
 
         fxaaBlur = make_shared<MultiAttr>();
-        fxaaBlur->name = "fxaaBlur";
+        fxaaBlur->name = "blur";
         fxaaBlur->type = "bool";
         fxaaBlur->typeX = "FBO";
         fxaaBlur->val_b = 1;
@@ -502,7 +512,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
         multiObj.push_back(fxaaBlur);
 
         fxaaSubPix = make_shared<MultiAttr>();
-        fxaaSubPix->name = "fxaaSubPix";
+        fxaaSubPix->name = "subPix";
         fxaaSubPix->type = "float";
         fxaaSubPix->typeX = "FBO";
         fxaaSubPix->val_f = .75f;
@@ -511,7 +521,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
         multiObj.push_back(fxaaSubPix);
 
         fxaaEdgeThr = make_shared<MultiAttr>();
-        fxaaEdgeThr->name = "fxaaEdgeThr";
+        fxaaEdgeThr->name = "edgeThr";
         fxaaEdgeThr->type = "float";
         fxaaEdgeThr->typeX = "FBO";
         fxaaEdgeThr->val_f = .125f;
@@ -520,7 +530,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
         multiObj.push_back(fxaaEdgeThr);
 
         fxaaEdgeThrMin = make_shared<MultiAttr>();
-        fxaaEdgeThrMin->name = "fxaaEdgeThrMin";
+        fxaaEdgeThrMin->name = "edgeThrMin";
         fxaaEdgeThrMin->type = "float";
         fxaaEdgeThrMin->typeX = "FBO";
         fxaaEdgeThrMin->val_f = .0833f;
@@ -536,7 +546,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     multiObj.push_back(ssaoSep);
 
     ssaoBias = make_shared<MultiAttr>();
-    ssaoBias->name = "ssaoBias";
+    ssaoBias->name = "bias";
     ssaoBias->type = "float";
     ssaoBias->typeX = "FBO";
     ssaoBias->val_f = .1f;
@@ -545,14 +555,14 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     multiObj.push_back(ssaoBias);
 
     ssaoBlur = make_shared<MultiAttr>();
-    ssaoBlur->name = "ssaoBlur";
+    ssaoBlur->name = "blur";
     ssaoBlur->type = "bool";
     ssaoBlur->typeX = "FBO";
     ssaoBlur->val_b = 1;
     multiObj.push_back(ssaoBlur);
 
     ssaoInten = make_shared<MultiAttr>();
-    ssaoInten->name = "ssaoInten";
+    ssaoInten->name = "inten";
     ssaoInten->type = "float";
     ssaoInten->typeX = "FBO";
     ssaoInten->val_f = 5.f;
@@ -560,7 +570,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     multiObj.push_back(ssaoInten);
 
     ssaoRad = make_shared<MultiAttr>();
-    ssaoRad->name = "ssaoRad";
+    ssaoRad->name = "rad";
     ssaoRad->type = "float";
     ssaoRad->typeX = "FBO";
     ssaoRad->val_f = .25f;
@@ -568,13 +578,105 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     multiObj.push_back(ssaoRad);
 
     ssaoRand = make_shared<MultiAttr>();
-    ssaoRand->name = "ssaoRand";
+    ssaoRand->name = "rand";
     ssaoRand->type = "int";
     ssaoRand->typeX = "FBO";
     ssaoRand->val_i = 4;
     ssaoRand->min = 2;
     ssaoRand->max = 64;
     multiObj.push_back(ssaoRand);
+
+    //SSR
+    ssrSep = make_shared<MultiAttr>();
+    ssrSep->name = "ssr";
+    ssrSep->type = "sep";
+    ssrSep->typeX = "FBO";
+    ssrSep->tab = 1;
+    multiObj.push_back(ssrSep);
+
+    ssrIter = make_shared<MultiAttr>();
+    ssrIter->name = "iter";
+    ssrIter->type = "int";
+    ssrIter->typeX = "FBO";
+    ssrIter->val_i = 10;
+    ssrIter->min = 1;
+    ssrIter->tab = 1;
+    multiObj.push_back(ssrIter);
+
+    ssrRefine = make_shared<MultiAttr>();
+    ssrRefine->name = "refine";
+    ssrRefine->type = "int";
+    ssrRefine->typeX = "FBO";
+    ssrRefine->val_i = 4;
+    ssrRefine->min = 0;
+    ssrRefine->tab = 1;
+    multiObj.push_back(ssrRefine);
+
+    ssrPixStride = make_shared<MultiAttr>();
+    ssrPixStride->name = "pixStride";
+    ssrPixStride->type = "int";
+    ssrPixStride->typeX = "FBO";
+    ssrPixStride->val_i = 30;
+    ssrPixStride->min = 0;
+    ssrPixStride->tab = 1;
+    multiObj.push_back(ssrPixStride);
+
+    ssrPixStrideZ = make_shared<MultiAttr>();
+    ssrPixStrideZ->name = "pixStrideZ";
+    ssrPixStrideZ->type = "float";
+    ssrPixStrideZ->typeX = "FBO";
+    ssrPixStrideZ->val_f = 100.f;
+    ssrPixStrideZ->min = 0.f;
+    ssrPixStrideZ->tab = 1;
+    multiObj.push_back(ssrPixStrideZ);
+
+    ssrPixZSize = make_shared<MultiAttr>();
+    ssrPixZSize->name = "pixZSize";
+    ssrPixZSize->type = "float";
+    ssrPixZSize->typeX = "FBO";
+    ssrPixZSize->val_f = .1f;
+    ssrPixZSize->min = 0.f;
+    ssrPixZSize->tab = 1;
+    multiObj.push_back(ssrPixZSize);
+
+    ssrMaxRayDist = make_shared<MultiAttr>();
+    ssrMaxRayDist->name = "maxRayDist";
+    ssrMaxRayDist->type = "float";
+    ssrMaxRayDist->typeX = "FBO";
+    ssrMaxRayDist->val_f = 10.f;
+    ssrMaxRayDist->min = 0.f;
+    ssrMaxRayDist->tab = 1;
+    multiObj.push_back(ssrMaxRayDist);
+
+    ssrEdgeFade = make_shared<MultiAttr>();
+    ssrEdgeFade->name = "edgeFade";
+    ssrEdgeFade->type = "float";
+    ssrEdgeFade->typeX = "FBO";
+    ssrEdgeFade->val_f = .75f;
+    ssrEdgeFade->min = 0.f;
+    ssrEdgeFade->max = .99f;
+    ssrEdgeFade->tab = 1;
+    multiObj.push_back(ssrEdgeFade);
+
+    ssrEyeFade0 = make_shared<MultiAttr>();
+    ssrEyeFade0->name = "eyeFade0";
+    ssrEyeFade0->type = "float";
+    ssrEyeFade0->typeX = "FBO";
+    ssrEyeFade0->val_f = 0.f;
+    ssrEyeFade0->min = 0.f;
+    ssrEyeFade0->max = 1.f;
+    ssrEyeFade0->tab = 1;
+    multiObj.push_back(ssrEyeFade0);
+
+    ssrEyeFade1 = make_shared<MultiAttr>();
+    ssrEyeFade1->name = "eyeFade1";
+    ssrEyeFade1->type = "float";
+    ssrEyeFade1->typeX = "FBO";
+    ssrEyeFade1->val_f = 1.f;
+    ssrEyeFade1->min = 0.f;
+    ssrEyeFade1->max = 1.f;
+    ssrEyeFade1->tab = 1;
+    multiObj.push_back(ssrEyeFade1);
 
     populateTexCombos();
 
@@ -702,17 +804,18 @@ Object::Object(const Object &obj) : myWin(obj.myWin) //COPY CONSTRUCTOR
 
             //BLOOM
             else if (multiObj[i]->name == "bloom") bloomSep = multiObj[i];
-            else if (multiObj[i]->name == "bloomI") bloomI = multiObj[i];
-            else if (multiObj[i]->name == "bloomLensI") bloomLensI = multiObj[i];
+            else if (multiObj[i]->name == "bloomInten") bloomInten = multiObj[i];
+            else if (multiObj[i]->name == "bloomLensInten") bloomLensInten = multiObj[i];
             else if (multiObj[i]->name == "lensM") lensM = multiObj[i];
 
             //HDR
             else if (multiObj[i]->name == "hdr") hdrSep = multiObj[i];
             else if (multiObj[i]->name == "expo") expo = multiObj[i];
+            else if (multiObj[i]->name == "Kgi") Kgi = multiObj[i];
             else if (multiObj[i]->name == "adaptTime") adaptTime = multiObj[i];
             else if (multiObj[i]->name == "adaptAuto") adaptAuto = multiObj[i];
-            else if (multiObj[i]->name == "vignette") vignette = multiObj[i];
-            else if (multiObj[i]->name == "vignetteD") vignetteD = multiObj[i];
+            else if (multiObj[i]->name == "vign") vign = multiObj[i];
+            else if (multiObj[i]->name == "vignDist") vignDist = multiObj[i];
 
                 //FXAA
                 else if (multiObj[i]->name == "fxaa") fxaaSep = multiObj[i];
@@ -728,6 +831,18 @@ Object::Object(const Object &obj) : myWin(obj.myWin) //COPY CONSTRUCTOR
             else if (multiObj[i]->name == "ssaoInten") ssaoInten = multiObj[i];
             else if (multiObj[i]->name == "ssaoRad") ssaoRad = multiObj[i];
             else if (multiObj[i]->name == "ssaoRand") ssaoRand = multiObj[i];
+
+            //SSAO
+            else if (multiObj[i]->name == "ssrSep") ssrSep = multiObj[i];
+            else if (multiObj[i]->name == "ssrIter") ssrIter = multiObj[i];
+            else if (multiObj[i]->name == "ssrRefine") ssrRefine = multiObj[i];
+            else if (multiObj[i]->name == "ssrPixStride") ssrPixStride = multiObj[i];
+            else if (multiObj[i]->name == "ssrPixZSize") ssrPixZSize = multiObj[i];
+            else if (multiObj[i]->name == "ssrPixStrideZ") ssrPixStrideZ = multiObj[i];
+            else if (multiObj[i]->name == "ssrMaxRayDist") ssrMaxRayDist = multiObj[i];
+            else if (multiObj[i]->name == "ssrEdgeFade") ssrEdgeFade = multiObj[i];
+            else if (multiObj[i]->name == "ssrEyeFade0") ssrEyeFade0 = multiObj[i];
+            else if (multiObj[i]->name == "ssrEyeFade1") ssrEyeFade1 = multiObj[i];
         }
     }
 
@@ -737,7 +852,6 @@ Object::Object(const Object &obj) : myWin(obj.myWin) //COPY CONSTRUCTOR
     pE = obj.pE;
     nE = obj.nE;
     tE = obj.tE;
-    bE = obj.bE;
     uvE = obj.uvE;
     idxE = obj.idxE;
 
@@ -896,12 +1010,8 @@ void Object::loadVAO(shared_ptr<GLWidget> myGL)
                         glVertexArrayAttribFormat(dynVAO_perGL[i].VAO, 2, 3, GL_FLOAT, GL_FALSE, 0);
 
                         glEnableVertexArrayAttrib(dynVAO_perGL[i].VAO, 3);
-                        glVertexArrayVertexBuffer(dynVAO_perGL[i].VAO, 3, myWin.myGLWidgetSh->GLDataSh[j].VBO_B, 0, 12);
+                        glVertexArrayVertexBuffer(dynVAO_perGL[i].VAO, 3, myWin.myGLWidgetSh->GLDataSh[j].VBO_N, 0, 12);
                         glVertexArrayAttribFormat(dynVAO_perGL[i].VAO, 3, 3, GL_FLOAT, GL_FALSE, 0);
-
-                        glEnableVertexArrayAttrib(dynVAO_perGL[i].VAO, 4);
-                        glVertexArrayVertexBuffer(dynVAO_perGL[i].VAO, 4, myWin.myGLWidgetSh->GLDataSh[j].VBO_N, 0, 12);
-                        glVertexArrayAttribFormat(dynVAO_perGL[i].VAO, 4, 3, GL_FLOAT, GL_FALSE, 0);
 
                         glVertexArrayElementBuffer(dynVAO_perGL[i].VAO, myWin.myGLWidgetSh->GLDataSh[j].VBO_IDX);
                     }
@@ -1224,7 +1334,7 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                         glProgramUniformHandleui64ARB(proH, 6, myWin.myGLWidgetSh->allTex[j].tex_64);
                 }
 
-//                glUniform1i(glGetUniformLocation(proH, "vignette"), myWin.myFSQ->vignette->val_b);
+//                glUniform1i(glGetUniformLocation(proH, "vign"), myWin.myFSQ->vign->val_b);
             }
 
             else if (proN == "pLumaInit")
@@ -1271,8 +1381,8 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                         glProgramUniformHandleui64ARB(proH, 7, myWin.myGLWidgetSh->allTex[j].tex_64);
                 }
 
-                glUniform1f(glGetUniformLocation(proH, "bloomI"), myWin.myFSQ->bloomI->val_f);
-                glUniform1f(glGetUniformLocation(proH, "bloomLensI"), myWin.myFSQ->bloomLensI->val_f);
+                glUniform1f(glGetUniformLocation(proH, "bloomInten"), myWin.myFSQ->bloomInten->val_f);
+                glUniform1f(glGetUniformLocation(proH, "bloomLensInten"), myWin.myFSQ->bloomLensInten->val_f);
             }
 
             else if (proN == "pSSAO")
@@ -1281,7 +1391,7 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                 glUniformMatrix4fv(glGetUniformLocation(proH, "PMinv"), 1, GL_FALSE, &PMinv[0][0]);
 
                 glProgramUniformHandleui64ARB(proH, 0, myGL->gbuf2_64);
-                glProgramUniformHandleui64ARB(proH, 1, myGL->gbuf_DS_64); //
+                glProgramUniformHandleui64ARB(proH, 1, myGL->gbuf_DS_64);
 
                 for (unsigned int j = 0; j < myWin.myGLWidgetSh->allTex.size(); ++j)
                 {
@@ -1293,6 +1403,54 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                 glUniform1f(glGetUniformLocation(proH, "ssaoInten"), ssaoInten->val_f);
                 glUniform1f(glGetUniformLocation(proH, "ssaoRad"), ssaoRad->val_f);
                 glUniform1i(glGetUniformLocation(proH, "ssaoRand"), ssaoRand->val_i);
+            }
+
+            else if (proN == "pSSR")
+            {
+                glUniformMatrix4fv(glGetUniformLocation(proH, "PM"), 1, GL_FALSE, &PM[0][0]);
+
+                glm::mat4 PMinv = glm::inverse(PM);
+                glUniformMatrix4fv(glGetUniformLocation(proH, "PMinv"), 1, GL_FALSE, &PMinv[0][0]);
+
+                // projection matrix that maps to screen pixels (not NDC)
+                glm::mat4 screenScaleM = glm::scale(glm::mat4(), glm::vec3(myGL->width(), myGL->height(), 1.f));
+
+                glm::mat4 trs = glm::mat4(1.f);
+                trs[0][0] = .5f;
+                trs[0][3] = .5f;
+                trs[1][1] = .5f;
+                trs[1][3] = .5f;
+
+                glm::mat4 PM_d3d = PM;
+                float temp23 = PM_d3d[2][3];
+                PM_d3d[2][3] = PM_d3d[3][2];
+                PM_d3d[3][2] = temp23;
+
+                glm::mat4 PM_SS_d3d = PM_d3d * trs * screenScaleM;
+                glUniformMatrix4fv(glGetUniformLocation(proH, "PM_SS_d3d"), 1, GL_FALSE, &PM_SS_d3d[0][0]);
+
+                glUniformMatrix4fv(glGetUniformLocation(proH, "VM"), 1, GL_FALSE, &VM[0][0]);
+
+                glProgramUniformHandleui64ARB(proH, 0, myGL->gbuf2_64);
+                glProgramUniformHandleui64ARB(proH, 1, myGL->gbuf_DS_64);
+                glProgramUniformHandleui64ARB(proH, 2, myGL->depthRev_node.DS_64);
+                glProgramUniformHandleui64ARB(proH, 3, myGL->tonemap_node.tex2_64);
+
+                glUniform1f(glGetUniformLocation(proH, "farClip"), myGL->selCamLi->farClip->val_f);
+                glUniform1f(glGetUniformLocation(proH, "nearClip"), myGL->selCamLi->nearClip->val_f);
+                glUniform1i(glGetUniformLocation(proH, "vign"), myWin.myFSQ->vign->val_b);
+
+                //ssr uniforms
+                glUniform1i(glGetUniformLocation(proH, "ssrIter"), myWin.myFSQ->ssrIter->val_i);
+                glUniform1i(glGetUniformLocation(proH, "ssrRefine"), myWin.myFSQ->ssrRefine->val_i);
+                glUniform1i(glGetUniformLocation(proH, "ssrPixStride"), myWin.myFSQ->ssrPixStride->val_i);
+
+                glUniform1f(glGetUniformLocation(proH, "ssrPixZSize"), myWin.myFSQ->ssrPixZSize->val_f);
+                glUniform1f(glGetUniformLocation(proH, "ssrPixStrideZ"), myWin.myFSQ->ssrPixStrideZ->val_f);
+                glUniform1f(glGetUniformLocation(proH, "ssrMaxRayDist"), myWin.myFSQ->ssrMaxRayDist->val_f);
+                glUniform1f(glGetUniformLocation(proH, "ssrEdgeFade"), myWin.myFSQ->ssrEdgeFade->val_f);
+                glUniform1f(glGetUniformLocation(proH, "ssrEyeFade0"), myWin.myFSQ->ssrEyeFade0->val_f);
+                glUniform1f(glGetUniformLocation(proH, "ssrEyeFade1"), myWin.myFSQ->ssrEyeFade1->val_f);
             }
 
             else if (proN == "pBloomC")
@@ -1319,7 +1477,7 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                 glProgramUniformHandleui64ARB(proH, 4, myGL->gbuf4_64);
                 glProgramUniformHandleui64ARB(proH, 5, myGL->gbuf5_64);
                 glProgramUniformHandleui64ARB(proH, 7, myGL->ssao_gauss_node.tex2_64);
-                glProgramUniformHandleui64ARB(proH, 8, myGL->simp_sky_64);
+                glProgramUniformHandleui64ARB(proH, 8, myGL->simp_node.tex1_64);
                 glBindTextureUnit(9, myWin.cubeM_specular_32);
                 glBindTextureUnit(10, myWin.cubeM_irradiance_32);
                 glProgramUniformHandleui64ARB(proH, 12, myGL->gbuf_DS_64); //
@@ -1330,7 +1488,8 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                         glProgramUniformHandleui64ARB(proH, 11, myWin.myGLWidgetSh->allTex[j].tex_64);
                 }
 
-                glUniform1i(glGetUniformLocation(proH, "vignette"), myWin.myFSQ->vignette->val_b);
+                glUniform1f(glGetUniformLocation(proH, "Kgi"), myWin.myFSQ->Kgi->val_f);
+                glUniform1i(glGetUniformLocation(proH, "vign"), myWin.myFSQ->vign->val_b);
                 glUniform1i(glGetUniformLocation(proH, "NUM_LIGHTS"), myWin.lightCt);
             }
 
@@ -1338,12 +1497,12 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
             {
                 glProgramUniformHandleui64ARB(proH, 0, myGL->bloomC_node.tex1_64);
                 glProgramUniformHandleui64ARB(proH, 1, myGL->lumaAdapt[myGL->currLum].tex1_64);
-                glProgramUniformHandleui64ARB(proH, 2, myGL->simp_Giz_64);
+                glProgramUniformHandleui64ARB(proH, 2, myGL->simp_node.tex2_64);
 
                 glUniform1f(glGetUniformLocation(proH, "expo"), log(myWin.myFSQ->expo->val_f));
                 glUniform1i(glGetUniformLocation(proH, "adaptAuto"), myWin.myFSQ->adaptAuto->val_b);
-//                glUniform1i(glGetUniformLocation(proH, "vignette"), myWin.myFSQ->vignette->val_b);
-                glUniform1f(glGetUniformLocation(proH, "vignetteD"), myWin.myFSQ->vignetteD->val_f);
+//                glUniform1i(glGetUniformLocation(proH, "vign"), myWin.myFSQ->vign->val_b);
+                glUniform1f(glGetUniformLocation(proH, "vignDist"), myWin.myFSQ->vignDist->val_f);
             }
 
             else if (proN == "pFxaa")
@@ -1360,6 +1519,7 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
             else if (proN == "pFinal")
             {
                 glProgramUniformHandleui64ARB(proH, 0, myGL->fxaa_node.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 1, myGL->ssr_node.tex1_64);
 
                 //REZGATE
                 bool rezGateTgl = (myGL->rezGateTgl || myGL->rezGateTgl_sel) ? 1 : 0;
@@ -1367,6 +1527,8 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                 glUniform2fv(glGetUniformLocation(proH, "rezGate_LD"), 1, &myGL->rezGate_LD.x);
                 glUniform2fv(glGetUniformLocation(proH, "rezGate_RU"), 1, &myGL->rezGate_RU.x);
                 glUniform1i(glGetUniformLocation(proH, "dragDrop"), myGL->dragDrop);
+
+                glUniform1i(glGetUniformLocation(proH, "vign"), myWin.myFSQ->vign->val_b);
             }
 
             //GIZ
@@ -1881,7 +2043,6 @@ void Object::delete_()
             glDeleteBuffers(1, &(*it).VBO_P);
             glDeleteBuffers(1, &(*it).VBO_UV);
             glDeleteBuffers(1, &(*it).VBO_T);
-            glDeleteBuffers(1, &(*it).VBO_B);
             glDeleteBuffers(1, &(*it).VBO_N);
             glDeleteBuffers(1, &(*it).VBO_IDX);
             glErrorPrint("Couldnt delete VBOs");

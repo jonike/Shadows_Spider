@@ -169,7 +169,6 @@ public:
 
     GLuint cubeM_specular_32, cubeM_irradiance_32;
 
-
     virtual glm::vec2 toVec2(QPoint in) { return glm::vec2(in.x(), in.y()); }
     virtual QPoint toQP(glm::vec2 in) { return QPoint(in.x, in.y); }
     unsigned int countSel();
@@ -250,10 +249,12 @@ typedef struct
 {
     QString name;
     int width, height;
-    GLuint fbo1, tex1;
+    GLuint fbo1, tex1_32;
     GLuint64 tex1_64;
-    GLuint fbo2, tex2;
+    GLuint fbo2, tex2_32;
     GLuint64 tex2_64;
+    GLuint DS_32;
+    GLuint64 DS_64;
 } AbjNode;
 
 typedef struct
@@ -308,7 +309,7 @@ typedef struct
 typedef struct
 {
     shared_ptr<Object> obj;
-    GLuint VBO_P, VBO_UV, VBO_T, VBO_B, VBO_N, VBO_IDX;
+    GLuint VBO_P, VBO_UV, VBO_T, VBO_N, VBO_IDX;
 } GLSharedData;
 
 typedef struct

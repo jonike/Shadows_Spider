@@ -33,9 +33,10 @@ layout(bindless_sampler, location = 0) uniform sampler2D bloomC_64;
 layout(bindless_sampler, location = 1) uniform sampler2D luma_64;
 layout(bindless_sampler, location = 2) uniform sampler2D giz_64;
 layout(location = 0) out vec3 Ci;
+layout(location = 1) out vec3 Ci_noGiz;
 
-uniform bool adaptAuto, vignette;
-uniform float expo, vignetteD;
+uniform bool adaptAuto, vign;
+uniform float expo, vignDist;
 
 float log10(float x)
 {
@@ -75,8 +76,8 @@ void main()
     vec4 bloomC = texture(bloomC_64, v.uv);
     float lum = max(exp(textureLod(luma_64, v.uv, 10.f).r), .0001f);
 
-    if (vignette)
-        bloomC.rgb *= vignetteOverlay(v.uv * 2.f - 1.f, .55f, vignetteD);
+    if (vign)
+        bloomC.rgb *= vignetteOverlay(v.uv * 2.f - 1.f, .55f, vignDist);
 
     float expoAdapt = expo;
 
@@ -85,6 +86,7 @@ void main()
 
     Ci = bloomC.rgb * expoAdapt / lum;
     Ci = filmicHabel(Ci) / filmicHabel(vec3(11.2f));
+    Ci_noGiz = Ci;
 
     vec4 giz = texture(giz_64, v.uv);
     Ci = mix(Ci.rgb, giz.rgb, giz.a);

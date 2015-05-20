@@ -26,6 +26,8 @@ out Vert
     vec2 uv;
 } v;
 
+uniform mat4 PMinv;
+
 void main()
 {
     const vec4 vertices[] = vec4[](
