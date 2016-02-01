@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -27,15 +27,15 @@ in Vert
     vec2 uv, uv2, uv3, uv4, uv5;
 } v;
 
-layout(bindless_sampler, location = 0) uniform sampler2D downSampT;
+layout(bindless_sampler, location = 0) uniform sampler2D downSamp;
 layout(location = 0) out vec4 Ci;
 
 void main()
 {
-    Ci = (  texture(downSampT, v.uv2) +
-            texture(downSampT, v.uv3) +
-            texture(downSampT, v.uv4) +
-            texture(downSampT, v.uv5)) * .25f;
+    Ci = (  texture(downSamp, v.uv2) +
+            texture(downSamp, v.uv3) +
+            texture(downSamp, v.uv4) +
+            texture(downSamp, v.uv5)) * .25f;
 
     Ci = max(Ci, 0.f);
 }

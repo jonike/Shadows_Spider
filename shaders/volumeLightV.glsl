@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -20,11 +20,6 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #version 450 core
-
-/*
-reference:
-    http://john-chapman-graphics.blogspot.com/2013/01/good-enough-volumetrics-for-spotlights.html
-*/
 
 layout(location = 0) in vec3 pE;
 layout(location = 1) in vec2 uvE;

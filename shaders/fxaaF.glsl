@@ -22,11 +22,11 @@ in Vert
     vec2 uv;
 } v;
 
-layout(bindless_sampler, location = 0) uniform sampler2D aliased_64;
+layout(bindless_sampler, location = 0) uniform sampler2D aliased;
 layout(location = 0) out vec3 Ci;
 
-uniform float fxaaSubPix, fxaaEdgeThr, fxaaEdgeThrMin;
-uniform vec2 texelSize;
+uniform vec4 comboU0; //vec4(fxaaSubPix, fxaaEdgeThr, fxaaEdgeThrMin)
+uniform bool debug0;
 
 #define FXAA_QUALITY__PRESET 29
 
@@ -501,5 +501,7 @@ vec4 FxaaPixelShader(
 
 void main()
 {
-    Ci = FxaaPixelShader(aliased_64, v.uv, texelSize, fxaaSubPix, fxaaEdgeThr, fxaaEdgeThrMin).rgb;
+    vec2 texelSize = 1.f / textureSize(aliased, 0);
+
+    Ci = FxaaPixelShader(aliased, v.uv, texelSize, comboU0.x, comboU0.y, comboU0.z).rgb;
 }

@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -24,65 +24,6 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "MainWin.h"
 
-typedef struct
-{
-    QString name;
-    GLuint pro;
-} Pro;
-
-typedef struct
-{
-    QString name, type;
-    GLuint tex_32;
-    GLuint64 tex_64;
-} Tex;
-
-typedef struct
-{
-    unsigned int dwSize;
-    unsigned int dwFlags;
-    unsigned int dwHeight;
-    unsigned int dwWidth;
-    unsigned int dwPitchOrLinearSize;
-    unsigned int dwDepth;
-    unsigned int dwMipMapCount;
-    unsigned int dwReserved1[11];
-
-    struct
-    {
-        unsigned int dwSize;
-        unsigned int dwFlags;
-        unsigned int dwFourCC;
-        unsigned int dwRGBBitCount;
-        unsigned int dwRBitMask;
-        unsigned int dwGBitMask;
-        unsigned int dwBBitMask;
-        unsigned int dwAlphaBitMask;
-    } sPixelFormat;
-
-    struct
-    {
-        unsigned int dwCaps1;
-        unsigned int dwCaps2;
-        unsigned int dwDDSX;
-        unsigned int dwReserved;
-    } sCaps;
-
-    unsigned int dwReserved2;
-
-} ddsHeader;
-
-struct lightUBO
-{
-    glm::vec4 Cl_type, falloff, lDirRot, lP;
-//    glm::vec4 ShadowCoord;
-};
-
-//struct baseUBO
-//{
-//    glm::mat4 NM, MV;
-//};
-
 class GLWidgetSh : public QGLWidget
 {
     Q_OBJECT
@@ -94,46 +35,49 @@ public:
     vector<shared_ptr<Object>> newO;
     vector<Pro> allPro;
     vector<AbjNode> allShadow;
-    vector<Tex> allTex;
+    vector<Map> allMaps;
+    vector<shared_ptr<Brush>> allBrushes;
 
-    GLuint pro, ubo_lights, ubo_;
-    QString proN;
-    bool dontRename = 0;
-    bool UBO_light_needsUp = 1;
+    GLuint pro, UBO_lights;
+//    GLuint pro, UBO_lights, UBO_SSAO;
+    string proN;
+    vector<string> typeList;
+
+    bool dontRename = false;
+    bool UBO_light_needsUp = true;
+    bool brushOutlineUpB = false;
+
+    AbjNode cubeFBON;
+    glm::mat4 dynVM;
+
+    shared_ptr<Brush> selBrush, selEraser;
+    shared_ptr<Object> shadowObj;
+    glm::mat4 negCubeCenter, negCubeCenter2, VMcubeShadow;
 
     void UBO_update();
     void UBO_init();
+    void brushInit();
+    void mapInit();
 
-    //LIGHT
-    int shadowIdx;
-    glm::mat4 negCubeCenter, negCubeCenter2, VMcubeShadow;
-
-    void texInit();
-    GLuint dds16fUp(string);
-    GLuint texUp(string);
-    void writeShadow(int);
+    void writeShadow(shared_ptr<Object>);
     void addDeleteShadows(string);
-    AbjNode shadowNode_create(QString, int, int);
-    AbjNode cubeDynNode_create(QString, int, int);
+    AbjNode shadowNode_create(string, int, int);
+    AbjNode cubeDynNode_create(string, int, int);
     void cubemapGen();
-
-    AbjNode cubeFBO_node;
-    glm::mat4 dynVM;
 
     void up64N(AbjNode &, bool);
     void up64T(GLuint &, GLuint64 &, bool);
+    AbjNode topLayer(Map);
 
-    //PAINT
-    void paintSlow(shared_ptr<GLWidget>);
+    void glUseProgram2(string);
+    void proInit();
 
-    void glUseProgram2(QString);
-    void proUp();
-
+    AbjNode texN_create(string, string, string, int);
     void VAOup(shared_ptr<Object>);
-    vector<shared_ptr<Object>> VBOup(QString, QString, QString, shared_ptr<Object>);
+    vector<shared_ptr<Object>> VBOup(string, string, string, shared_ptr<Object>);
 
     //OPENGL-TUTORIAL.ORG
-    bool loadOBJ(const char *, vector<glm::vec3> &, vector<glm::vec2> &, vector<glm::vec3> &);
+    bool loadNewOBJ(const char *, vector<glm::vec3> &, vector<glm::vec2> &, vector<glm::vec3> &);
     void computeTangentBasis(vector<glm::vec3> &, vector<glm::vec2> &, vector<glm::vec3> &, vector<glm::vec3> &, vector<glm::vec3> &);
     bool is_near(float, float);
     bool getSimilarVertexIndex(glm::vec3 &, glm::vec2 &, glm::vec3 &, vector<glm::vec3> &, vector<glm::vec2> &, vector<glm::vec3> &, unsigned short &);
@@ -147,9 +91,15 @@ public:
     char* shader_read(const char *);
     void shader_error(GLuint);
 
+    //SSAO NEW
+    vector<glm::vec3> ssaoNoise, ssaoKernel32, ssaoKernel64;
+    GLuint ssaoNoiseTex_32;
+    GLuint64 ssaoNoiseTex_64;
+    void ssaoUp_dynamic();
+    float lerp(float, float, float);
+
 protected:
     void initializeGL();
-
 };
 
 #endif // GLWIDGETSH

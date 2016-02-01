@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -31,16 +31,16 @@ public:
     MainWin &myWin;
     RadPop(MainWin &, QWidget *parent = 0);
 
-    vector<PopSetup> allPop;
     shared_ptr<GLWidget> myGL;
 
-    bool quitTgl = 0;
+    vector<PopSetup> allPop;
+
+    bool quitTgl = false;
     float radius = 100;
 
     glm::vec2 startP, newP;
     QPainter painter;
-    QString popName;
-
+    string popName;
 
     void buttonInit(vector<PopSetup>);
 
@@ -51,9 +51,9 @@ protected:
     void paintEvent(QPaintEvent *);
 
     void hoverHighlight();
-    void hitFind(QString);
-    bool findCorrectAttrTable(QString);
-    bool selCamLiTextColor(QString, QString);
+    void hitFind(string);
+    bool findCorrectAttrTable(string);
+    bool selCamLiTextColor(string, string);
 };
 
 #endif // RADPOP_H

@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -19,14 +19,14 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-#include "MainWin.h"
+#include "Attrs.h"
 
 Attrs::Attrs(MainWin &myWinTemp, QWidget *parent) : QTableWidget(parent), myWin(myWinTemp)
 {
     setRowCount(1);
     setColumnCount(2);
-    setFrameShadow(QFrame::Raised); //
-    setItemDelegate(myWin.myFocus); //
+    setFrameShadow(QFrame::Raised);
+    setItemDelegate(myWin.myFocus);
     setAlternatingRowColors(1);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setEditTriggers(QAbstractItemView::DoubleClicked | QAbstractItemView::EditKeyPressed);
@@ -45,13 +45,13 @@ Attrs::Attrs(MainWin &myWinTemp, QWidget *parent) : QTableWidget(parent), myWin(
     setItem(0, 0, selObjN);
     setSpan(0, 0, 1, 2); //sets row 0, col 0 to span both columns
 
-    writeAttrTgl = 1;
+    writeAttrTgl = true;
     connect(this, &Attrs::itemChanged, this, &Attrs::writeValue);
 
     viewport()->setMouseTracking(1);
     installEventFilter(this);
 
-    altTgl = ctrlTgl = shiftTgl = qTgl = lmbTgl = mmbTgl = camAttrWrongType = 0;
+    altTgl = ctrlTgl = shiftTgl = lmbTgl = mmbTgl = camAttrWrongType = false;
     tabIdx = 0;
 
     //CTRL+ALT shortcut and RMB has menu pop where you can reset, save, load etc
@@ -80,8 +80,8 @@ void Attrs::closeEditor(QWidget* editor, QAbstractItemDelegate::EndEditHint hint
     {
         hint = QAbstractItemDelegate::NoHint;
 
-        QModelIndex currIdx = currentIndex();
-        QModelIndex nextIdx = model()->index(currIdx.row() + 1, 1);
+        auto currIdx = currentIndex();
+        auto nextIdx = model()->index(currIdx.row() + 1, 1);
 
         selectionModel()->select(nextIdx, QItemSelectionModel::Select);
         setCurrentIndex(nextIdx);
@@ -96,19 +96,30 @@ bool Attrs::eventFilter(QObject *obj, QEvent *e)
 {
     if (e->type() == QEvent::KeyPress)
     {
-        QKeyEvent *ke = static_cast<QKeyEvent*>(e);
+        auto *ke = static_cast<QKeyEvent*>(e);
 
         if (ke->key() == Qt::Key_Tab)
         {
-            QModelIndex currIdx = currentIndex();
-            QModelIndex nextIdx = model()->index(currIdx.row() + 1, 1);
+            auto currIdx = currentIndex();
+            auto nextIdx = model()->index(currIdx.row() + 1, 1);
 
             selectionModel()->select(nextIdx, QItemSelectionModel::Select);
             setCurrentIndex(nextIdx);
             setFocus();
             edit(nextIdx);
 
-            return 1;
+            return true;
+        }
+
+        else if (ke->key() == Qt::Key_I || Qt::Key_K)
+        {
+            if (myWin.myPaintWin->isVisible())
+            {
+                cout << "I or K is being PRESSED and paintWin is visible" << endl;
+                e->ignore(); // no "I" cell highlight while keeping paintWin open
+
+                return false;
+            }
         }
     }
 
@@ -121,21 +132,21 @@ void Attrs::keyPressEvent(QKeyEvent *e)
     {
         if (!undoDragAttrs.empty())
         {
-            for (unsigned int i = 0; i < undoDragAttrs.size(); ++i)
+            for (auto &i : undoDragAttrs)
             {
-                for (unsigned int j = 0; j < multiVec.size(); ++j)
+                for (auto &j : multiVec)
                 {
-                    if (undoDragAttrs[i]->name == multiVec[j]->name)
+                    if (i->name == j->name)
                     {
-                        if (undoDragAttrs[i]->type == "bool")
+                        if (i->type == "bool")
                         {
-                            multiVec[j]->val_b = undoDragAttrs[i]->val_b;
+                            j->val_b = i->val_b;
 
-                            if (multiVec[j]->name == "framed")
+                            if (j->name == "framed")
                             {
                                 Qt::WindowFlags framedOrFrameless;
 
-                                if (!multiVec[j]->val_b)
+                                if (!j->val_b)
                                     framedOrFrameless = Qt::FramelessWindowHint;
 
                                 myWin.hide();
@@ -144,52 +155,56 @@ void Attrs::keyPressEvent(QKeyEvent *e)
                             }
                         }
 
-                        else if (undoDragAttrs[i]->type == "float")
+                        else if (i->type == "float")
                         {
-                            multiVec[j]->val_f = undoDragAttrs[i]->val_f;
+                            j->val_f = i->val_f;
 
-                            if (multiVec[j]->name == "fov")
+                            if (j->name == "fov")
                             {
-                                for (unsigned int k = 0; k < myWin.allGL.size(); ++k)
-                                    myWin.allGL[k]->resizeGL(myWin.allGL[k]->width(), myWin.allGL[k]->height());
+                                for (auto &k : myWin.allGL)
+                                    k->resizeGL(k->width(), k->height());
                             }
                         }
 
-                        else if (undoDragAttrs[i]->type == "int")
-                            multiVec[j]->val_i = undoDragAttrs[i]->val_i;
+                        else if (i->type == "int")
+                            j->val_i = i->val_i;
 
 
-                        else if (undoDragAttrs[i]->type == "vec3")
+                        else if (i->type == "vec3")
                         {
                             //undo pivot
-                            for (unsigned int k = 0; k < myWin.allObj.size(); ++k)
+                            for (auto &k : myWin.allObj)
                             {
-                                if (myWin.allObj[k]->selected)
+                                if (k->selected)
                                 {
-                                    float offSetPivotPos = myWin.allObj[k]->piv->val_3[undoDragAttrs[i]->idx_3] - multiVec[j]->val_3[undoDragAttrs[i]->idx_3];
+                                    float offSetPivotPos = k->piv->val_3[i->idx_3] - j->val_3[i->idx_3];
 
-                                    if (multiVec[j]->name == "t") //ALSO MOVE PIVOT
-                                        myWin.allObj[k]->piv->val_3[undoDragAttrs[i]->idx_3] = undoDragAttrs[i]->val_3[undoDragAttrs[i]->idx_3] + offSetPivotPos;
+                                    if (j->name == "t") //ALSO MOVE PIVOT
+                                        k->piv->val_3[i->idx_3] = i->val_3[i->idx_3] + offSetPivotPos;
                                 }
                             }
 
-                            multiVec[j]->val_3[undoDragAttrs[i]->idx_3] = undoDragAttrs[i]->val_3[undoDragAttrs[i]->idx_3];
+                            j->val_3[i->idx_3] = i->val_3[i->idx_3];
                         }
 
                     }
                 }
             }
 
-            refreshTable();
+            refreshAndKeepSelAfterMMBRelease();
             myWin.setLightsDirty();
         }
-
     }
 
-    else if (e->key() == Qt::Key_Alt) altTgl = 1;
-    else if (e->key() == Qt::Key_Control) ctrlTgl = 1;
-    else if (e->key() == Qt::Key_Shift) shiftTgl = 1;
-    else if (e->key() == Qt::Key_Q) qTgl = 1;
+    else if (e->key() == Qt::Key_I)
+        myWin.PaintWinTgl(1, 0);
+
+    else if (e->key() == Qt::Key_K)
+        myWin.PaintWinTgl(1, 1);
+
+    else if (e->key() == Qt::Key_Alt) altTgl = true;
+    else if (e->key() == Qt::Key_Control) ctrlTgl = true;
+    else if (e->key() == Qt::Key_Shift) shiftTgl = true;
 
     if (ctrlTgl && e->key() == Qt::Key_Q)
         myWin.quitConfirm();
@@ -202,9 +217,27 @@ void Attrs::keyPressEvent(QKeyEvent *e)
 
 void Attrs::keyReleaseEvent(QKeyEvent *e)
 {
-    if (e->key() == Qt::Key_Alt) altTgl = 0;
-    else if (e->key() == Qt::Key_Control) ctrlTgl = 0;
-    else if (e->key() == Qt::Key_Shift) shiftTgl = 0;
+    if (e->isAutoRepeat())
+        return;
+
+    else if (e->key() == Qt::Key_Alt) altTgl = false;
+    else if (e->key() == Qt::Key_Control) ctrlTgl = false;
+    else if (e->key() == Qt::Key_Shift) shiftTgl = false;
+
+    else if (e->key() == Qt::Key_I)
+    {
+        if (myWin.myPaintWin->stackedMain->currentIndex() == 0)
+            myWin.PaintWinTgl(0, 999);
+    }
+
+    else if (e->key() == Qt::Key_K)
+    {
+        if (myWin.myPaintWin->stackedMain->currentIndex() == 1)
+            myWin.PaintWinTgl(0, 999);
+    }
+
+    else if (e->key() == Qt::Key_QuoteLeft)
+        myWin.myPrefWin->hide();
 
     setCursor(Qt::ArrowCursor);
 }
@@ -213,46 +246,46 @@ void Attrs::mousePressEvent(QMouseEvent *e)
 {
     if (e->button() == Qt::LeftButton)
     {
-        lmbTgl = 1;
+        lmbTgl = true;
 
-        QTableWidget::mousePressEvent(e);
+        return QTableWidget::mousePressEvent(e);
     }
 
     if (e->button() == Qt::MiddleButton)
-        mmbTgl = 1;
+        mmbTgl = true;
 
     if (e->button() == Qt::RightButton)
     {
-        QTableWidgetItem *myItem = itemAt(e->pos());
+        auto *myItem = itemAt(e->pos());
 
         if (myItem)
         {
-            for (unsigned int i = 0; i < multiVec.size(); ++i)
+            for (auto &i : multiVec)
             {
-                if (myItem->text() == multiVec[i]->name && multiVec[i]->type == "enum")
+                if (myItem->text().toStdString() == i->name && i->type == "enum")
                 {
                     vector<PopSetup> radPop;
+                    vector<string> usableList = i->comboList;
 
-                    QStringList usableList = multiVec[i]->comboList;
-
-                    bool reversePop = 0;
+                    auto reversePop = false;
 
                     if (reversePop)
                     {
-                        for (int i = usableList.size(); --i > -1; )
-                            radPop.push_back( { usableList[i], "RAD", 75, 50 } );
+                        for (size_t j = usableList.size(); --j > -1; )
+                            radPop.push_back( { usableList[j], "RAD", 75, 50 } );
                     }
 
                     else
                     {
-                        for (int i = 0; i < usableList.size(); ++i)
-                            radPop.push_back( { usableList[i], "RAD", 75, 50 } );
+                        for (auto &j : usableList)
+                        radPop.push_back( { j, "RAD", 75, 50 } );
                     }
 
-                    myWin.myRadPop->popName = myItem->text();
+                    myWin.myRadPop->popName = myItem->text().toStdString();
 
                     myWin.myRadPop->radius = 0;
-                    for (int i = 0; i < usableList.size(); ++i)
+
+                    for (int j = 0; j < usableList.size(); ++j)
                         myWin.myRadPop->radius += 14;
 
                     myWin.myRadPop->radius = glm::max(100, (int)myWin.myRadPop->radius);
@@ -266,32 +299,21 @@ void Attrs::mousePressEvent(QMouseEvent *e)
             }
         }
     }
+
 }
 
 void Attrs::mouseReleaseEvent(QMouseEvent *e)
 {
     if (e->button() == Qt::LeftButton)
-        lmbTgl = 0;
+        lmbTgl = false;
 
     else if (e->button() == Qt::MiddleButton)
     {
-        mmbTgl = 0;
+        mmbTgl = false;
         undoDragAttrs.clear();
-        setCursor(Qt::ArrowCursor);
 
         if (refreshRowH_onRelease)
             refreshRowH();
-
-        keepSelAfterMMBRelease();
-    }
-
-    else if (e->button() == Qt::RightButton && tableType != "attr")
-    {
-        if (altTgl && ctrlTgl)
-        {
-            qDebug() << "show reset settings";
-            RMB_menu.exec(mapToGlobal(e->pos()));
-        }
     }
 
     setCursor(Qt::ArrowCursor);
@@ -301,29 +323,37 @@ void Attrs::mouseReleaseEvent(QMouseEvent *e)
 
 void Attrs::mouseMoveEvent(QMouseEvent *e)
 {
-    QTableWidgetItem *myItem = itemAt(e->pos());
+    auto *myItem = itemAt(e->pos());
 
     if (myItem && lmbTgl)
         myItem->setSelected(1);
 
-    pOld = pNew;
-    pNew = myWin.toVec2(e->pos());
-    pD =  pNew - pOld;
+    pMouseOld = pMouseNew;
+    pMouseNew = myWin.toVec2(e->pos());
+    pMouseDiff =  pMouseNew - pMouseOld;
 
     if (mmbTgl && !selectedItems().empty())
     {
         setCursor(Qt::SizeHorCursor);
-        vDrag(pD);
+        vDrag(pMouseDiff);
     }
 }
 
 void Attrs::cutTable_init()
 {
+    boundingBox = make_shared<MultiAttr>();
+    boundingBox->name = "boundingBox";
+    boundingBox->type = "QShortcut";
+    boundingBox->val_s = "CTRL+B";
+    boundingBox->cut = new QShortcut(QKeySequence::fromString(QString::fromStdString(boundingBox->val_s)), &myWin);
+    connect(boundingBox->cut, SIGNAL(activated()), &myWin, SLOT(boundingBoxTgl()));
+    multiCut.push_back(boundingBox);
+
     deleteS = make_shared<MultiAttr>();
     deleteS->name = "delete";
     deleteS->type = "QShortcut";
     deleteS->val_s = "DELETE";
-    deleteS->cut = new QShortcut(QKeySequence::fromString(deleteS->val_s), &myWin);
+    deleteS->cut = new QShortcut(QKeySequence::fromString(QString::fromStdString(deleteS->val_s)), &myWin);
     connect(deleteS->cut, SIGNAL(activated()), &myWin, SLOT(delete_()));
     multiCut.push_back(deleteS);
 
@@ -331,7 +361,7 @@ void Attrs::cutTable_init()
     dupe->name = "dupe";
     dupe->type = "QShortcut";
     dupe->val_s = "CTRL+D";
-    dupe->cut = new QShortcut(QKeySequence::fromString(dupe->val_s), &myWin);
+    dupe->cut = new QShortcut(QKeySequence::fromString(QString::fromStdString(dupe->val_s)), &myWin);
     connect(dupe->cut, SIGNAL(activated()), &myWin, SLOT(dupe()));
     multiCut.push_back(dupe);
 
@@ -339,7 +369,7 @@ void Attrs::cutTable_init()
     hide->name = "hide";
     hide->type = "QShortcut";
     hide->val_s = "H";
-    hide->cut = new QShortcut(QKeySequence::fromString(hide->val_s), &myWin);
+    hide->cut = new QShortcut(QKeySequence::fromString(QString::fromStdString(hide->val_s)), &myWin);
     connect(hide->cut, SIGNAL(activated()), &myWin, SLOT(hide()));
     multiCut.push_back(hide);
 
@@ -347,31 +377,31 @@ void Attrs::cutTable_init()
     unHide->name = "unHide";
     unHide->type = "QShortcut";
     unHide->val_s = "SHIFT+H";
-    unHide->cut = new QShortcut(QKeySequence::fromString(unHide->val_s), &myWin);
+    unHide->cut = new QShortcut(QKeySequence::fromString(QString::fromStdString(unHide->val_s)), &myWin);
     connect(unHide->cut, SIGNAL(activated()), &myWin, SLOT(unHide()));
     multiCut.push_back(unHide);
 
     invertSel = make_shared<MultiAttr>();
     invertSel->name = "invertSel";
     invertSel->type = "QShortcut";
-    invertSel->val_s = "[";
-    invertSel->cut = new QShortcut(QKeySequence::fromString(invertSel->val_s), &myWin);
+    invertSel->val_s = "CTRL+SHIFT+I";
+    invertSel->cut = new QShortcut(QKeySequence::fromString(QString::fromStdString(invertSel->val_s)), &myWin);
     connect(invertSel->cut, SIGNAL(activated()), &myWin, SLOT(invertSel()));
     multiCut.push_back(invertSel);
 
     gizSpace = make_shared<MultiAttr>();
     gizSpace->name = "gizSpace";
-    gizSpace->type = "QString";
+    gizSpace->type = "string";
     gizSpace->val_s = "ALT+X";
-    gizSpace->cut = new QShortcut(QKeySequence::fromString(gizSpace->val_s), &myWin);
+    gizSpace->cut = new QShortcut(QKeySequence::fromString(QString::fromStdString(gizSpace->val_s)), &myWin);
     connect(gizSpace->cut, SIGNAL(activated()), &myWin, SLOT(gizSpaceSwitch()));
     multiCut.push_back(gizSpace);
 
     parent = make_shared<MultiAttr>();
     parent->name = "parent";
-    parent->type = "QString";
-    parent->val_s = "P";
-    parent->cut = new QShortcut(QKeySequence::fromString(parent->val_s), &myWin);
+    parent->type = "string";
+    parent->val_s = "CTRL+P";
+    parent->cut = new QShortcut(QKeySequence::fromString(QString::fromStdString(parent->val_s)), &myWin);
     connect(parent->cut, SIGNAL(activated()), &myWin, SLOT(parent()));
     multiCut.push_back(parent);
 
@@ -379,7 +409,7 @@ void Attrs::cutTable_init()
     parentWorld->name = "parentWorld";
     parentWorld->type = "QShortcut";
     parentWorld->val_s = "SHIFT+P";
-    parentWorld->cut = new QShortcut(QKeySequence::fromString(parentWorld->val_s), &myWin);
+    parentWorld->cut = new QShortcut(QKeySequence::fromString(QString::fromStdString(parentWorld->val_s)), &myWin);
     connect(parentWorld->cut, SIGNAL(activated()), &myWin, SLOT(parentWorld()));
     multiCut.push_back(parentWorld);
 
@@ -387,7 +417,7 @@ void Attrs::cutTable_init()
     pivCenter->name = "pivCenter";
     pivCenter->type = "QShortcut";
     pivCenter->val_s = "F5";
-    pivCenter->cut = new QShortcut(QKeySequence::fromString(pivCenter->val_s), &myWin);
+    pivCenter->cut = new QShortcut(QKeySequence::fromString(QString::fromStdString(pivCenter->val_s)), &myWin);
     connect(pivCenter->cut, SIGNAL(activated()), &myWin, SLOT(pivCenter()));
     multiCut.push_back(pivCenter);
 
@@ -402,7 +432,7 @@ void Attrs::etcTable_init()
     framed = make_shared<MultiAttr>();
     framed->name = "framed";
     framed->type = "bool";
-    framed->val_b = 0;
+    framed->val_b = false;
     multiEtc.push_back(framed);
 
     selAccuracy = make_shared<MultiAttr>();
@@ -576,30 +606,21 @@ void Attrs::pathTable_init()
 {
     pathGLSL = make_shared<MultiAttr>();
     pathGLSL->name = "pathGLSL";
-    pathGLSL->type = "QString";
-    pathGLSL->val_s = QDir::currentPath() + "/shaders/";
+    pathGLSL->type = "string";
+    pathGLSL->val_s = QDir::currentPath().toStdString();
+    pathGLSL->val_s.append("/shaders/");
     multiPath.push_back(pathGLSL);
-
 
     pathObj = make_shared<MultiAttr>();
     pathObj->name = "pathObj";
-    pathObj->type = "QString";
-#if __unix__
-    pathObj->val_s = "/home/aleks/Desktop/obj/";
-#else
+    pathObj->type = "string";
     pathObj->val_s = "C:/users/aleks/desktop/obj/";
-#endif
     multiPath.push_back(pathObj);
-
 
     pathTex = make_shared<MultiAttr>();
     pathTex->name = "pathTex";
-    pathTex->type = "QString";
-#if __unix__
-    pathTex->val_s = "/home/aleks/Desktop/tex/";
-#else
+    pathTex->type = "string";
     pathTex->val_s = "C:/users/aleks/desktop/tex/";
-#endif
     multiPath.push_back(pathTex);
 
     multiPath_stored.resize(multiPath.size());
@@ -631,13 +652,6 @@ void Attrs::glTable_init()
     popCenterXY->min = 10.f;
     multiGL.push_back(popCenterXY);
 
-    CPopSize = make_shared<MultiAttr>();
-    CPopSize->name = "CPopSize";
-    CPopSize->type = "int";
-    CPopSize->val_i = 150;
-    CPopSize->min = 30.f;
-    multiGL.push_back(CPopSize);
-
     CPopManipSize = make_shared<MultiAttr>();
     CPopManipSize->name = "CPopManipSize";
     CPopManipSize->type = "int";
@@ -648,7 +662,7 @@ void Attrs::glTable_init()
     gizSide = make_shared<MultiAttr>();
     gizSide->name = "gizSide";
     gizSide->type = "bool";
-    gizSide->val_b = 1;
+    gizSide->val_b = true;
     multiGL.push_back(gizSide);
 
     gizSideS = make_shared<MultiAttr>();
@@ -674,7 +688,7 @@ void Attrs::glTable_init()
     gridLines->type = "enum";
     gridLines->val_s = "20"; //
     gridLines->val_i = 20;
-    gridLines->comboList << "10" << "20" << "30" << "40" << "50";
+    gridLines->comboList = { "10", "20", "30", "40", "50" };
     multiGL.push_back(gridLines);
 
     gridSize = make_shared<MultiAttr>();
@@ -715,49 +729,49 @@ void Attrs::glTable_init()
 
 void Attrs::multiCutTgl(bool state)
 {
-    for (unsigned int i = 0; i < myWin.cutTable->multiCut.size(); ++i)
-        myWin.cutTable->multiCut[i]->cut->setEnabled(state);
+    for (auto &i : myWin.cutTable->multiCut)
+        i->cut->setEnabled(state);
 }
 
 void Attrs::resetPrefs()
 {
-    if (tableType == "cut")
+    if (this == myWin.cutTable)
     {
         prefReset = multiCut;
         prefReset_stored = multiCut_stored;
     }
 
-    else if (tableType == "etc")
+    else if (this == myWin.etcTable)
     {
         prefReset = multiEtc;
         prefReset_stored = multiEtc_stored;
     }
 
-    else if (tableType == "glsl")
+    else if (this == myWin.glslTable)
     {
         prefReset = multiGL;
         prefReset_stored = multiGL_stored;
     }
 
-    else if (tableType == "path")
+    else if (this == myWin.pathTable)
     {
         prefReset = multiPath;
         prefReset_stored = multiPath_stored;
     }
 
-    for (unsigned int i = 0; i < prefReset.size(); ++i)
+    for (auto &i : prefReset)
     {
-        for (unsigned int j = 0; j < prefReset_stored.size(); ++j)
+        for (auto &j : prefReset_stored)
         {
-            if (prefReset[i]->name == prefReset_stored[j]->name)
+            if (i->name == j->name)
             {
-                prefReset[i]->val_b = prefReset_stored[j]->val_b;
-                prefReset[i]->val_i = prefReset_stored[j]->val_i;
-                prefReset[i]->val_f = prefReset_stored[j]->val_f;
-                prefReset[i]->val_s = prefReset_stored[j]->val_s;
-                prefReset[i]->val_2 = prefReset_stored[j]->val_2;
-                prefReset[i]->val_3 = prefReset_stored[j]->val_3;
-                prefReset[i]->val_4 = prefReset_stored[j]->val_4;
+                i->val_b = j->val_b;
+                i->val_i = j->val_i;
+                i->val_f = j->val_f;
+                i->val_s = j->val_s;
+                i->val_2 = j->val_2;
+                i->val_3 = j->val_3;
+                i->val_4 = j->val_4;
 
                 break;
             }
@@ -768,19 +782,19 @@ void Attrs::resetPrefs()
     refreshTable();
 }
 
-int Attrs::rowCt_get(QString type)
+int Attrs::rowCt_get(string type)
 {
     int realRowCt = 0;
 
-    for (unsigned int i = 0; i < multiVec.size(); ++i)
+    for (auto &i : multiVec)
     {
-        if (tabIdx == multiVec[i]->tab)
+        if (tabIdx == i->tab)
         {
-            if (multiVec[i]->typeX == type)
+            if (i->typeX == type)
             {
-                if (multiVec[i]->type == "vec2") realRowCt += 2;
-                else if (multiVec[i]->type == "vec3") realRowCt += 3;
-                else if (multiVec[i]->type == "vec4") realRowCt += 4;
+                if (i->type == "vec2") realRowCt += 2;
+                else if (i->type == "vec3") realRowCt += 3;
+                else if (i->type == "vec4") realRowCt += 4;
                 else realRowCt += 1;
             }
         }
@@ -794,39 +808,57 @@ bool Attrs::refreshTable()
     setRowCount(1);
 
     lastRow = useThisRow = 0;
-    setupTgl = 1;
+    setupTgl = true;
 
-    if (tableType == "attr" && myWin.selB == 0)
+    if (this == myWin.attrTable && myWin.selB == 0)
     {
         myWin.stackedAttrTable->setCurrentIndex(0); //
         storedStackedIdx = myWin.stackedAttrTable->currentIndex();
 
-        return 0;
+        return false;
     }
 
-    else if (tableType == "attr")
+    else if (this == myWin.attrTable)
     {
         multiVec = myWin.selB->multiObj;
         myWin.stackedAttrTable->setCurrentIndex(1); //
         storedStackedIdx = myWin.stackedAttrTable->currentIndex();
 
-        QString objName_temp = myWin.selB->name->val_s;
+        auto objName_temp = myWin.selB->name->val_s;
 
         if (myWin.countSel() > 1 && !myWin.myFSQ->selected)
-            objName_temp += "...";
+            objName_temp.append("...");
 
-        selObjN->setText(objName_temp);
+        selObjN->setText(QString::fromStdString(objName_temp));
     }
 
-    if (tableType != "attr")
+    else
     {
-        selObjN->setText(tableType);
         selObjN->setFlags(selObjN->flags()^(Qt::ItemIsEditable | Qt::ItemIsSelectable));
 
-        if (tableType == "cut") multiVec = multiCut;
-        else if (tableType == "etc") multiVec = multiEtc;
-        else if (tableType == "glsl") multiVec = multiGL;
-        else if (tableType == "path") multiVec = multiPath;
+        if (this == myWin.cutTable)
+        {
+            selObjN->setText("cut");
+            multiVec = multiCut;
+        }
+
+        else if (this == myWin.etcTable)
+        {
+            selObjN->setText("etc");
+            multiVec = multiEtc;
+        }
+
+        else if (this == myWin.glslTable)
+        {
+            selObjN->setText("glsl");
+            multiVec = multiGL;
+        }
+
+        else if (this == myWin.pathTable)
+        {
+            selObjN->setText("path");
+            multiVec = multiPath;
+        }
     }
 
     if (!myButtons.empty())
@@ -836,14 +868,14 @@ bool Attrs::refreshTable()
         myEnumCombo.clear();
 
     selObjN->setFont(QFont("DejaVu Sans Mono", 13, 75));
-    selObjN->setForeground(QBrush(Qt::black));
+    selObjN->setForeground(QBrush(myWin.toQC(glm::vec3(0.f))));
     selObjN->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-    selObjN->setData(32, "QString"); //TYPE
+    selObjN->setData(32, "string"); //TYPE
 
-    int rowCt = rowCt_get(0);
+    int rowCt = rowCt_get("ALL");
     int rowCtO = 0;
 
-    if (tableType == "attr")
+    if (this == myWin.attrTable)
     {
         rowCt = (myWin.selB->type == "FBO") ? 0 : rowCt;
         rowCtO = rowCt_get(myWin.selB->type);
@@ -851,28 +883,29 @@ bool Attrs::refreshTable()
 
     setRowCount(rowCt + rowCtO + 1);
 
-    for (unsigned int i = 0; i < multiVec.size(); ++i)
+    for (auto &i : multiVec)
     {
-        attrType = multiVec[i]->type;
-        attrName = multiVec[i]->name;
+        attrType = i->type;
+        attrName = i->name;
+        attrGrp = i->grp;
 
-        if (tabIdx == multiVec[i]->tab)
+        if (tabIdx == i->tab)
         {
-            if (tableType == "attr" && myWin.selB == myWin.myFSQ)
+            if (this == myWin.attrTable && myWin.selB == myWin.myFSQ)
             {
                 //hide transform attrs, show only matching typeX
-                if (multiVec[i]->typeX == myWin.selB->type)
+                if (i->typeX == myWin.selB->type)
                     tableWidgetItem_add(i);
             }
 
             else
             {
-                if (multiVec[i]->typeX == 0)
+                if (i->typeX == "ALL")
                     tableWidgetItem_add(i);
 
-                if (tableType == "attr")
+                if (this == myWin.attrTable)
                 {
-                    if (multiVec[i]->typeX == myWin.selB->type)
+                    if (i->typeX == myWin.selB->type)
                         tableWidgetItem_add(i);
                 }
             }
@@ -880,43 +913,43 @@ bool Attrs::refreshTable()
     }
 
     useThisRow = 0;
-    setupTgl = 0;
+    setupTgl = false;
 
-    return 1;
+    return true;
 }
 
-void Attrs::tableWidgetItem_add(int idx)
+void Attrs::tableWidgetItem_add(shared_ptr<MultiAttr> attr)
 {
     if (attrType == "bool")
     {
         useThisRow = lastRow + 1;
         setRowHeight(useThisRow, myWin.etcTable->rowH->val_i);
 
-        QTableWidgetItem *itemLabel = new QTableWidgetItem(attrName);
+        auto *itemLabel = new QTableWidgetItem(QString::fromStdString(attrName));
         prepItems(itemLabel, "label");
 
-        Qt::ItemFlags noSelFlag = itemLabel->flags();
+        auto noSelFlag = itemLabel->flags();
         noSelFlag &= ~Qt::ItemIsSelectable;
         itemLabel->setFlags(noSelFlag);
 
         //VALUE
-        QPushButton *itemVal = new QPushButton();
+        auto *itemVal = new QPushButton();
         itemVal->setFlat(1);
-        itemVal->setText(QString::number(multiVec[idx]->val_b, 'g', 4));
+        itemVal->setText(QString::number(attr->val_b, 'g', 4));
         itemVal->setFont(valF);
 
         //SS
-        string pushBG = (useThisRow % 2) ? "#555555" : "#4d4d4d";
+        auto pushBG = (useThisRow % 2) ? "#555555" : "#4d4d4d";
 
         stringstream ss;
         ss << "QPushButton { color: " << "black;" << "background: " << pushBG << "; } QPushButton:pressed { background: " << hexFromVec(myWin.gammaCsel()) << "; }";
 
-        QString colorStyleSheet_dynamic = QString::fromStdString(ss.str());
-        itemVal->setStyleSheet(colorStyleSheet_dynamic);
+        auto colorStyleSheet_dynamic = ss.str();
+        itemVal->setStyleSheet(QString::fromStdString(colorStyleSheet_dynamic));
 
         connect(itemVal, &QPushButton::clicked, this, &Attrs::boolChange);
         setCellWidget(useThisRow, 1, itemVal);
-        myButtons.push_back( {itemVal, attrName} );
+        myButtons.push_back( { itemVal, attrName } );
     }
 
     else if (attrType == "color")
@@ -924,29 +957,29 @@ void Attrs::tableWidgetItem_add(int idx)
         useThisRow = lastRow + 1;
         setRowHeight(useThisRow, myWin.etcTable->rowH->val_i);
 
-        QTableWidgetItem *itemLabel = new QTableWidgetItem(attrName);
+        auto *itemLabel = new QTableWidgetItem(QString::fromStdString(attrName));
         prepItems(itemLabel, "label");
 
-        Qt::ItemFlags noSelFlag = itemLabel->flags();
+        auto noSelFlag = itemLabel->flags();
         noSelFlag &= ~Qt::ItemIsSelectable;
         itemLabel->setFlags(noSelFlag);
 
         //VALUE
-        QPushButton *itemVal = new QPushButton();
+        auto *itemVal = new QPushButton();
         itemVal->setFlat(1);
 
         //SS
-        glm::vec3 Cadjusted(pow(multiVec[idx]->val_3.r, myWin.gamma), pow(multiVec[idx]->val_3.g, myWin.gamma), pow(multiVec[idx]->val_3.b, myWin.gamma));
-        string usableCol = hexFromVec(Cadjusted);
+        glm::vec3 Cadjusted(pow(attr->val_3.r, myWin.gamma), pow(attr->val_3.g, myWin.gamma), pow(attr->val_3.b, myWin.gamma));
+        auto usableCol = hexFromVec(Cadjusted);
 
         stringstream ss;
         ss << "QPushButton { background: " << usableCol << "; } QPushButton:pressed { background: " << hexFromVec(myWin.gammaCsel()) << "; }";
-        QString colorStyleSheet_dynamic = QString::fromStdString(ss.str());
-        itemVal->setStyleSheet(colorStyleSheet_dynamic);
+        auto colorStyleSheet_dynamic = ss.str();
+        itemVal->setStyleSheet(QString::fromStdString(colorStyleSheet_dynamic));
 
         connect(itemVal, &QPushButton::clicked, this, &Attrs::colorPick);
         setCellWidget(useThisRow, 1, itemVal);
-        myButtons.push_back( {itemVal, attrName} );
+        myButtons.push_back( { itemVal, attrName } );
     }
 
     else if (attrType == "enum")
@@ -954,57 +987,57 @@ void Attrs::tableWidgetItem_add(int idx)
         useThisRow = lastRow + 1;
         setRowHeight(useThisRow, myWin.etcTable->rowH->val_i);
 
-        QTableWidgetItem *itemLabel = new QTableWidgetItem(attrName);
+        auto *itemLabel = new QTableWidgetItem(QString::fromStdString(attrName));
         prepItems(itemLabel, "label");
 
-        Qt::ItemFlags noSelFlag = itemLabel->flags();
+        auto noSelFlag = itemLabel->flags();
         noSelFlag &= ~Qt::ItemIsSelectable;
         itemLabel->setFlags(noSelFlag);
 
         //VALUE
-        Combo *tableCombo = new Combo;
+        auto *tableCombo = new Combo;
         tableCombo->setItemDelegate(myWin.myFocus);
 
         if (attrName == "camLiType")
         {
-            for (int i = 0; i < multiVec[idx]->comboList.size(); ++i)
+            for (auto &i : attr->comboList)
             {
-                QString myType = multiVec[idx]->comboList[i];
+                auto myType = i;
 
                 if (myType == "FPS" || myType == "ORTHO" || myType == "PERSP")
-                    tableCombo->addItem(myWin.myIconCam, multiVec[idx]->comboList[i]);
+                    tableCombo->addItem(myWin.myIconCam, QString::fromStdString(i));
 
                 else
-                    tableCombo->addItem(myWin.myIconLight, multiVec[idx]->comboList[i]);
+                    tableCombo->addItem(myWin.myIconLight, QString::fromStdString(i));
             }
         }
 
         else
-            tableCombo->addItems(multiVec[idx]->comboList); //
+        {
+            for (auto &i : attr->comboList)
+                tableCombo->addItem(QString::fromStdString(i));
+        }
 
         tableCombo->setFont(labelF);
         tableCombo->setStyleSheet("color:black");
         setCellWidget(useThisRow, 1, tableCombo);
 
-        connect(tableCombo, SIGNAL(currentIndexChanged(QString)), this, SLOT(changeEnum(QString)));
+        connect(tableCombo, SIGNAL(currentIndexChanged(QString)), this, SLOT(changeEnumD(QString)));
 
-        tableCombo->setCurrentIndex(tableCombo->findText(multiVec[idx]->val_s));
+        tableCombo->setCurrentIndex(tableCombo->findText(QString::fromStdString(attr->val_s)));
         tableCombo->setEditable(1);
         tableCombo->lineEdit()->setAlignment(Qt::AlignHCenter);
         tableCombo->lineEdit()->setFont(labelF); //
-        tableCombo->lineEdit()->setStyleSheet(myWin.myStyle); //
+        tableCombo->lineEdit()->setStyleSheet(QString::fromStdString(myWin.myStyle)); //
         tableCombo->setEditable(0);
 
         for (int j = 0; j < tableCombo->count(); ++j)
         {
             tableCombo->setItemData(j, Qt::AlignHCenter, Qt::TextAlignmentRole);
-            tableCombo->setItemData(j, attrName, 33); //BASENAME
+            tableCombo->setItemData(j, QString::fromStdString(attrName), 33); //BASENAME
         }
 
         myEnumCombo.push_back(tableCombo);
-
-//        for (int j = 0; j < myEnumCombo.size(); ++j)
-//            qDebug() << "myEnumCombo[0] 33 basename = " << myEnumCombo[j]->itemData(0, 33).toString();
     }
 
     else if (attrType == "float")
@@ -1012,13 +1045,13 @@ void Attrs::tableWidgetItem_add(int idx)
         useThisRow = lastRow + 1;
         setRowHeight(useThisRow, myWin.etcTable->rowH->val_i);
 
-        QTableWidgetItem *itemLabel = new QTableWidgetItem(attrName);
+        auto *itemLabel = new QTableWidgetItem(QString::fromStdString(attrName));
         prepItems(itemLabel, "label");
 
         //VALUE
         stringstream ss;
-        ss << fixed << setprecision(3) << multiVec[idx]->val_f;
-        QTableWidgetItem *itemVal = new QTableWidgetItem(QString::fromStdString(ss.str()));
+        ss << fixed << setprecision(3) << attr->val_f;
+        auto *itemVal = new QTableWidgetItem(QString::fromStdString(ss.str()));
         prepItems(itemVal, "value");
     }
 
@@ -1027,23 +1060,23 @@ void Attrs::tableWidgetItem_add(int idx)
         useThisRow = lastRow + 1;
         setRowHeight(useThisRow, myWin.etcTable->rowH->val_i);
 
-        QTableWidgetItem *itemLabel = new QTableWidgetItem(attrName);
+        auto *itemLabel = new QTableWidgetItem(QString::fromStdString(attrName));
         prepItems(itemLabel, "label");
 
-        QTableWidgetItem *itemVal = new QTableWidgetItem(QString::number(multiVec[idx]->val_i, 'g', 4));
+        auto *itemVal = new QTableWidgetItem(QString::number(attr->val_i, 'g', 4));
         prepItems(itemVal, "value");
     }
 
-    else if (attrType == "QString" || attrType == "QShortcut")
+    else if (attrType == "string" || attrType == "QShortcut")
     {
         useThisRow = lastRow + 1;
         setRowHeight(useThisRow, myWin.etcTable->rowH->val_i);
 
-        QTableWidgetItem *itemLabel = new QTableWidgetItem(attrName);
+        auto *itemLabel = new QTableWidgetItem(QString::fromStdString(attrName));
         prepItems(itemLabel, "label");
 
         //VALUE
-        QTableWidgetItem *itemVal = new QTableWidgetItem(multiVec[idx]->val_s);
+        auto *itemVal = new QTableWidgetItem(QString::fromStdString(attr->val_s));
         prepItems(itemVal, "value");
     }
 
@@ -1052,18 +1085,16 @@ void Attrs::tableWidgetItem_add(int idx)
         useThisRow = lastRow + 1;
         setRowHeight(useThisRow, myWin.etcTable->rowH_sep->val_i);
 
-        //get highlight col for label - replace with global highlight col
-        glm::vec3 Cadj = myWin.gammaCsel();
-        QColor Chigh = QColor::fromRgbF(Cadj.r, Cadj.g, Cadj.b);
-
-        QTableWidgetItem *itemLabel = new QTableWidgetItem(attrName);
+        auto *itemLabel = new QTableWidgetItem(QString::fromStdString(attrName));
         prepItems(itemLabel, "label");
         itemLabel->setFont(sepF); //
-        itemLabel->setForeground(QBrush(Chigh));
         itemLabel->setFlags(itemLabel->flags()^Qt::ItemIsSelectable);
 
+        //get highlight col for label - replace with global highlight col
+        itemLabel->setForeground(QBrush(myWin.toQC(myWin.gammaCsel())));
+
         //VALUE
-        QTableWidgetItem *itemVal = new QTableWidgetItem();
+        auto *itemVal = new QTableWidgetItem();
         prepItems(itemVal, "value");
         itemVal->setFlags(itemVal->flags()^Qt::ItemIsSelectable);
         itemVal->setFlags(itemVal->flags()^Qt::ItemIsEditable);
@@ -1071,28 +1102,31 @@ void Attrs::tableWidgetItem_add(int idx)
 
     else if (attrType == "vec2" || attrType == "vec3" || attrType == "vec4")
     {
-        QString appendEnding[4] = {"X", "Y", "Z", "W"};
+        string appendEnding[4] = { "X", "Y", "Z", "W" };
 
-        int usableIter = attrType.toStdString().back() - '0';
+        int usableIter = attrType.back() - '0';
 
         for (int j = 0; j < usableIter; ++j)
         {
             useThisRow = lastRow + 1;
             setRowHeight(useThisRow, myWin.etcTable->rowH->val_i);
 
-            QTableWidgetItem *itemLabel = new QTableWidgetItem(attrName + appendEnding[j]);
+            auto conc = attrName;
+            conc.append(appendEnding[j]);
+
+            auto *itemLabel = new QTableWidgetItem(QString::fromStdString(conc));
             prepItems(itemLabel, "label");
             itemLabel->setData(34, j); //VEC IDX
 
             float usableVal;
-            if (usableIter == 2) usableVal = multiVec[idx]->val_2[j];
-            if (usableIter == 3) usableVal = multiVec[idx]->val_3[j];
-            if (usableIter == 4) usableVal = multiVec[idx]->val_4[j];
+            if (usableIter == 2) usableVal = attr->val_2[j];
+            if (usableIter == 3) usableVal = attr->val_3[j];
+            if (usableIter == 4) usableVal = attr->val_4[j];
 
             stringstream ss;
             ss << fixed << setprecision(3) << usableVal;
 
-            QTableWidgetItem *itemVal = new QTableWidgetItem(QString::fromStdString(ss.str()));
+            auto *itemVal = new QTableWidgetItem(QString::fromStdString(ss.str()));
             prepItems(itemVal, "value");
             itemVal->setData(34, j); //VEC IDX
         }
@@ -1112,8 +1146,9 @@ void Attrs::prepItems(QTableWidgetItem *item, string type)
             item->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
 
         item->setFlags(item->flags()^Qt::ItemIsEditable);
-        item->setData(32, attrType);
-        item->setData(33, attrName);
+        item->setData(32, QString::fromStdString(attrType));
+        item->setData(33, QString::fromStdString(attrName));
+        item->setData(35, QString::fromStdString(attrGrp));
 
         setItem(useThisRow, 0, item);
     }
@@ -1122,9 +1157,10 @@ void Attrs::prepItems(QTableWidgetItem *item, string type)
     {
         item->setFont(valF);
         item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-        item->setForeground(QBrush(Qt::black));
-        item->setData(32, attrType);
-        item->setData(33, attrName);
+        item->setForeground(QBrush(myWin.toQC(glm::vec3(0.f))));
+        item->setData(32, QString::fromStdString(attrType));
+        item->setData(33, QString::fromStdString(attrName));
+        item->setData(35, QString::fromStdString(attrGrp));
 
         setItem(useThisRow, 1, item);
     }
@@ -1134,19 +1170,19 @@ vector<shared_ptr<Object>> Attrs::selTemp()
 {
     vector<shared_ptr<Object>> temp;
 
-    for (unsigned int j = 0; j < myWin.allObj.size(); ++j)
+    for (auto &i : myWin.allObj)
     {
-        if (tableType == "attr")
+        if (this == myWin.attrTable)
         {
-            if (myWin.allObj[j]->selected)
-                temp.push_back(myWin.allObj[j]);
+            if (i->selected)
+                temp.push_back(i);
         }
 
         else //need 1 obj to iterate...use any nondeletable
         {
-            if (myWin.allObj[j]->name->val_s == "top")
+            if (i->name->val_s == "top")
             {
-                temp.push_back(myWin.allObj[j]);
+                temp.push_back(i);
 
                 continue; //
             }
@@ -1158,50 +1194,50 @@ vector<shared_ptr<Object>> Attrs::selTemp()
 
 void Attrs::boolChange()
 {
-    for (unsigned int i = 0; i < myButtons.size(); ++i)
+    for (auto &i : myButtons)
     {
-        if (myButtons[i].button == sender())
+        if (i.button == sender())
         {
-            vector<shared_ptr<Object>> boolChangeTemp = selTemp();
+            auto boolChangeTemp = selTemp();
 
-            for (unsigned int j = 0; j < boolChangeTemp.size(); ++j)
+            for (auto &j : boolChangeTemp)
             {
-                if (tableType == "attr")
-                    multiVec = boolChangeTemp[j]->multiObj;
+                if (this == myWin.attrTable)
+                    multiVec = j->multiObj;
 
-                for (unsigned int k = 0; k < multiVec.size(); ++k)
+                for (auto &k : multiVec)
                 {
-                    if (myButtons[i].name == multiVec[k]->name)
+                    if (i.name == k->name)
                     {
-                        multiVec[k]->val_b = !multiVec[k]->val_b;
+                        k->val_b = !k->val_b;
 
-                        if (multiVec[k]->name == "framed")
+                        if (k->name == "framed")
                         {
                             Qt::WindowFlags framedOrFrameless;
 
-                            if (!multiVec[k]->val_b)
+                            if (!k->val_b)
                                 framedOrFrameless = Qt::FramelessWindowHint;
 
                             myWin.setWindowFlags(framedOrFrameless);
                             myWin.show();
                         }
 
-                        else if (multiVec[k]->name == "fxaaBlur")
+                        else if (k->name == "fxaaBlur")
                         {
-                            for (unsigned int l = 0; l < myWin.allGL.size(); ++l)
-                                myWin.myPP->resizeTexClearMem(myWin.allGL[l]);
+                            for (auto &l : myWin.allGL)
+                                myWin.myPP->resizeTexClearMem(l);
                         }
 
-                        else if (multiVec[k]->name == "gizSide")
+                        else if (k->name == "gizSide")
                         {
-                            for (unsigned int l = 0; l < myWin.allGL.size(); ++l)
-                                myWin.allGL[l].get()->gizSideTgl_();
+                            for (auto &l : myWin.allGL)
+                                l->gizSideTgl_swap();
                         }
 
-                        else if (multiVec[k]->name == "orthoFree" && multiVec[k]->val_b == 0)
+                        else if (k->name == "orthoFree" && k->val_b == false)
                             resetOrtho(j);
 
-                        else if (multiVec[k]->name == "bb" || multiVec[k]->name == "shadowCast" || multiVec[k]->name == "v")
+                        else if (k->name == "bb" || k->name == "shadowCast" || k->name == "v")
                             myWin.setLightsDirty();
                     }
                 }
@@ -1215,28 +1251,29 @@ void Attrs::boolChange()
 
 void Attrs::colorPick()
 {
-    for (unsigned int i = 0; i < myButtons.size(); ++i)
+    for (auto &i : myButtons)
     {
-        if (myButtons[i].button == sender())
+        if (i.button == sender())
         {
-            for (unsigned int j = 0; j < multiVec.size(); ++j)
+            for (auto &j : multiVec)
             {
-                if (myButtons[i].name == multiVec[j]->name)
+                if (i.name == j->name)
                 {
-                    glm::vec3 Cldr = glm::clamp(multiVec[j]->val_3, 0.f, 1.f);
-                    QColor toHSV = QColor::fromRgbF(Cldr.r, Cldr.g, Cldr.b).toHsv();
+                    cout << "j->name = " << j->name << endl;
 
-                    myWin.myCPopWin->myCPop->hue = toHSV.hueF();
-                    myWin.myCPopWin->myCPop->sat = toHSV.saturationF();
-                    myWin.myCPopWin->myCPop->val = toHSV.valueF();
-                    myWin.myCPopWin->myCPop->changedManip = 1;
+                    auto Cldr = glm::hsvColor(glm::clamp(j->val_3, 0.f, 1.f));
 
-                    myWin.TglCPopWin();
+//                    myWin.myPaintWin->myCPop->hue = Cldr[0];
+                    myWin.myPaintWin->myCPop->hue = Cldr[0] / 360.f; //divide by 360 to get 0-1 hue...
+                    myWin.myPaintWin->myCPop->sat = Cldr[1];
+                    myWin.myPaintWin->myCPop->val = Cldr[2];
 
-                    myWin.myCPopWin->myCPop->drawHueRect();
-                    myWin.myCPopWin->myCPop->update();
+                    myWin.myPaintWin->myCPop->changedManip = true;
 
-                    myWin.myCPopWin->myCPop->targetAttr = multiVec[j];
+                    myWin.myPaintWin->myCPop->drawHueRect();
+                    myWin.myPaintWin->myCPop->update();
+
+                    myWin.myPaintWin->myCPop->targetAttr = j; //changes the attr color box of the vec3...
                 }
             }
         }
@@ -1249,93 +1286,97 @@ string Attrs::hexFromVec(glm::vec3 glmCol)
 {
     glmCol = glm::clamp(glmCol, 0.f, 1.f);
 
-    int r_i = int(glmCol.r * 255 + .5);
-    int g_i = int(glmCol.g * 255 + .5);
-    int b_i = int(glmCol.b * 255 + .5);
+    auto r_i = int(glmCol.r * 255 + .5);
+    auto g_i = int(glmCol.g * 255 + .5);
+    auto b_i = int(glmCol.b * 255 + .5);
 
-    QColor *qCol = new QColor(r_i, g_i, b_i);
-
-    return qCol->name().toStdString();
+    return QColor(r_i, g_i, b_i).name().toStdString();
 }
 
-void Attrs::changeEnum(QString text)
+void Attrs::changeEnumD(QString text)
+{
+    changeEnum(text.toStdString());
+}
+
+void Attrs::changeEnum(string text)
 {
     if (!setupTgl)
     {
         if (changeEnumName == "")
-            changeEnumName = qobject_cast<QComboBox *>(sender())->itemData(0, 33).toString();
+            changeEnumName = qobject_cast<QComboBox *>(sender())->itemData(0, 33).toString().toStdString();
 
         if (this == myWin.glslTable)
         {
             if (changeEnumName == "gridLines")
             {
                 myWin.glslTable->gridLines->val_s = text;
-                myWin.glslTable->gridLines->val_i = text.toInt();
+                myWin.glslTable->gridLines->val_i = QString::fromStdString(text).toInt();
 
-                for (unsigned int k = 0; k < myWin.allObj.size(); ++k)
+                for (auto &i : myWin.allObj)
                 {
-                    if (myWin.allObj[k]->type == "GRID")
+                    if (i->type == "GRID")
                     {
-                        myWin.allObj[k]->deletable = 1;
-                        myWin.allObj[k]->selected = 1;
+                        i->deletable = true;
+                        i->selected = true;
                     }
                 }
 
                 //rebuild grid
-                myWin.delete_();
+                myWin.delete_(); // TO DO : GRID ONLY !!!!! USE TEMP SEL HERE
                 myWin.gridInit();
             }
         }
 
         else // attrTable
         {
-            for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
+            for (auto &i : myWin.allObj)
             {
-                if (myWin.allObj[i]->selected || changeEnumName == "cubeM")
+                if (i->selected || changeEnumName == "cube_specM")
                 {
-                    for (unsigned int j = 0; j < myWin.allObj[i]->multiObj.size(); ++j)
+                    for (auto &j : i->multiObj)
                     {
-                        if (changeEnumName == myWin.allObj[i]->multiObj[j]->name)
+                        if (changeEnumName == j->name)
                         {
-                            //qDebug() << "match = " << changeEnumName << myWin.allObj[i]->multiObj[j]->name;
-                            myWin.allObj[i]->multiObj[j]->val_s = text;
+//                            cout << "match = " << changeEnumName << myWin.allObj[i]->multiObj[j]->name << endl;
+
+                            j->val_s = text;
 
                             if (changeEnumName == "camLiType")
                             {
-                                myWin.allObj[i]->targO = glm::vec3(0.f);
-                                myWin.allObj[i]->setTarg(myWin.allObj[i]->targO, 0.f);
+                                i->targO = glm::vec3(0.f);
+                                i->setTarg(i->targO, 0.f);
 
                                 if (text == "DIR")
                                 {
-                                    myWin.allObj[i]->t->val_3 = glm::vec3(0.f, 8.f, .1f);
-                                    myWin.allObj[i]->r->val_3 = glm::vec3(-45.f, 0.f, 0.f);
+                                    i->t->val_3 = glm::vec3(0.f, 8.f, .1f);
+                                    i->r->val_3 = glm::vec3(-45.f, 0.f, 0.f);
 
-                                    myWin.allObj[i]->RM = myWin.allObj[i]->rotOrderUse(myWin.allObj[i]->rotOrder->val_s);
+                                    i->RM = i->rotOrderUse(i->rotOrder->val_s);
                                 }
 
-                                for (unsigned int k = 0; k < myWin.allGL.size(); ++k)
+                                for (auto &k : myWin.allGL)
                                 {
-                                    if (myWin.allGL[k]->isVisible() && myWin.allGL[k]->selCamLi == myWin.selB)
-                                        myWin.allGL[k]->changeCamLiType_();
+                                    if (k->isVisible() && k->selCamLi == myWin.selB)
+                                        k->changeCamLiType_();
                                 }
 
                                 myWin.lightCt = myWin.countLights();
                                 myWin.myGLWidgetSh->addDeleteShadows("refresh");
                                 myWin.setLightsDirty();
-                                myWin.myGLWidgetSh->UBO_light_needsUp = 1; //
+                                myWin.myGLWidgetSh->UBO_light_needsUp = true; //
                             }
 
-                            else if (changeEnumName == "cubeM")
+                            else if (changeEnumName == "cube_specM")
                             {
-                                for (unsigned int k = 0; k < myWin.myGLWidgetSh->allTex.size(); ++k)
+                                for (auto &k : myWin.myGLWidgetSh->allMaps)
                                 {
-                                    if (text == myWin.myGLWidgetSh->allTex[k].name)
+                                    if (text == k.name)
                                     {
-                                        if (myWin.myGLWidgetSh->allTex[k].type == "CUBE")
-                                            myWin.cubeM_specular_32 = myWin.myGLWidgetSh->allTex[k].tex_32;
+                                        if (k.type == "CUBE_SPEC")
+                                            myWin.cubeM_specular_32 = k.layer[0].tex1_32;
 
-                                        else if (myWin.myGLWidgetSh->allTex[k].type == "CUBE_IRRAD")
-                                            myWin.cubeM_irradiance_32 = myWin.myGLWidgetSh->allTex[k].tex_32;
+                                        else if (k.type == "CUBE_IRRAD")
+                                            myWin.cubeM_irradiance_32 = k.layer[0].tex1_32;
                                     }
 
                                     myWin.myFSQ->cubeM->val_s = text;
@@ -1344,8 +1385,8 @@ void Attrs::changeEnum(QString text)
 
                             else if (changeEnumName == "orthoType")
                             {
-                                myWin.allObj[i]->camLiType->val_s = "ORTHO";
-                                myWin.allObj[i]->orthoFree->val_b = 0;
+                                i->camLiType->val_s = "ORTHO";
+                                i->orthoFree->val_b = false;
                                 resetOrtho(i);
                             }
                         }
@@ -1359,56 +1400,62 @@ void Attrs::changeEnum(QString text)
     }
 }
 
-void Attrs::resetOrtho(int idx)
+void Attrs::resetOrtho(shared_ptr<Object> obj)
 {
     CamSetup myCamSetup[] =
     {
-        { "back", "ORTHO", {0.f, 0.f, -5.f} },
-        { "bottom", "ORTHO", {0.f, -5.f, .002f} }, //
-        { "front", "ORTHO", {0.f, 0.f, 5.f} },
-        { "left", "ORTHO", {5.f, 0.f, 0.f} },
-        { "right", "ORTHO", {-5.f, 0.f, 0.f} },
-        { "top", "ORTHO", {0.f, 5.f, .002f} }, //
+        { "back", "ORTHO", { 0.f, 0.f, -5.f } },
+        { "bottom", "ORTHO", { 0.f, -5.f, .002f } }, //
+        { "front", "ORTHO", { 0.f, 0.f, 5.f } },
+        { "left", "ORTHO", { 5.f, 0.f, 0.f } },
+        { "right", "ORTHO", { -5.f, 0.f, 0.f } },
+        { "top", "ORTHO", { 0.f, 5.f, .002f } }, //
     };
 
-    for (unsigned int i = 0; i < arraySize(myCamSetup); ++i)
+    for (auto &i : myCamSetup)
     {
-        if (myWin.allObj[idx]->orthoType->val_s == myCamSetup[i].name.toUpper())
+        if (obj->orthoType->val_s == myWin.stringToUpper(i.name))
         {
-            myWin.allObj[idx]->t->val_3 = myCamSetup[i].t;
-            myWin.allObj[idx]->upO = glm::vec3(0.f, 1.f, 0.f);
-            myWin.allObj[idx]->setTarg(glm::vec3(0.f), 0.f);
+            obj->t->val_3 = i.t;
+            obj->upO = glm::vec3(0.f, 1.f, 0.f);
+            obj->setTarg(glm::vec3(0.f), 0.f);
 
             continue;
         }
     }
 }
 
-void Attrs::keepSelAfterMMBRelease()
+void Attrs::refreshAndKeepSelAfterMMBRelease()
 {
     vector<TableRowCol> selItems_saved;
-    QList<QTableWidgetItem*> selItems = selectedItems();
+    vector<QTableWidgetItem *> selItems;
 
-    for (int i = 0; i < selItems.size(); ++i)
-        selItems_saved.push_back( {selItems[i]->row(), selItems[i]->column()} );
+    for (auto &i : selectedItems())
+        selItems.push_back(i);
+
+    for (auto &i : selItems)
+        selItems_saved.push_back( { i->row(), i->column() } );
 
     refreshTable();
 
-    for (unsigned int i = 0; i < selItems_saved.size(); ++i)
+    for (auto &i : selItems_saved)
     {
-        QModelIndex id = model()->index(selItems_saved[i].row, selItems_saved[i].col);
+        auto id = model()->index(i.row, i.col);
         selectionModel()->select(id, QItemSelectionModel::Select);
     }
 
     selItems_saved.clear();
+    undoDragAttrs.clear();
+    mmbTgl = false;
+    setCursor(Qt::ArrowCursor);
 }
 
-bool Attrs::isTransformAttr(QString name)
+bool Attrs::isTransformAttr(string name)
 {
     if (name == "t" || name == "r" || name == "s")
-        return 1;
+        return true;
 
-    return 0;
+    return false;
 }
 
 void Attrs::refreshRowH()
@@ -1418,71 +1465,68 @@ void Attrs::refreshRowH()
     myWin.pathTable->refreshTable();
     myWin.attrTable->refreshTable();
 
-    refreshRowH_onRelease = 0;
+    refreshRowH_onRelease = false;
 }
 
-void Attrs::writeActions(QString type, QString name, unsigned int idxO, unsigned int idxM, int idxV, float val, QString valText)
+void Attrs::writeActions(string type, string name, shared_ptr<Object> obj, shared_ptr<MultiAttr> attr, int idxV, float val, string valText)
 {
     if (type == "float")
     {
-        multiVec[idxM]->val_f = val;
+        attr->val_f = val;
 
         if (name == "gridSize")
         {
-            for (unsigned int k = 0; k < myWin.allObj.size(); ++k)
+            for (auto &i : myWin.allObj)
             {
-                if (myWin.allObj[k]->type == "GRID")
-                    myWin.allObj[k]->s->val_3 = glm::vec3(multiVec[idxM]->val_f);
+                if (i->type == "GRID")
+                    i->s->val_3 = glm::vec3(attr->val_f);
             }
         }
 
         else if (name == "fov" || name == "orthoZoom" || name == "nearClip" || name == "farClip")
         {
-            for (unsigned int k = 0; k < myWin.allGL.size(); ++k)
-                myWin.allGL[k]->resizeGL(myWin.allGL[k]->width(), myWin.allGL[k]->height());
+            for (auto &i : myWin.allGL)
+                i->resizeGL(i->width(), i->height());
         }
 
         else if (name == "lInten" || name == "lSpotI" || name == "lSpotO")
-            myWin.myGLWidgetSh->UBO_light_needsUp = 1;
+            myWin.myGLWidgetSh->UBO_light_needsUp = true;
+
+        else if (name == "edgeThr")
+            myWin.myGLWidgetSh->brushOutlineUpB = true;
     }
 
     else if (type == "int")
     {
-        multiVec[idxM]->val_i = val;
+        attr->val_i = val;
 
-        if (name == "CPopSize")
+        if (name == "CPopManipSize")
         {
-            myWin.myCPopWin->resize(multiVec[idxM]->val_i, multiVec[idxM]->val_i);
-            myWin.myCPopWin->myCPop->update();
-        }
-
-        else if (name == "CPopManipSize")
-        {
-            myWin.myCPopWin->myCPop->changedManip = 1;
-            myWin.myCPopWin->myCPop->update();
+            myWin.myPaintWin->myCPop->changedManip = true;
+            myWin.myPaintWin->myCPop->update();
         }
 
         else if (name == "rowH" || name == "rowH_sep")
         {
-            if (mmbTgl) refreshRowH_onRelease = 1;
+            if (mmbTgl) refreshRowH_onRelease = true;
             else refreshRowH();
         }
     }
 
     else if (type == "QShortcut")
     {
-        multiVec[idxM]->val_s = valText;
-        multiVec[idxM]->cut->setKey(QKeySequence::fromString(multiVec[idxM]->val_s));
+        attr->val_s = valText;
+        attr->cut->setKey(QKeySequence::fromString(QString::fromStdString(attr->val_s)));
     }
 
-    else if (type == "QString")
+    else if (type == "string")
     {
-        selObjs[idxO]->rename(valText);
+        obj->rename(valText);
 
-        if (selObjs[idxO]->type == "CAMLI")
+        if (obj->type == "CAMLI")
         {
-            for (unsigned int l = 0; l < myWin.allCamCombo.size(); ++l)
-                myWin.allCamCombo[l]->refresh();
+            for (auto &i : myWin.allCamCombo)
+                i->refresh();
         }
 
         myWin.myOutliner->refreshOutliner(1);
@@ -1490,41 +1534,41 @@ void Attrs::writeActions(QString type, QString name, unsigned int idxO, unsigned
 
     else if (type == "vec2")
     {
-        multiVec[idxM]->val_2[idxV] = val;
+        attr->val_2[idxV] = val;
     }
 
     else if (type == "vec3")
     {
-        multiVec[idxM]->val_3[idxV] = val;
+        attr->val_3[idxV] = val;
 
         if (name == "t")
         {
-            for (unsigned int k = 0; k < multiVec.size(); ++k)
+            for (auto &i : multiVec)
             {
-                if (multiVec[k]->name == "piv")
+                if (i->name == "piv")
                 {
-                    //float pivVal = multiVec[k]->val_3[idxV];
-                    //float tVal = multiVec[j]->val_3[idxV];
+                    //float pivVal = i->val_3[idxV];
+                    //float tVal = i->val_3[idxV];
                     //float textVal = item->text().toFloat();
                     //float offsetVal = pivVal - tVal;
-                    //qDebug() << "piv / t / text / offset = " << pivVal << tVal << textVal << offsetVal;
+                    //cout() << "piv / t / text / offset = " << pivVal << tVal << textVal << offsetVal << endl;
 
-//                    multiVec[k]->val_3[idxV] = item->text().toFloat(); // !!!
-                    //multiVec[k]->val_3[idxV] = offsetVal;
+                    //                    i->val_3[idxV] = item->text().toFloat(); // !!!
+                    //i->val_3[idxV] = offsetVal;
                 }
             }
         }
 
-        if (selObjs[idxO]->type == "CAMLI")
-            selObjs[idxO]->setDirty();
+        if (obj->type == "CAMLI")
+            obj->setDirty();
 
-        else if (isTransformAttr(name) && selObjs[idxO]->type == "OBJ")
+        else if (isTransformAttr(name) && obj->type == "OBJ")
             myWin.setLightsDirty();
     }
 
     else if (type == "vec4")
     {
-        multiVec[idxM]->val_4[idxV] = val;
+        attr->val_4[idxV] = val;
     }
 }
 
@@ -1540,20 +1584,21 @@ void Attrs::writeValue(QTableWidgetItem *item)
     {
         selObjs = selTemp();
 
-        for (unsigned int i = 0; i < selObjs.size(); ++i)
+        for (auto &i : selObjs)
         {
-            foreach (QTableWidgetItem *singleItem, selectedItems())
+            for (auto *singleItem : selectedItems())
             {
-                if (tableType == "attr")
-                    multiVec = selObjs[i]->multiObj;
+                if (this == myWin.attrTable)
+                    multiVec = i->multiObj;
 
-                for (unsigned int j = 0; j < multiVec.size(); ++j)
+                for (auto &j : multiVec)
                 {
-                    QString name = multiVec[j]->name;
+                    auto name = j->name;
+                    auto grp = j->grp;
 
-                    if (name == singleItem->data(33) || singleItem->row() == 0)
+                    if ((QString::fromStdString(name) == singleItem->data(33) && QString::fromStdString(grp) == singleItem->data(35) ) || singleItem->row() == 0)
                     {
-                        writeActions(singleItem->data(32).toString(), name, i, j, singleItem->data(34).toInt(), glm::clamp(item->text().toFloat(), multiVec[j]->min, multiVec[j]->max), singleItem->text());
+                        writeActions(singleItem->data(32).toString().toStdString(), name, i, j, singleItem->data(34).toInt(), glm::clamp(item->text().toFloat(), j->min, j->max), singleItem->text().toStdString());
 
                         break;
                     }
@@ -1573,34 +1618,39 @@ void Attrs::vDrag(glm::vec2 diff)
     if (undoDragAttrs.empty())
         dragUndo_prep();
 
-    QList<QTableWidgetItem*> selItems = selectedItems();
-    QModelIndexList fullySelectedRows = selectionModel()->selectedRows();
+    vector<QTableWidgetItem *> selItems;
 
-    for (int i = 0; i < selItems.length(); ++i) //check if both columns are selected
+    for (auto &i : selectedItems()) // check if both col are selected
     {
-        for (int j = 0; j < fullySelectedRows.length(); ++j)
+        auto notADupe = true;
+
+        for (auto &j : selectionModel()->selectedRows())
         {
-            if (selItems[i]->row() == fullySelectedRows[j].row() && selItems[i]->column() == 0)
-                selItems.removeAt(i);
+            if (i->row() == j.row() && i->column() == 0)
+                notADupe = 1;
         }
+
+        if (notADupe)
+            selItems.push_back(i);
     }
 
-    myWin.attrTable->writeAttrTgl = 0;
+    myWin.attrTable->writeAttrTgl = false;
     selObjs = selTemp();
 
-    for (unsigned int i = 0; i < selObjs.size(); ++i)
+    for (auto &i : selObjs)
     {
-        if (tableType == "attr")
-            multiVec = selObjs[i]->multiObj;
+        if (this == myWin.attrTable)
+            multiVec = i->multiObj;
 
-        for (unsigned int j = 0; j < multiVec.size(); ++j)
+        for (auto &j : multiVec)
         {
-            foreach (QTableWidgetItem *singleItem, selItems)
+            for (auto *singleItem : selItems)
             {
-                QString attrNameVD = singleItem->data(33).toString();
-                QString attrTypeVD = singleItem->data(32).toString();
+                auto attrNameVD = singleItem->data(33).toString().toStdString();
+                auto attrTypeVD = singleItem->data(32).toString().toStdString();
+                auto attrGrpVD = singleItem->data(35).toString().toStdString();
 
-                if (multiVec[j]->name == attrNameVD)
+                if (j->name == attrNameVD && j->grp == attrGrpVD)
                 {
                     float vSlide, vSlideVal;
 
@@ -1613,19 +1663,19 @@ void Attrs::vDrag(glm::vec2 diff)
                     else if (attrTypeVD == "int") vSlide *= 5.f;
                     else if (attrNameVD == "t" || attrNameVD == "pivot") vSlide *= .2f;
 
-                    if (tableType == "attr")
+                    if (this == myWin.attrTable)
                     {
-                        if (attrTypeVD == "int") vSlideVal = glm::clamp(multiVec[j]->val_i + vSlide * diff.x, multiVec[j]->min, multiVec[j]->max);
-                        else if (attrTypeVD == "float") vSlideVal = glm::clamp(multiVec[j]->val_f + vSlide * diff.x, multiVec[j]->min, multiVec[j]->max);
-                        else if (attrTypeVD == "vec2") vSlideVal = glm::clamp(multiVec[j]->val_2[singleItem->data(34).toInt()] + vSlide * diff.x, multiVec[j]->min, multiVec[j]->max);
-                        else if (attrTypeVD == "vec3") vSlideVal = glm::clamp(multiVec[j]->val_3[singleItem->data(34).toInt()] + vSlide * diff.x, multiVec[j]->min, multiVec[j]->max);
-                        else if (attrTypeVD == "vec4") vSlideVal = glm::clamp(multiVec[j]->val_4[singleItem->data(34).toInt()] + vSlide * diff.x, multiVec[j]->min, multiVec[j]->max);
+                        if (attrTypeVD == "int") vSlideVal = glm::clamp(j->val_i + vSlide * diff.x, j->min, j->max);
+                        else if (attrTypeVD == "float") vSlideVal = glm::clamp(j->val_f + vSlide * diff.x, j->min, j->max);
+                        else if (attrTypeVD == "vec2") vSlideVal = glm::clamp(j->val_2[singleItem->data(34).toInt()] + vSlide * diff.x, j->min, j->max);
+                        else if (attrTypeVD == "vec3") vSlideVal = glm::clamp(j->val_3[singleItem->data(34).toInt()] + vSlide * diff.x, j->min, j->max);
+                        else if (attrTypeVD == "vec4") vSlideVal = glm::clamp(j->val_4[singleItem->data(34).toInt()] + vSlide * diff.x, j->min, j->max);
                     }
 
                     else
-                        vSlideVal = glm::clamp(item(singleItem->row(), 1)->text().toFloat() + vSlide * diff.x, multiVec[j]->min, multiVec[j]->max);
+                        vSlideVal = glm::clamp(item(singleItem->row(), 1)->text().toFloat() + vSlide * diff.x, j->min, j->max);
 
-                    if (selObjs[i] == myWin.selB || tableType != "attr")
+                    if (i == myWin.selB || this != myWin.attrTable)
                     {
                         if (attrTypeVD == "int")
                             item(singleItem->row(), 1)->setText(QString::number((int)vSlideVal, 'g', '4'));
@@ -1638,7 +1688,7 @@ void Attrs::vDrag(glm::vec2 diff)
                         }
                     }
 
-                    writeActions(attrTypeVD, attrNameVD, i, j, singleItem->data(34).toInt(), vSlideVal, singleItem->text());
+                    writeActions(attrTypeVD, attrNameVD, i, j, singleItem->data(34).toInt(), vSlideVal, singleItem->text().toStdString());
                 }
             }
         }
@@ -1646,21 +1696,21 @@ void Attrs::vDrag(glm::vec2 diff)
 
     selObjs.clear();
 
-    myWin.attrTable->writeAttrTgl = 1;
+    myWin.attrTable->writeAttrTgl = true;
 }
 
 void Attrs::dragUndo_prep()
 {
-    for (int i = 0; i < selectedItems().size(); ++i)
+    for (auto &i : selectedItems())
     {
-        for (unsigned int j = 0; j < multiVec.size(); ++j)
+        for (auto &j : multiVec)
         {
-            if (selectedItems()[i]->data(33) == multiVec[j]->name)
+            if (i->data(33) == QString::fromStdString(j->name))
             {
-                shared_ptr<MultiAttr> at = multiVec[j]->Clone();
+                auto at = j->Clone();
 
-                if (selectedItems()[i]->data(32) == "vec3")
-                    at->idx_3 = selectedItems()[i]->data(34).toInt();
+                if (i->data(32) == "vec3")
+                    at->idx_3 = i->data(34).toInt();
 
                 undoDragAttrs.push_back(at);
             }

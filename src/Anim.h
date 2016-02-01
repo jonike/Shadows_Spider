@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -35,7 +35,6 @@ public:
     float anticp_(float, float);
     float overSh_(float, float);
     float cubicHerm_(float, float, float, float, float);
-
 };
 
 #endif // ANIM_H

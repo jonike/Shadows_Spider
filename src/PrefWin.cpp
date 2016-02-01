@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -26,37 +26,16 @@ PrefWin::PrefWin(MainWin &myWinTemp, QWidget *parent) : QMainWindow(parent), myW
     setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
     resize(650, 550);
 
-    QWidget *topWidget = new QWidget;
+    auto *topWidget = new QWidget;
     setCentralWidget(topWidget);
-    setStyleSheet(myWin.myStyle); //
+    setStyleSheet(QString::fromStdString(myWin.myStyle)); //
 
     stackedMain = new QStackedLayout(topWidget);
-
     myPrefs = new Prefs(myWin);
 
-    QSplitter *hsvSplit = new QSplitter(Qt::Horizontal);
-    hsvSplit->insertWidget(0, myPrefs);
-
-    stackedMain->insertWidget(0, hsvSplit);
+    stackedMain->insertWidget(0, myPrefs);
     stackedMain->setCurrentIndex(0);
 
-    QShortcut *HideThis_s = new QShortcut(Qt::Key_QuoteLeft, this);
-    connect(HideThis_s, SIGNAL(activated()), this, SLOT(HideThis()));
-}
-
-void PrefWin::HideThis()
-{
-    myWin.PrefWinTgl = 0;
-    hide();
-}
-
-void PrefWin::mousePressEvent(QMouseEvent *e)
-{
-    mpos = myWin.toVec2(e->pos());
-}
-
-void PrefWin::mouseMoveEvent(QMouseEvent *e)
-{
-    if (e->buttons() && Qt::LeftButton)
-        move(e->globalX() - mpos.x, e->globalY() - mpos.y);
+    setMouseTracking(1);
+    setAcceptDrops(1);
 }

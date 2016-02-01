@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -31,15 +31,15 @@ CamCombo::CamCombo(MainWin &myWinTemp, shared_ptr<GLWidget> myGLTemp, QWidget *p
 
     clear();
 
-    for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
+    for (auto &i : myWin.allObj)
     {
-        if (myWin.allObj[i]->selectable)
+        if (i->selectable)
         {
-            if (myWin.allObj[i]->camLiTypeGet("cam"))
-                addItem(myWin.myIconCam, myWin.allObj[i]->name->val_s);
+            if (i->camLiTypeGet("cam"))
+                addItem(myWin.myIconCam, QString::fromStdString(i->name->val_s));
 
-            else if (myWin.allObj[i]->camLiTypeGet("light"))
-                addItem(myWin.myIconLight, myWin.allObj[i]->name->val_s);
+            else if (i->camLiTypeGet("light"))
+                addItem(myWin.myIconLight, QString::fromStdString(i->name->val_s));
         }
     }
 
@@ -69,12 +69,12 @@ void CamCombo::selActiveCam()
 {
     myWin.clearSel();
 
-    for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
+    for (auto &i : myWin.allObj)
     {
-        if (myWin.allObj[i]->name->val_s == currentText())
+        if (i->name->val_s == currentText().toStdString())
         {
-            myWin.allObj[i]->selected = 1;
-            myWin.selB = myWin.allObj[i];
+            i->selected = true;
+            myWin.selB = i;
 
             break;
         }
@@ -86,42 +86,41 @@ void CamCombo::selActiveCam()
 
 void CamCombo::changeCam()
 {
-    for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
+    for (auto &i : myWin.allObj)
     {
-        if (myWin.allObj[i]->name->val_s == currentText())
+        if (i->name->val_s == currentText().toStdString())
         {
-            myGL.get()->selCamLi = myWin.allObj[i];
-            myGL.get()->selCamLi->setDirty();
+            myGL->selCamLi = i;
+            myGL->selCamLi->setDirty();
 
             myWin.setLightsDirty();
         }
     }
 
-    myGL.get()->resizeGL(myGL.get()->width(), myGL.get()->height());
+    myGL->resizeGL(myGL->width(), myGL->height());
 }
 
 void CamCombo::refresh()
 {
     clear();
 
-    for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
+    for (auto &i : myWin.allObj)
     {
-        if (myWin.allObj[i]->selectable)
+        if (i->selectable)
         {
-            if (myWin.allObj[i]->camLiTypeGet("cam"))
-                addItem(myWin.myIconCam, myWin.allObj[i]->name->val_s);
+            if (i->camLiTypeGet("cam"))
+                addItem(myWin.myIconCam, QString::fromStdString(i->name->val_s));
 
-            else if (myWin.allObj[i]->camLiTypeGet("light"))
-                addItem(myWin.myIconLight, myWin.allObj[i]->name->val_s);
+            else if (i->camLiTypeGet("light"))
+                addItem(myWin.myIconLight, QString::fromStdString(i->name->val_s));
         }
     }
 
-
-    bool match = 0;
+    auto match = false;
 
     for (int i = 0; i < count(); ++i)
     {
-        if (itemText(i) == myGL.get()->selCamLi->name->val_s)
+        if (itemText(i).toStdString() == myGL->selCamLi->name->val_s)
         {
             match = 1;
             setCurrentIndex(i); //set the index back to stored val
@@ -132,12 +131,12 @@ void CamCombo::refresh()
 
     if (!match)
     {
-        for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
+        for (auto &i : myWin.allObj)
         {
-            if (myWin.allObj[i]->name->val_s == "persp") //set persp by default
-                myGL.get()->selCamLi = myWin.allObj[i];
+            if (i->name->val_s == "persp") //set persp by default
+                myGL->selCamLi = i;
         }
     }
 
-    myGL.get()->resizeGL(myGL.get()->width(), myGL.get()->height());
+    myGL->resizeGL(myGL->width(), myGL->height());
 }

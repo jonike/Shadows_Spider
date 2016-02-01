@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -21,22 +21,36 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450 core
 
-out Vert
-{
-    vec2 uv;
-} v;
+layout(triangles) in;
+layout(triangle_strip, max_vertices = 3) out;
 
-uniform mat4 MVP;
+in Vert
+{
+    vec2 UV;
+    vec3 T_VS, N_VS;
+    vec4 shadowCoord0, shadowCoord1;
+} v[];
+
+out Geo
+{
+    vec2 UV;
+    vec3 T_VS, N_VS;
+    vec4 shadowCoord0, shadowCoord1;
+} g;
 
 void main()
 {
-    const vec4 vertices[] = vec4[](
-            vec4(-1.f, -1.f, 0.f, 1.f),
-            vec4( 1.f, -1.f, 0.f, 1.f),
-            vec4(-1.f,  1.f, 0.f, 1.f),
-            vec4( 1.f,  1.f, 0.f, 1.f));
+    for (int i = 0; i < 3; ++i)
+    {
+        g.UV = v[i].UV;
+        g.T_VS = v[i].T_VS;
+        g.N_VS = v[i].N_VS;
+        g.shadowCoord0 = v[i].shadowCoord0;
+        g.shadowCoord1 = v[i].shadowCoord1;
 
-    gl_Position = MVP * vertices[gl_VertexID];
-    v.uv = vertices[gl_VertexID].xy * .5f + .5f;
+        gl_Position = gl_in[i].gl_Position;
+        EmitVertex();
+    }
+
+    EndPrimitive();
 }
-

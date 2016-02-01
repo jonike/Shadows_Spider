@@ -1,6 +1,6 @@
-/*
 
-Copyright 2015 Aleksander Berg-Jones
+/*
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -20,21 +20,25 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #version 450 core
+#extension GL_ARB_bindless_texture : require
 
-/*
-reference:
-    OpenGL SuperBible Sixth Edition - pg 325 - 328
-*/
-
-in Geo
+in Vert
 {
-    vec3 Cv;
-} g;
+    vec2 uv;
+} v;
 
-layout(location = 1) out vec4 rttGiz;
+layout(bindless_sampler, location = 0) uniform sampler2D bg;
+layout(bindless_sampler, location = 1) uniform sampler2D eraser;
+layout(location = 0) out vec4 Ci;
 
 void main()
 {
-    rttGiz = vec4(g.Cv, 1.f);
-}
+    vec4 bgT = texture(bg, v.uv);
+    vec4 eraserT = texture(eraser, v.uv);
 
+    if (eraserT.a > 0.f)
+        Ci = vec4(0.f);
+
+    else
+        Ci = bgT;
+}

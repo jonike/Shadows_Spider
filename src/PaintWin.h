@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -19,19 +19,27 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-#version 450 core
-#extension GL_ARB_bindless_texture : require
+#ifndef PAINTWIN_H
+#define PAINTWIN_H
 
-in Vert
+#include "MainWin.h"
+
+class PaintWin : public QMainWindow
 {
-    vec2 uv;
-} v;
+    Q_OBJECT
+public:
+    MainWin &myWin;
+    PaintWin(MainWin &, QWidget *parent = 0);
 
-layout(bindless_sampler, location = 0) uniform sampler2D inT;
+    QStackedLayout *stackedMain;
+    QSplitter *colorPick_H, *layerSel_H;
+    CPop *myCPop;
 
-out vec4 Ci;
+public slots:
 
-void main()
-{
-    Ci = texture(inT, v.uv);
-}
+protected:
+    void keyPressEvent(QKeyEvent *e);
+    void keyReleaseEvent(QKeyEvent *e);
+};
+
+#endif // PAINTWIN_H

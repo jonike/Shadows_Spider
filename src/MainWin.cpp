@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -28,36 +28,28 @@ MainWin::MainWin(QWidget *parent) : QMainWindow(parent)
     setContextMenuPolicy(Qt::ActionsContextMenu);
 
     myFocus = new FocusCtrlDel;
+
     resize(1024, 600);
 //    resize(1400, 1000);
 
     centerToScreen(this);
 
-    //load ss
-    QFile loadStyleSheet;
-    loadStyleSheet.setFileName("style/styleMain.stylesheet");
-    loadStyleSheet.open(QFile::ReadOnly);
-    myStyle = QLatin1String(loadStyleSheet.readAll());
-    loadStyleSheet.close();
+    loadSS();
 
-    setStyleSheet(myStyle); //
-
-    CPopWinTgl = PrefWinTgl = 0;
     lastScene = "";
     menuSmallF = QFont("DejaVu Sans Mono", 10, 75);
 
-    QPixmap *pixMap60 = new QPixmap(60, 60);
-    pixMap60->fill(Qt::blue);
+    auto *pixMap60 = new QPixmap(60, 60);
+    pixMap60->fill(toQC(glm::vec3(0.f, 0.f, 1.f)));
     myIconCam = QIcon(*pixMap60);
 
-    pixMap60->fill(Qt::yellow);
+    pixMap60->fill(toQC(glm::vec3(1.f, 1.f, 0.f)));
     myIconLight = QIcon(*pixMap60);
-
-    addAttrTables();
 
     myAnim = new Anim(*this);
     myGLWidgetSh = new GLWidgetSh(*this);
-    myCPopWin = new CPopWin(*this);
+    addAttrTables();
+    myPaintWin = new PaintWin(*this);
     myPrefWin = new PrefWin(*this);
     myRadPop = new RadPop(*this);
     myGizmo = new Gizmo(*this);
@@ -66,7 +58,7 @@ MainWin::MainWin(QWidget *parent) : QMainWindow(parent)
     myProgress = new QProgressBar(); //
     myProgress->setFont(QFont("DejaVu Sans Mono", 20, 75));
 
-    QWidget *topWidget = new QWidget;
+    auto *topWidget = new QWidget;
     setCentralWidget(topWidget);
     myMenuBar_top = new MenuBarTop(*this);
     setMenuBar(myMenuBar_top);
@@ -93,6 +85,41 @@ MainWin::MainWin(QWidget *parent) : QMainWindow(parent)
     stackedMain->setCurrentIndex(3); // PROGRESSBAR
 
     progressAdd_init();
+
+//    rgb2HSV_d();
+}
+
+void MainWin::rgb2HSV_d()
+{
+    glm::vec3 rgb2HSV0(0.25f, 0.45f, 0.65f);
+    cout << "starting RGB color : " << glm::to_string(rgb2HSV0) << endl << endl;
+
+
+    auto rgb2HSV1 = QColor::fromRgbF(rgb2HSV0.r, rgb2HSV0.g, rgb2HSV0.b).toHsv();
+    glm::vec3 rgb2HSV1_toHSV_qc(rgb2HSV1.hue(), rgb2HSV1.saturationF(), rgb2HSV1.valueF());
+    cout << "rgb2HSV1_toHSV_qc = " << glm::to_string(rgb2HSV1_toHSV_qc) << endl;
+    cout << "hueF = " << rgb2HSV1.hueF() << " " << rgb2HSV1.hue() << " " << rgb2HSV1.hue() / 360.f << endl;
+
+
+    auto rgb2HSV0_glmConv = glm::hsvColor(rgb2HSV0);
+    cout << "rgb2HSV0_glmConv = " << glm::to_string(rgb2HSV0_glmConv) << endl;
+    cout << "0/1/2 = " << rgb2HSV0_glmConv[0] << " " << rgb2HSV0_glmConv[1] << " " << rgb2HSV0_glmConv[2] << endl;
+    cout << "R/G/B = " << rgb2HSV0_glmConv.r << " " << rgb2HSV0_glmConv.g << " " << rgb2HSV0_glmConv.b << endl;
+
+
+    auto myRGB = glm::rgbColor(rgb2HSV0_glmConv);
+    cout << "myRGB = " << glm::to_string(myRGB) << endl;
+}
+
+void MainWin::loadSS()
+{
+    QFile loadStyleSheet;
+    loadStyleSheet.setFileName("style/styleMain.stylesheet");
+    loadStyleSheet.open(QFile::ReadOnly);
+
+    myStyle = QString(QLatin1String(loadStyleSheet.readAll())).toStdString();
+    loadStyleSheet.close();
+    setStyleSheet(QString::fromStdString(myStyle)); //
 }
 
 void MainWin::progressAdd_init()
@@ -100,8 +127,8 @@ void MainWin::progressAdd_init()
     myProgress->setValue(0);
     QApplication::processEvents();
 
-    myGLWidgetSh->texInit();
-    myGLWidgetSh->proUp();
+    myGLWidgetSh->mapInit();
+    myGLWidgetSh->proInit();
 
     myProgress->setValue(40);
     QApplication::processEvents();
@@ -111,19 +138,19 @@ void MainWin::progressAdd_init()
     objInit();
     glWidgetInit();
 
-    for (unsigned int i = 0; i < allObj.size(); ++i)
-        myGLWidgetSh->VAOup(allObj[i]);
+    for (auto &i : allObj)
+        myGLWidgetSh->VAOup(i);
 
     myProgress->setValue(85);
     QApplication::processEvents();
 
-    cutTable->cutTable_init(); //
-    cutTable->refreshTable();
+    cutTable->cutTable_init(); cutTable->refreshTable();
     etcTable->refreshTable();
     glslTable->refreshTable();
     pathTable->refreshTable(); //
     attrTable->refreshTable();
 
+    //PAINT TABLES
     myProgress->setValue(100);
     QApplication::processEvents();
 
@@ -133,28 +160,46 @@ void MainWin::progressAdd_init()
     stackedMain->setCurrentIndex(2); //
 
     //INITIALIZE RM FOR DIR LIGHTS
-    for (unsigned int i = 0; i < allObj.size(); ++i)
+    for (auto &i : allObj)
     {
-        if (allObj[i]->type == "CAMLI" && allObj[i]->camLiType->val_s == "DIR")
-            allObj[i]->RM = allObj[i]->rotOrderUse(allObj[i]->rotOrder->val_s);
+        if (i->type == "CAMLI" && i->camLiType->val_s == "DIR")
+            i->RM = i->rotOrderUse(i->rotOrder->val_s);
     }
 
     myGLWidgetSh->addDeleteShadows("add");
     myGLWidgetSh->UBO_init();
-//    myGLWidgetSh->cubeFBO_node = myGLWidgetSh->cubeDynNode_create("cube", 1024, 1024);
+//    myGLWidgetSh->cubeFBON = myGLWidgetSh->cubeDynNode_create("cube", 1024, 1024);
 
     lightCt = countLights();
 
     //SINGLE VIEW AT START
-    for (unsigned int i = 0; i < allGL.size(); ++i)
+    for (auto &i : allGL)
     {
-        if (allGL[i]->debugID == 4)
+        if (i->ID_GLWidget == 4)
         {
             blankW_main->setParent(0);
-            stackedMain->insertWidget(1, &allGL[i]->mySplitV);
+            stackedMain->insertWidget(1, &i->mySplitV);
             stackedMain->setCurrentIndex(1);
             savedIdx = 1;
         }
+    }
+}
+
+void MainWin::keyReleaseEvent(QKeyEvent *e)
+{
+    if (e->isAutoRepeat())
+        return;
+
+    else if (e->key() == Qt::Key_I)
+    {
+        if (myPaintWin->stackedMain->currentIndex() == 0)
+            PaintWinTgl(0, 999);
+    }
+
+    else if (e->key() == Qt::Key_K)
+    {
+        if (myPaintWin->stackedMain->currentIndex() == 1)
+            PaintWinTgl(0, 999);
     }
 }
 
@@ -162,28 +207,29 @@ void MainWin::gridInit()
 {
     GridSetup myGridSetup[] =
     {
-        { "grid_front", {0.f, 0.f, 0.f} },
-        { "grid_frontB", {0.f, 0.f, 90.f} }, //
+        { "grid_front", { 0.f, 0.f, 0.f } },
+        { "grid_frontB", { 0.f, 0.f, 90.f } }, //
 
-        { "grid_left", {0.f, 90.f, 0.f} },
-        { "grid_leftB", {90.f, 90.f, 0.f} },
+        { "grid_left", { 0.f, 90.f, 0.f } },
+        { "grid_leftB", { 90.f, 90.f, 0.f } },
 
-        { "grid_top", {90.f, 0.f, 0.f} },
-        { "grid_topB", {0.f, 90.f, 90.f} }, //ok
+        { "grid_top", { 90.f, 0.f, 0.f } },
+        { "grid_topB", { 0.f, 90.f, 90.f } }, //ok
     };
 
-    for (unsigned int i = 0; i < arraySize(myGridSetup); ++i)
+    for (auto &i : myGridSetup)
     {
-        loadO = myGLWidgetSh->VBOup(0, "GRID", myGridSetup[i].name, 0); //
-        for (unsigned int j = 0; j < loadO.size(); ++j)
-        {
-            loadO[j]->deletable = 0;
-            loadO[j]->selectable = 0;
-            loadO[j]->ignoreOutliner = 1;
+        newObj = myGLWidgetSh->VBOup("999", "GRID", i.name, 0); //
 
-            loadO[j]->r->val_3 = myGridSetup[i].r;
-            loadO[j]->s->val_3 = glm::vec3(attrTable->gridSize->val_f);
-            allObj.push_back(loadO[j]);
+        for (auto &j : newObj)
+        {
+            j->deletable = false;
+            j->selectable = false;
+            j->ignoreOutliner = true;
+
+            j->r->val_3 = i.r;
+            j->s->val_3 = glm::vec3(attrTable->gridSize->val_f);
+            allObj.push_back(j);
         }
     }
 }
@@ -194,46 +240,47 @@ void MainWin::camInit()
 
     CamSetup myCamSetup[] =
     {
-        { "ORTHO", "back", {0.f, 0.f, -5.f} },
-        { "ORTHO", "bottom", {0.f, -5.f, .002f} }, //
-        { "ORTHO", "front", {0.f, 0.f, 5.f} },
-        { "ORTHO", "left", {5.f, 0.f, 0.f} },
-        { "ORTHO", "right", {-5.f, 0.f, 0.f} },
-        { "ORTHO", "top", {0.f, 5.f, .002f} }, //
+        { "ORTHO", "back", { 0.f, 0.f, -5.f } },
+        { "ORTHO", "bottom", { 0.f, -5.f, .002f } }, //
+        { "ORTHO", "front", { 0.f, 0.f, 5.f } },
+        { "ORTHO", "left", { 5.f, 0.f, 0.f } },
+        { "ORTHO", "right", { -5.f, 0.f, 0.f } },
+        { "ORTHO", "top", { 0.f, 5.f, .002f } }, //
 
-        { "PERSP", "persp", {10.f, 10.f, 10.f} },
-        { "PERSP", "persp1", {-5.f, 2.f, 5.f} },
+        { "PERSP", "persp", { 10.f, 10.f, 10.f } },
+        { "PERSP", "persp1", { -5.f, 2.f, 5.f } },
     };
 
-    for (unsigned int i = 0; i < arraySize(myCamSetup); ++i)
+    for (auto &i : myCamSetup)
     {
-        loadO = myGLWidgetSh->VBOup(0, myCamSetup[i].type, myCamSetup[i].name, 0);
-        for (unsigned int j = 0; j < loadO.size(); ++j)
+        newObj = myGLWidgetSh->VBOup("999", i.type, i.name, 0);
+
+        for (auto &j : newObj)
         {
-            loadO[j]->Cgiz = glm::vec3(1.f, 0.f, 0.f);
-            loadO[j]->t->val_3 = myCamSetup[i].t;
-            loadO[j]->piv->val_3 = loadO[j]->t->val_3;
+            j->Cgiz = glm::vec3(1.f, 0.f, 0.f);
+            j->t->val_3 = i.t;
+            j->piv->val_3 = j->t->val_3;
 
-            if (myCamSetup[i].type == "ORTHO") //sets in VBOup()
+            if (i.type == "ORTHO") //sets in VBOup()
             {
-                loadO[j]->nearClip->val_f = -10000.f;
-                loadO[j]->farClip->val_f = 10000.f;
-                loadO[j]->orthoType->val_s = myCamSetup[i].name.toUpper();
-                loadO[j]->ignoreOutliner = 1;
-                loadO[j]->deletable = 0;
-                loadO[j]->ref = 1;
+                j->nearClip->val_f = -10000.f;
+                j->farClip->val_f = 10000.f;
+                j->orthoType->val_s = stringToUpper(i.name);
+                j->ignoreOutliner = true;
+                j->deletable = false;
+                j->ref = true;
             }
 
-            else if (myCamSetup[i].name == "persp")
+            else if (i.name == "persp")
             {
-                loadO[j]->deletable = 0;
-                loadO[j]->ref = 1;
+                j->deletable = false;
+                j->ref = true;
             }
 
-            loadO[j]->setTarg(loadO[j]->targO, 0.f);
-            loadO[j]->v->val_b = (loadO[j]->camLiType->val_s != "ORTHO") ? 1 : 0;
+            j->setTarg(j->targO, 0.f);
+            j->v->val_b = (j->camLiType->val_s != "ORTHO") ? true : false;
 
-            allObj.push_back(loadO[j]);
+            allObj.push_back(j);
         }
     }
 }
@@ -242,30 +289,30 @@ void MainWin::glWidgetInit()
 {
     GLSetup myGL_setup[] =
     {
-        { "top", 0, *hLayU },
-        { "persp", 1, *hLayU },
+        { "top", 0, 0, *hLayU },
+        { "persp", 1, 1, *hLayU },
 
-        { "front", 0, *hLayD },
-        { "left", 1, *hLayD },
+        { "front", 0, 2, *hLayD },
+        { "left", 1, 3, *hLayD },
 
-        { "persp", 0, *vLay },
-        { "persp1", 1, *vLay },
-//        { "top", 1, *vLay },
+        { "persp", 0, 4, *vLay },
+        { "persp1", 1, 5, *vLay },
     };
 
-    for (unsigned int i = 0; i < arraySize(myGL_setup); ++i)
+    //create 6 GLWidgets and add them to allGL
+    for (auto &i : myGL_setup)
     {
-        QSplitter *splitV = new QSplitter(Qt::Vertical);
+        auto *splitV = new QSplitter(Qt::Vertical);
         splitV->setHandleWidth(2);
 
-        shared_ptr<GLWidget> myGL = make_shared<GLWidget>(*this, *splitV, myGLWidgetSh);
-        myGL.get()->debugID = i;
+        auto myGL = make_shared<GLWidget>(*this, *splitV, myGLWidgetSh);
+        myGL->ID_GLWidget = i.ID;
         allGL.push_back(myGL);
 
-        shared_ptr<CamCombo> myCamCombo = make_shared<CamCombo>(*this, myGL);
+        auto myCamCombo = make_shared<CamCombo>(*this, myGL);
         allCamCombo.push_back(myCamCombo);
 
-        int camIdx = myCamCombo->findText(myGL_setup[i].cam); //find the default cam
+        auto camIdx = myCamCombo->findText(QString::fromStdString(i.cam)); //find the default cam
         myCamCombo->setCurrentIndex(camIdx);
         myCamCombo->activated(camIdx);
 
@@ -275,221 +322,229 @@ void MainWin::glWidgetInit()
         splitV->setStretchFactor(0, 0);
         splitV->setStretchFactor(1, 1);
 
-        myGL_setup[i].split.insertWidget(myGL_setup[i].idx, splitV);
+        i.split.insertWidget(i.splitIdx, splitV);
     }
 }
 
 void MainWin::objInit()
 {
-    loadO = myGLWidgetSh->VBOup(0, "BB", "bb", 0);
-    for (unsigned int i = 0; i < loadO.size(); ++i)
+    newObj = myGLWidgetSh->VBOup("999", "BB", "bb", 0);
+
+    for (auto &i : newObj)
     {
-        loadO[i]->deletable = 0;
-        loadO[i]->ignoreOutliner = 1;
-        loadO[i]->selectable = 0;
-        loadO[i]->v->val_b = 0;
-        allObj.push_back(loadO[i]);
-        myBB = loadO[i];
+        i->deletable = false;
+        i->ignoreOutliner = true;
+        i->selectable = false;
+        i->v->val_b = false;
+        allObj.push_back(i);
+        myBB = i;
     }
 
-    loadO = myGLWidgetSh->VBOup(0, "FBO", "fsq", 0);
-    for (unsigned int i = 0; i < loadO.size(); ++i)
+    newObj = myGLWidgetSh->VBOup("999", "FBO", "fsq", 0);
+    for (auto &i : newObj)
     {
-        loadO[i]->deletable = 0;
-        loadO[i]->ignoreOutliner = 1;
-        loadO[i]->selectable = 0;
+        i->deletable = false;
+        i->ignoreOutliner = true;
+        i->selectable = false;
 
-        for (unsigned int j = 0; j < myGLWidgetSh->allTex.size(); ++j)
+        for (auto &j : myGLWidgetSh->allMaps)
         {
-            if (myGLWidgetSh->allTex[j].name == "ennis")
+            if (j.name == "ennis")
             {
-                if (myGLWidgetSh->allTex[j].type == "CUBE")
-                    cubeM_specular_32 = myGLWidgetSh->allTex[j].tex_32;
+                if (j.type == "CUBE_SPEC")
+                    cubeM_specular_32 = j.layer[0].tex1_32;
 
-                else if (myGLWidgetSh->allTex[j].type == "CUBE_IRRAD")
-                    cubeM_irradiance_32 = myGLWidgetSh->allTex[j].tex_32;
+                else if (j.type == "CUBE_IRRAD")
+                    cubeM_irradiance_32 = j.layer[0].tex1_32;
 
-                loadO[i]->cubeM->val_s = myGLWidgetSh->allTex[j].name;
+                i->cubeM->val_s = j.name;
             }
         }
 
-        allObj.push_back(loadO[i]);
-        myFSQ = loadO[i];
+        allObj.push_back(i);
+        myFSQ = i;
     }
 
-    loadO = myGLWidgetSh->VBOup(0, "SELRECT", "selRect", 0);
-    for (unsigned int i = 0; i < loadO.size(); ++i)
+    newObj = myGLWidgetSh->VBOup("999", "FBO", "paintStroke", 0);
+    for (auto &i : newObj)
     {
-        loadO[i]->deletable = 0;
-        loadO[i]->ignoreOutliner = 1;
-        loadO[i]->selectable = 0;
-        allObj.push_back(loadO[i]);
+        i->deletable = false;
+        i->ignoreOutliner = true;
+        i->selectable = false;
+
+        allObj.push_back(i);
+        paintStroke = i;
     }
 
-    loadO = myGLWidgetSh->VBOup(0, "TXT", "txt", 0);
-    for (unsigned int i = 0; i < loadO.size(); ++i)
+    newObj = myGLWidgetSh->VBOup("999", "SELRECT", "selRect", 0);
+    for (auto &i : newObj)
     {
-        loadO[i]->deletable = 0;
-        loadO[i]->ignoreOutliner = 1;
-        loadO[i]->selectable = 0;
-        allObj.push_back(loadO[i]);
-        myTxt = loadO[i];
+        i->deletable = false;
+        i->ignoreOutliner = true;
+        i->selectable = false;
+        allObj.push_back(i);
     }
 
-    loadO = myGLWidgetSh->VBOup(0, "RTT", "rtt", 0);
-    for (unsigned int i = 0; i < loadO.size(); ++i)
+    newObj = myGLWidgetSh->VBOup("999", "TXT", "txt", 0);
+    for (auto &i : newObj)
     {
-        loadO[i]->s->val_3 = glm::vec3(.075f, 0.f, 0.f);
-        loadO[i]->t->val_3 = glm::vec3(-2.f, .05f, 0.f);
-        loadO[i]->v->val_b = 0;
-        allObj.push_back(loadO[i]);
+        i->deletable = false;
+        i->ignoreOutliner = true;
+        i->selectable = false;
+        allObj.push_back(i);
+        myTxt = i;
     }
 
-    loadO = myGLWidgetSh->VBOup(0, "GIZ_CUBE", "pivot", 0);
-    for (unsigned int i = 0; i < loadO.size(); ++i)
+    newObj = myGLWidgetSh->VBOup("999", "GIZ_CUBE", "pivot", 0);
+    for (auto &i : newObj)
     {
-        loadO[i]->v->val_b = 0;
-        loadO[i]->s->val_3 = glm::vec3(.3f);
-        loadO[i]->Cgiz = glm::vec3(1.f, 1.f, 0.f);
-        loadO[i]->deletable = 0;
-        loadO[i]->ignoreOutliner = 1;
-        loadO[i]->selectable = 0;
-        allObj.push_back(loadO[i]);
-        myPivot = loadO[i];
+        i->v->val_b = false;
+        i->s->val_3 = glm::vec3(.3f);
+        i->Cgiz = glm::vec3(1.f, 1.f, 0.f);
+        i->deletable = false;
+        i->ignoreOutliner = true;
+        i->selectable = false;
+        allObj.push_back(i);
+        myPivot = i;
     }
 
 //    startupScene("cubemapDebug");
 //    startupScene("lotsOfSpheres");
 //    startupScene("lotsOfSpheres2");
-//    startupScene("teapotPlane");
-    startupScene("SSR");
+    startupScene("teapotPlane");
+//    startupScene("SSR");
 
     /* DEFAULT LIGHTS */
-    loadO = myGLWidgetSh->VBOup(0, "SPOT", "light", 0);
-    //    loadO = myGLWidgetSh->VBOup(0, "POINT", "light", 0);
-    for (unsigned int i = 0; i < loadO.size(); ++i)
-    {
-        loadO[i]->t->val_3 = glm::vec3(0.f, 10.f, .1f);
-        loadO[i]->piv->val_3 = loadO[i]->t->val_3;
-        loadO[i]->Cgiz = glm::vec3(1.f, 0.f, 0.f);
-        loadO[i]->setTarg(loadO[i]->targO, 0.f);
-//        loadO[i]->lSpotO->val_f = 40.f;
-        loadO[i]->lInten->val_f = 5.f;
-
-        allObj.push_back(loadO[i]);
-    }
-
-    loadO = myGLWidgetSh->VBOup(0, "SPOT", "light", 0);
-    for (unsigned int i = 0; i < loadO.size(); ++i)
-    {
-//        loadO[i]->t->val_3 = glm::vec3(10.f);
-        loadO[i]->t->val_3 = glm::vec3(8.f);
-        loadO[i]->piv->val_3 = loadO[i]->t->val_3;
-        loadO[i]->Cgiz = glm::vec3(1.f, 0.f, 0.f);
-        loadO[i]->setTarg(loadO[i]->targO, 0.f);
-//        loadO[i]->lSpotO->val_f = 40.f;
-        loadO[i]->lInten->val_f = 5.f;
-
-        allObj.push_back(loadO[i]);
-    }
-
-//    loadO = myGLWidgetSh->VBOup(0, "SPOT", "light", 0);
-//    //loadO = myGLWidgetSh->VBOup(0, "POINT", "light", 0);
-//    for (unsigned int i = 0; i < loadO.size(); ++i)
+//    newObj = myGLWidgetSh->VBOup("999", "SPOT", "light", 0);
+//    //newObj = myGLWidgetSh->VBOup("999", "POINT", "light", 0);
+//    for (auto &i : newObj)
 //    {
-////        loadO[i]->t->val_3 = glm::vec3(0.f, 8.f, .1f);
-//        loadO[i]->t->val_3 = glm::vec3(6.f, 8.f, .1f);
-//        loadO[i]->piv->val_3 = loadO[i]->t->val_3;
-//        loadO[i]->Cgiz = glm::vec3(1.f, 0.f, 0.f);
-//        loadO[i]->setTarg(loadO[i]->targO, 0.f);
-//        loadO[i]->lSpotO->val_f = 60.f;
+//        i->t->val_3 = glm::vec3(0.f, 10.f, .1f);
+//        i->piv->val_3 = i->t->val_3;
+//        i->Cgiz = glm::vec3(1.f, 0.f, 0.f);
+//        i->setTarg(i->targO, 0.f);
+//        //i->lSpotO->val_f = 40.f;
+//        i->lInten->val_f = 5.f;
 
-//        allObj.push_back(loadO[i]);
+//        allObj.push_back(i);
 //    }
 
-//    loadO = myGLWidgetSh->VBOup(0, "SPOT", "light", 0); // #2
-//    for (unsigned int i = 0; i < loadO.size(); ++i)
-//    {
-//        loadO[i]->t->val_3 = glm::vec3(0.f, 8.f, 0.f);
-//        loadO[i]->piv->val_3 = loadO[i]->t->val_3;
-//        loadO[i]->Cgiz = glm::vec3(1.f, 0.f, 0.f);
-//        loadO[i]->setTarg(loadO[i]->targO, 0.f);
+    newObj = myGLWidgetSh->VBOup("999", "SPOT", "light", 0);
+    for (auto &i : newObj)
+    {
+        //i->t->val_3 = glm::vec3(10.f);
+        i->t->val_3 = glm::vec3(8.f);
+        i->piv->val_3 = i->t->val_3;
+        i->Cgiz = glm::vec3(1.f, 0.f, 0.f);
+        i->setTarg(i->targO, 0.f);
+        //i->lSpotO->val_f = 40.f;
+        i->lInten->val_f = 5.f;
 
-//        allObj.push_back(loadO[i]);
+        allObj.push_back(i);
+    }
+
+    newObj = myGLWidgetSh->VBOup("999", "SPOT", "light", 0);
+    for (auto &i : newObj)
+    {
+        i->t->val_3 = glm::vec3(-8.f, 8.f, 8.f);
+        i->piv->val_3 = i->t->val_3;
+        i->Cgiz = glm::vec3(1.f, 0.f, 0.f);
+        i->setTarg(i->targO, 0.f);
+        i->lSpotO->val_f = 60.f;
+
+        allObj.push_back(i);
+    }
+
+//    newObj = myGLWidgetSh->VBOup("999", "SPOT", "light", 0); // #2
+//    for (auto &i : newObj)
+//    {
+//        i->t->val_3 = glm::vec3(0.f, 8.f, 0.f);
+//        i->piv->val_3 = i->t->val_3;
+//        i->Cgiz = glm::vec3(1.f, 0.f, 0.f);
+//        i->setTarg(i->targO, 0.f);
+
+//        allObj.push_back(i);
 //    }
 
     LightSetup myLightSetup[] =
     {
-        { "AREA", "areaLight"},
-        { "DIR", "dirLight"},
-        { "POINT", "pointLight"},
-        { "SPOT", "spotLight"},
+        { "AREA", "areaLight" },
+        { "DIR", "dirLight" },
+        { "POINT", "pointLight" },
+        { "SPOT", "spotLight" },
     };
 
-    for (unsigned int i = 0; i < arraySize(myLightSetup); ++i)
+    for (auto &i : myLightSetup)
     {
-        loadO = myGLWidgetSh->VBOup(0, myLightSetup[i].type, myLightSetup[i].name, 0);
-        for (unsigned int j = 0; j < loadO.size(); ++j)
+        newObj = myGLWidgetSh->VBOup("999", i.type, i.name, 0);
+        for (auto &j : newObj)
         {
-            loadO[j]->ignoreOutliner = 1;
-            loadO[j]->selectable = 0;
-            loadO[j]->ref = 1;
-            loadO[j]->v->val_b = 0;
-            allObj.push_back(loadO[j]);
+            j->ignoreOutliner = true;
+            j->selectable = 0;
+            j->ref = true;
+            j->v->val_b = false;
+            allObj.push_back(j);
 
-            if (myLightSetup[i].name == "areaLight") myAreaLight = loadO[j];
-            else if (myLightSetup[i].name == "dirLight") myDirLight = loadO[j];
-            else if (myLightSetup[i].name == "pointLight") myPointLight = loadO[j];
-            else if (myLightSetup[i].name == "spotLight") mySpotLight = loadO[j];
+            if (i.name == "areaLight") myAreaLight = j;
+            else if (i.name == "dirLight") myDirLight = j;
+            else if (i.name == "pointLight") myPointLight = j;
+            else if (i.name == "spotLight") mySpotLight = j;
         }
     }
 
-    loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "cone.obj", "VOL", "volCone", 0);
-    for (unsigned int i = 0; i < loadO.size(); ++i)
+    string conc = pathTable->pathObj->val_s;
+    conc.append("cone.obj");
+
+    newObj = myGLWidgetSh->VBOup(conc, "VOL", "volCone", 0);
+    for (auto &i : newObj)
     {
-        loadO[i]->ignoreOutliner = 1;
-        loadO[i]->selectable = 0;
-        allObj.push_back(loadO[i]);
-        myVolCone = loadO[i];
+        i->ignoreOutliner = true;
+        i->selectable = 0;
+        allObj.push_back(i);
+        myVolCone = i;
     }
 
     myOutliner->refreshOutliner(1);
 }
 
-void MainWin::startupScene(QString name)
+void MainWin::startupScene(string name)
 {
     if (name == "lotsOfSpheres")
     {
+        auto conc = pathTable->pathObj->val_s;
+        conc.append("sphere.obj");
+
         for (int n = 0; n < 20; ++n)
         {
-            loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "sphere.obj", "OBJ", "sphere", 0);
-            for (unsigned int i = 0; i < loadO.size(); ++i)
+            newObj = myGLWidgetSh->VBOup(conc, "OBJ", "sphere", 0);
+
+            for (auto &i : newObj)
             {
-                loadO[i]->t->val_3 = glm::vec3(n + (n - .75f) - 15.f, 0.f, 0.f);
-//                loadO[i]->t->val_3 = glm::vec3(n + .5f, 0.f, 0.f);
-                loadO[i]->piv->val_3 = loadO[i]->t->val_3;
-                loadO[i]->s->val_3 = glm::vec3(1.f);
-                allObj.push_back(loadO[i]);
+                i->t->val_3 = glm::vec3(n + (n - .75f) - 15.f, 0.f, 0.f);
+                i->piv->val_3 = i->t->val_3;
+                i->s->val_3 = glm::vec3(1.f);
+                allObj.push_back(i);
             }
         }
     }
 
     else if (name == "lotsOfSpheres2")
     {
+        auto conc = pathTable->pathObj->val_s;
+        conc.append("sphere.obj");
+
         for (int w = 0; w < 20; ++w)
         {
             for (int n = 0; n < 20; ++n)
             {
-                loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "sphere.obj", "OBJ", "sphere", 0);
-                for (unsigned int i = 0; i < loadO.size(); ++i)
+                newObj = myGLWidgetSh->VBOup(conc, "OBJ", "sphere", 0);
+
+                for (auto &i : newObj)
                 {
-                    loadO[i]->t->val_3 = glm::vec3(n + (n - .75f) - 15.f, 0.f, w + (w - .75f));
-//                    loadO[i]->t->val_3 = glm::vec3(n + (n - .75f) - 15.f, 0.f, w);
-//                    loadO[i]->t->val_3 = glm::vec3(n + (n - .75f) - 15.f, 0.f, 0.f);
-    //                loadO[i]->t->val_3 = glm::vec3(n + .5f, 0.f, 0.f);
-                    loadO[i]->piv->val_3 = loadO[i]->t->val_3;
-                    loadO[i]->s->val_3 = glm::vec3(1.f);
-                    allObj.push_back(loadO[i]);
+                    i->t->val_3 = glm::vec3(n + (n - .75f) - 15.f, 0.f, w + (w - .75f));
+                    i->piv->val_3 = i->t->val_3;
+                    i->s->val_3 = glm::vec3(1.f);
+                    allObj.push_back(i);
                 }
             }
         }
@@ -497,147 +552,155 @@ void MainWin::startupScene(QString name)
 
     else if (name == "cubemapDebug")
     {
-        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "sphere.obj", "OBJ", "sphereF", 0);
-        for (unsigned int i = 0; i < loadO.size(); ++i)
+        auto conc = pathTable->pathObj->val_s;
+        conc.append("sphere.obj");
+
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "sphereF", 0);
+        for (auto &i : newObj)
         {
-            loadO[i]->t->val_3 = glm::vec3(0.f, 10.f, 5.f);
-            loadO[i]->piv->val_3 = loadO[i]->t->val_3;
-            loadO[i]->s->val_3 = glm::vec3(1.f);
-            allObj.push_back(loadO[i]);
+            i->t->val_3 = glm::vec3(0.f, 10.f, 5.f);
+            i->piv->val_3 = i->t->val_3;
+            i->s->val_3 = glm::vec3(1.f);
+            allObj.push_back(i);
         }
 
-        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "sphere.obj", "OBJ", "sphereB", 0);
-        for (unsigned int i = 0; i < loadO.size(); ++i)
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "sphereB", 0);
+        for (auto &i : newObj)
         {
-            loadO[i]->t->val_3 = glm::vec3(0.f, 10.f, -5.f);
-            loadO[i]->piv->val_3 = loadO[i]->t->val_3;
-            loadO[i]->s->val_3 = glm::vec3(1.f);
-            allObj.push_back(loadO[i]);
+            i->t->val_3 = glm::vec3(0.f, 10.f, -5.f);
+            i->piv->val_3 = i->t->val_3;
+            i->s->val_3 = glm::vec3(1.f);
+            allObj.push_back(i);
         }
 
-        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "sphere.obj", "OBJ", "sphereL", 0);
-        for (unsigned int i = 0; i < loadO.size(); ++i)
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "sphereL", 0);
+        for (auto &i : newObj)
         {
-            loadO[i]->t->val_3 = glm::vec3(-5.f, 10.f, 0.f);
-            loadO[i]->piv->val_3 = loadO[i]->t->val_3;
-            loadO[i]->s->val_3 = glm::vec3(1.f);
-            allObj.push_back(loadO[i]);
+            i->t->val_3 = glm::vec3(-5.f, 10.f, 0.f);
+            i->piv->val_3 = i->t->val_3;
+            i->s->val_3 = glm::vec3(1.f);
+            allObj.push_back(i);
         }
 
-        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "sphere.obj", "OBJ", "sphereR", 0);
-        for (unsigned int i = 0; i < loadO.size(); ++i)
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "sphereR", 0);
+        for (auto &i : newObj)
         {
-            loadO[i]->t->val_3 = glm::vec3(5.f, 10.f, 0.f);
-            loadO[i]->piv->val_3 = loadO[i]->t->val_3;
-            loadO[i]->s->val_3 = glm::vec3(1.f);
-            allObj.push_back(loadO[i]);
+            i->t->val_3 = glm::vec3(5.f, 10.f, 0.f);
+            i->piv->val_3 = i->t->val_3;
+            i->s->val_3 = glm::vec3(1.f);
+            allObj.push_back(i);
         }
 
-        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "sphere.obj", "OBJ", "sphereU", 0);
-        for (unsigned int i = 0; i < loadO.size(); ++i)
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "sphereU", 0);
+        for (auto &i : newObj)
         {
-            loadO[i]->t->val_3 = glm::vec3(0.f, 15.f, 0.f);
-            loadO[i]->piv->val_3 = loadO[i]->t->val_3;
-            loadO[i]->s->val_3 = glm::vec3(1.f);
-            allObj.push_back(loadO[i]);
+            i->t->val_3 = glm::vec3(0.f, 15.f, 0.f);
+            i->piv->val_3 = i->t->val_3;
+            i->s->val_3 = glm::vec3(1.f);
+            allObj.push_back(i);
         }
 
-        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "sphere.obj", "OBJ", "sphereD", 0);
-        for (unsigned int i = 0; i < loadO.size(); ++i)
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "sphereD", 0);
+        for (auto &i : newObj)
         {
-            loadO[i]->t->val_3 = glm::vec3(0.f, 5.f, 0.f);
-            loadO[i]->piv->val_3 = loadO[i]->t->val_3;
-            loadO[i]->s->val_3 = glm::vec3(1.f);
-            allObj.push_back(loadO[i]);
+            i->t->val_3 = glm::vec3(0.f, 5.f, 0.f);
+            i->piv->val_3 = i->t->val_3;
+            i->s->val_3 = glm::vec3(1.f);
+            allObj.push_back(i);
         }
-
-//        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "sphere.obj", "OBJ", "sphereCenter", 0);
-//        for (int i = 0; i < loadO.size(); ++i)
-//        {
-//            loadO[i]->t->val_3 = glm::vec3(0.f, 10.f, 0.f);
-//            loadO[i]->piv->val_3 = loadO[i]->t->val_3;
-//            loadO[i]->s->val_3 = glm::vec3(1.f);
-//            allObj.push_back(loadO[i]);
-//        }
 
         //CORNELL
-        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "plane.obj", "OBJ", "planeU", 0);
-        for (unsigned int i = 0; i < loadO.size(); ++i)
+        conc = pathTable->pathObj->val_s;
+        conc.append("plane.obj");
+
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "planeU", 0);
+        for (auto &i : newObj)
         {
-            loadO[i]->r->val_3 = glm::vec3(0.f, 0.f, 180.f);
-            loadO[i]->t->val_3 = glm::vec3(0.f, 20.f, 0.f);
-            loadO[i]->s->val_3 = glm::vec3(20.f);
-            allObj.push_back(loadO[i]);
+            i->r->val_3 = glm::vec3(0.f, 0.f, 180.f);
+            i->t->val_3 = glm::vec3(0.f, 20.f, 0.f);
+            i->s->val_3 = glm::vec3(20.f);
+            allObj.push_back(i);
         }
 
-        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "plane.obj", "OBJ", "planeD", 0);
-        for (unsigned int i = 0; i < loadO.size(); ++i)
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "planeD", 0);
+        for (auto &i : newObj)
         {
-            loadO[i]->s->val_3 = glm::vec3(20.f);
-            allObj.push_back(loadO[i]);
+            i->s->val_3 = glm::vec3(20.f);
+            allObj.push_back(i);
         }
 
-        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "plane.obj", "OBJ", "planeB", 0);
-        for (unsigned int i = 0; i < loadO.size(); ++i)
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "planeB", 0);
+        for (auto &i : newObj)
         {
-            loadO[i]->r->val_3 = glm::vec3(90.f, 0.f, 0.f);
-            loadO[i]->t->val_3 = glm::vec3(0.f, 10.f, -10.f);
-            loadO[i]->s->val_3 = glm::vec3(20.f);
-            allObj.push_back(loadO[i]);
+            i->r->val_3 = glm::vec3(90.f, 0.f, 0.f);
+            i->t->val_3 = glm::vec3(0.f, 10.f, -10.f);
+            i->s->val_3 = glm::vec3(20.f);
+            allObj.push_back(i);
         }
     }
 
     else if (name == "teapotPlane")
     {
-        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "teapot.obj", "OBJ", "teapot", 0);
-        for (unsigned int i = 0; i < loadO.size(); ++i)
+        auto conc = pathTable->pathObj->val_s;
+        conc.append("teapot.obj");
+
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "teapot", 0);
+        for (auto &i : newObj)
         {
-//            loadO[i]->t->val_3 = glm::vec3(0.f, 5.f, 0.f);
-            loadO[i]->r->val_3 = glm::vec3(0.f, 90.f, 0.f);
-            loadO[i]->s->val_3 = glm::vec3(1.5f);
-            allObj.push_back(loadO[i]);
+//            i->ruffM->val_s = "white";
+            i->r->val_3 = glm::vec3(0.f, 90.f, 0.f);
+            i->s->val_3 = glm::vec3(1.5f);
+            allObj.push_back(i);
         }
 
-        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "plane.obj", "OBJ", "planeD", 0);
-        for (unsigned int i = 0; i < loadO.size(); ++i)
+        conc = pathTable->pathObj->val_s;
+        conc.append("plane.obj");
+
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "planeD", 0);
+        for (auto &i : newObj)
         {
-            loadO[i]->s->val_3 = glm::vec3(20.f);
-            allObj.push_back(loadO[i]);
+            i->s->val_3 = glm::vec3(20.f);
+//            i->ruffM->val_s = "white";
+            allObj.push_back(i);
         }
     }
 
     else if (name == "SSR")
     {
-//        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "teapot.obj", "OBJ", "teapot", 0);
-        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "torus.obj", "OBJ", "torus", 0);
-        for (unsigned int i = 0; i < loadO.size(); ++i)
-        {
-//            loadO[i]->normalM->val_s = "voronoi";
-//            loadO[i]->albedoM->val_s = "brush5";
+        auto conc = pathTable->pathObj->val_s;
+        conc.append("torus.obj");
 
-            loadO[i]->Kr->val_f = .008f;
-            loadO[i]->t->val_3.y = 3.5f;
-//            loadO[i]->t->val_3.y = 10.f;
-            loadO[i]->s->val_3 = glm::vec3(1.5f);
-            allObj.push_back(loadO[i]);
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "torus", 0);
+        for (auto &i : newObj)
+        {
+//            i->normalM->val_s = "voronoi";
+            i->albedoM->val_s = "checker";
+
+            i->t->val_3.y = 3.5f;
+            i->piv->val_3 = i->t->val_3;
+            i->s->val_3 = glm::vec3(1.5f);
+            allObj.push_back(i);
         }
 
-        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "plane.obj", "OBJ", "plane", 0);
-        for (unsigned int i = 0; i < loadO.size(); ++i)
+        conc = pathTable->pathObj->val_s;
+        conc.append("plane.obj");
+
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "plane", 0);
+        for (auto &i : newObj)
         {
-            loadO[i]->Kr->val_f = .008f;
-            loadO[i]->s->val_3 = glm::vec3(20.f);
-            allObj.push_back(loadO[i]);
+            i->albedoM->val_s = "uv";
+            i->s->val_3 = glm::vec3(20.f);
+            allObj.push_back(i);
         }
 
-        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + "plane.obj", "OBJ", "plane", 0);
-        for (unsigned int i = 0; i < loadO.size(); ++i)
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "plane", 0);
+        for (auto &i : newObj)
         {
-            loadO[i]->Kr->val_f = .008f;
-            loadO[i]->r->val_3 = glm::vec3(90.f, 0.f, 0.f);
-            loadO[i]->t->val_3 = glm::vec3(0.f, 10.f, -5.f);
-            loadO[i]->s->val_3 = glm::vec3(20.f);
-            allObj.push_back(loadO[i]);
+            i->albedoM->val_s = "uv";
+            i->r->val_3 = glm::vec3(90.f, 0.f, 0.f);
+            i->t->val_3 = glm::vec3(0.f, 10.f, -5.f);
+            i->s->val_3 = glm::vec3(20.f);
+            allObj.push_back(i);
         }
     }
 }
@@ -646,53 +709,59 @@ void MainWin::camLiAdd()
 {
     clearSel();
 
-    loadO = myGLWidgetSh->VBOup(0, "PERSP", "camli", 0);
-    for (unsigned int i = 0; i < loadO.size(); ++i)
+    newObj = myGLWidgetSh->VBOup("999", "PERSP", "camli", 0);
+    for (auto &i : newObj)
     {
-        loadO[i]->Cgiz = glm::vec3(1.f, 0.f, 0.f);
-        loadO[i]->selected = 1;
+        i->Cgiz = glm::vec3(1.f, 0.f, 0.f);
+        i->selected = true;
 
-        selB = loadO[i];
-        allObj.push_back(loadO[i]);
+        selB = i;
+        allObj.push_back(i);
     }
 
-    for (unsigned int i = 0; i < allGL.size(); ++i)
+    for (auto &i : allGL)
     {
-        if (allGL[i]->debugID == lastFocusGL)
+        if (i->ID_GLWidget == ID_lastFocused)
         {
-            selB->t->val_3 = allGL[i]->selCamLi->t->val_3;
-            selB->piv->val_3 = allGL[i]->selCamLi->t->val_3;
+            selB->t->val_3 = i->selCamLi->t->val_3;
+            selB->piv->val_3 = i->selCamLi->t->val_3;
             selB->setTarg(selB->targO, 0.f);
-            selB->r->val_3 = allGL[i]->selCamLi->r->val_3;
+            selB->r->val_3 = i->selCamLi->r->val_3;
 
-            allGL[i]->selCamLi = selB;
+            i->selCamLi = selB;
         }
     }
 
     myOutliner->refreshOutliner(1);
     attrTable->refreshTable();
 
-    for (unsigned int i = 0; i < allCamCombo.size(); ++i)
-        allCamCombo[i]->refresh();
+    for (auto &i : allCamCombo)
+        i->refresh();
 
     //dont need to refresh shadows b/c creating a cam
 }
 
-void MainWin::objAdd(QString type, QString method)
+void MainWin::objAdd(string type, string method)
 {
     clearSel();
 
     if (method == "DRAGDROP")
-        loadO = myGLWidgetSh->VBOup(type, "OBJ", "renameMe", 0);
+        newObj = myGLWidgetSh->VBOup(type, "OBJ", "renameMe", 0);
 
     else if (method == "POP")
-        loadO = myGLWidgetSh->VBOup(pathTable->pathObj->val_s + type + ".obj", "OBJ", type, 0);
-
-    for (unsigned int i = 0; i < loadO.size(); ++i)
     {
-        loadO[i]->selected = 1;
-        selB = loadO[i];
-        allObj.push_back(loadO[i]);
+        auto conc = pathTable->pathObj->val_s;
+        conc.append(type);
+        conc.append(".obj");
+
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", type, 0);
+    }
+
+    for (auto &i : newObj)
+    {
+        i->selected = true;
+        selB = i;
+        allObj.push_back(i);
     }
 
     setLightsDirty();
@@ -707,18 +776,17 @@ void MainWin::addAttrTables()
     dock_attrTable->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 
     dock_attrTable_holder = new QWidget;
-    QVBoxLayout *dock_matrix_vbox = new QVBoxLayout(dock_attrTable_holder);
+    auto *dock_matrix_vbox = new QVBoxLayout(dock_attrTable_holder);
 
     attrTable_holder = new QWidget;
     stackedAttrTable = new QStackedLayout();
-    QWidget *blankW_matrix = new QWidget;
+    auto *blankW_matrix = new QWidget;
     stackedAttrTable->insertWidget(0, blankW_matrix);
 
     attrTable_holder->setLayout(stackedAttrTable);
     dock_matrix_vbox->insertWidget(0, attrTable_holder);
 
     attrTable = new Attrs(*this);
-    attrTable->tableType = "attr";
 
     stackedAttrTable->insertWidget(1, attrTable);
 
@@ -729,19 +797,26 @@ void MainWin::addAttrTables()
     dock_attrTable->setVisible(1); //
 
     //PREF TABLES
-    cutTable = new Attrs(*this); cutTable->tableType = "cut";
-    etcTable = new Attrs(*this); etcTable->tableType = "etc";
-    glslTable = new Attrs(*this); glslTable->tableType = "glsl";
-    pathTable = new Attrs(*this); pathTable->tableType = "path";
+    cutTable = new Attrs(*this);
+    etcTable = new Attrs(*this);
+    glslTable = new Attrs(*this);
+    pathTable = new Attrs(*this);
+
+    //LAYER PICK TABLES
+    objectLay = new LayerSel(*this);
+    typeLay = new LayerSel(*this);
+    mapLay = new LayerSel(*this);
+    layerLay = new LayerSel(*this);
+    layerLay->setSelectionMode(QAbstractItemView::ExtendedSelection);
 }
 
 void MainWin::addOutliner()
 {
-    dock_outliner = new QDockWidget("o",this);
+    dock_outliner = new QDockWidget("o", this);
     dock_outliner->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 
     dock_outliner_holder = new QWidget();
-    QGridLayout *outlinerGridLayout = new QGridLayout(dock_outliner_holder);
+    auto *outlinerGridLayout = new QGridLayout(dock_outliner_holder);
 
     myOutliner = new Outliner(*this);
     outlinerGridLayout->addWidget(myOutliner);
@@ -749,16 +824,20 @@ void MainWin::addOutliner()
     dock_outliner->setWidget(dock_outliner_holder);
     addDockWidget(Qt::LeftDockWidgetArea, dock_outliner);
 
-    dock_outliner->setFloating(1); //
-    dock_outliner->setVisible(1); //
+    auto startFloating = false;
+    if (startFloating)
+    {
+        dock_outliner->setFloating(1); //
+        dock_outliner->setVisible(1); //
 
-    centerToScreen(dock_outliner);
-    glm::vec2 moveRelative(glm::vec2(-650, 200) + toVec2(dock_outliner->pos()));
-    dock_outliner->move(moveRelative.x, moveRelative.y);
-    dock_outliner->resize(dock_outliner->width() - 100, dock_outliner->height());
+        centerToScreen(dock_outliner);
+        glm::vec2 moveRelative(glm::vec2(-650, 200) + toVec2(dock_outliner->pos()));
+        dock_outliner->move(moveRelative.x, moveRelative.y);
+        dock_outliner->resize(dock_outliner->width() - 100, dock_outliner->height());
+    }
 
     //SHOW / HIDE OUTLINER
-    QAction *showHideOutliner = dock_outliner->toggleViewAction();
+    auto *showHideOutliner = dock_outliner->toggleViewAction();
     showHideOutliner->setShortcut(tr("8"));
     edMenu->addAction(showHideOutliner);
 
@@ -772,25 +851,25 @@ void MainWin::addIoMenu()
     ioMenu->setFont(menuSmallF);
 
     ioMenu->addAction("new", this, SLOT(newScene()));
-    QShortcut *new_s = new QShortcut(tr("CTRL+N"), this);
+    auto *new_s = new QShortcut(tr("CTRL+N"), this);
     connect(new_s, SIGNAL(activated()), this, SLOT(newScene()));
 
     ioMenu->addAction("open", this, SLOT(openScene()));
-    QShortcut *open_s = new QShortcut(tr("CTRL+O"), this);
+    auto *open_s = new QShortcut(tr("CTRL+O"), this);
     connect(open_s, SIGNAL(activated()), this, SLOT(openScene()));
 
     ioMenu->addAction("save", this, SLOT(saveScene()));
-    QShortcut *save_s = new QShortcut(tr("CTRL+S"), this);
+    auto *save_s = new QShortcut(tr("CTRL+S"), this);
     connect(save_s, SIGNAL(activated()), this, SLOT(saveScene()));
 
     ioMenu->addAction("saveAs", this, SLOT(saveSceneAs()));
-    QShortcut *saveAs_s = new QShortcut(tr("CTRL+SHIFT+S"), this);
+    auto *saveAs_s = new QShortcut(tr("CTRL+SHIFT+S"), this);
     connect(saveAs_s, SIGNAL(activated()), this, SLOT(saveSceneAs()));
 
     ioMenu->addSeparator();
 
     ioMenu->addAction("quit", this, SLOT(quitConfirm()));
-    QShortcut *quit_s = new QShortcut(tr("CTRL+Q"), this);
+    auto *quit_s = new QShortcut(tr("CTRL+Q"), this);
     connect(quit_s, SIGNAL(activated()), this, SLOT(quitConfirm()));
 }
 
@@ -801,11 +880,11 @@ void MainWin::addActMenu()
     actMenu->setFont(menuSmallF);
 
     actMenu->addAction("getChild", this, SLOT(getChild()));
-    QShortcut *getChild_s = new QShortcut(Qt::Key_Down, this);
+    auto *getChild_s = new QShortcut(Qt::Key_Down, this);
     connect(getChild_s, SIGNAL(activated()), this, SLOT(getChild()));
 
     actMenu->addAction("getParent", this, SLOT(getParent()));
-    QShortcut *getParent_s = new QShortcut(Qt::Key_Up, this);
+    auto *getParent_s = new QShortcut(Qt::Key_Up, this);
     connect(getParent_s, SIGNAL(activated()), this, SLOT(getParent()));
 
     //myWin.cutTable->multiCut
@@ -827,14 +906,8 @@ void MainWin::addEdMenu()
     edMenu->setTearOffEnabled(1);
     edMenu->setFont(menuSmallF);
 
-    edMenu->addAction("prefs", this, SLOT(PrefWinOpen()));
-    QShortcut *PrefWinOpen_s = new QShortcut(Qt::Key_QuoteLeft, this);
-    connect(PrefWinOpen_s, SIGNAL(activated()), this, SLOT(PrefWinOpen()));
-
-    edMenu->addAction("color pop", this, SLOT(TglCPopWin()));
-
     edMenu->addAction("attrTableTgl", this, SLOT(attrTableVizToggle()));
-    QShortcut *attrTableTgl_s = new QShortcut(tr("CTRL+A"), this);
+    auto *attrTableTgl_s = new QShortcut(tr("CTRL+A"), this);
     connect(attrTableTgl_s, SIGNAL(activated()), this, SLOT(attrTableVizToggle()));
 }
 
@@ -867,21 +940,48 @@ void MainWin::addRenderMenu()
     renderMenu->setFont(menuSmallF);
 
     renderMenu->addAction("deferred prefs", this, SLOT(deferredPrefs()));
-    QShortcut *deferredPrefs_s = new QShortcut(Qt::Key_F4, this);
+    auto *deferredPrefs_s = new QShortcut(Qt::Key_F4, this);
     connect(deferredPrefs_s, SIGNAL(activated()), this, SLOT(deferredPrefs()));
 }
 
 void MainWin::quitConfirm()
 {
-    for (unsigned int i = 0; i < allObj.size(); ++i)
-        allObj[i]->selected = 1;
+    //on first CTRL+Q : switch to different gl background / overlay to confirm
+    //on second CTRL+Q : actually quit
+
+    //DELETE ALL OBJECTS AND THEIR VBOS
+    for (auto &i : allObj)
+        i->selected = true;
 
     delete_();
 
-    for (unsigned int i = 0; i < allGL.size(); ++i)
-        myPP->resizeTexClearMem(allGL[i]);
+    //DELETE ALL FBOS AND THEIR ATTACHED TEXTURES
+    for (auto &i : allGL)
+        myPP->resizeTexClearMem(i);
 
+    //DELETE ALL SHADOWMAPS
     myGLWidgetSh->addDeleteShadows("delete");
+
+    //DELETE ALL  "REG" TEXTURES
+    for (auto &i : myGLWidgetSh->allMaps)
+    {
+        for (auto &j : i.layer)
+        {
+            glMakeTextureHandleNonResidentARB(j.tex1_64);
+            glMakeTextureHandleNonResidentARB(j.tex2_64);
+            glDeleteTextures(1, &j.tex1_32);
+            glDeleteTextures(1, &j.tex2_32);
+        }
+    }
+
+    //DELETE ALL PROGRAMS
+    for (auto &i : myGLWidgetSh->allPro)
+        glDeleteProgram(i.pro);
+
+    //DELETE REMAINING ABJ NODES THAT HAVE FBOS INCLUDING ONES IN GLWIDGETSH
+    //delete ubo
+    glDeleteBuffers(1, &myGLWidgetSh->pro);
+    glDeleteBuffers(1, &myGLWidgetSh->UBO_lights);
 
     qApp->quit();
 }
@@ -890,15 +990,14 @@ void MainWin::deferredPrefs()
 {
     if (myFSQ->selected)
     {
-        myFSQ->selected = 0;
+        myFSQ->selected = false;
+        auto foundOldSelB = false;
 
-        bool foundOldSelB = 0;
-
-        for (unsigned int i = 0; i < allObj.size(); ++i)
+        for (auto &i : allObj)
         {
-            if (allObj[i]->name->val_s == oldSelB && allObj[i]->selected)
+            if (i->name->val_s == oldSelB && i->selected)
             {
-                selB = allObj[i];
+                selB = i;
                 foundOldSelB = 1;
             }
         }
@@ -911,7 +1010,7 @@ void MainWin::deferredPrefs()
 
     else
     {
-        myFSQ->selected = 1;
+        myFSQ->selected = true;
 
         if (selB)
             oldSelB = selB->name->val_s;
@@ -980,89 +1079,55 @@ glm::vec3 MainWin::gammaCsel()
     return gc;
 }
 
-void MainWin::TglCPopWin()
+void MainWin::refreshAllPaintTables()
 {
-    if (CPopWinTgl)
-    {
-        myCPopWin->hide();
-        CPopWinTgl = 0;
-        myCPopWin->myCPop->targetAttr = 0;
-    }
-
-    else
-    {
-        glm::vec2 popP = toVec2(QCursor::pos());
-        glm::vec2 showCPopP(popP.x - (myCPopWin->width() / 2), popP.y - (myCPopWin->height() / 2));
-        myCPopWin->move(toQP(showCPopP));
-        myCPopWin->show();
-
-        CPopWinTgl = 1;
-    }
+    objectLay->refreshTable();
+    typeLay->refreshTable();
+    mapLay->refreshTable();
+    layerLay->refreshTable();
 }
 
-//void MainWin::TglCPopWin()
-//{
-//    if (!CPopWinTgl)
-//    {
-//        glm::vec2 popP = toVec2(QCursor::pos());
-//        glm::vec2 showCPopP(popP.x - (myCPopWin->width() / 2), popP.y - (myCPopWin->height() / 2));
-//        myCPopWin->move(toQP(showCPopP));
-//        myCPopWin->show();
-
-//        CPopWinTgl = 1;
-//    }
-
-//    else
-//    {
-//        myCPopWin->hide();
-//        CPopWinTgl = 0;
-//        myCPopWin->myCPop->targetAttr = 0;
-//    }
-//}
-
-void MainWin::PrefWinOpen()
+void MainWin::PaintWinTgl(bool open, int idx)
 {
-    if (PrefWinTgl)
-    {
-        myPrefWin->hide();
-        PrefWinTgl = 0;
+    if (selB && !myPaintWin->isVisible() && open)
+    {        
+        auto prefP = toVec2(QCursor::pos());
+        glm::vec2 showPrefP(prefP.x - (myPaintWin->width() / 2), prefP.y - (myPaintWin->height() / 2));
+        myPaintWin->move(toQP(showPrefP));
+
+        refreshAllPaintTables();
+
+        myPaintWin->stackedMain->setCurrentIndex(idx);
+        myPaintWin->show();
     }
 
-    else
-    {
-        glm::vec2 prefP = toVec2(QCursor::pos());
-
-        glm::vec2 showPrefP(prefP.x - (myPrefWin->width() / 2), prefP.y - (myPrefWin->height() / 2));
-        myPrefWin->move(toQP(showPrefP));
-        myPrefWin->show();
-
-        PrefWinTgl = 1;
-    }
+    else if (!open)
+        myPaintWin->hide();
 }
 
 void MainWin::restoreZoomedLayout()
 {
-    for (unsigned int i = 0; i < allGL.size(); ++i)
+    for (auto &i : allGL)
     {
         for (int j = 0; j < stackedMain->count(); ++j)
         {
-            if (stackedMain->widget(j) == &allGL[i].get()->mySplitV)
+            if (stackedMain->widget(j) == &i->mySplitV)
             {
                 if (layoutType == "gridLay")
-                    allGL[i].get()->splitIdx.split->insertWidget(allGL[i].get()->splitIdx.idx, &allGL[i].get()->mySplitV);
+                    i->splitIdx.split->insertWidget(i->splitIdx.idx, &i->mySplitV);
 
                 else if (layoutType == "hLay")
-                    hLayU->insertWidget(allGL[i].get()->splitIdx.idx, &allGL[i].get()->mySplitV);
+                    hLayU->insertWidget(i->splitIdx.idx, &i->mySplitV);
 
                 else if (layoutType == "vLay")
-                    vLay->insertWidget(allGL[i].get()->splitIdx.idx, &allGL[i].get()->mySplitV);
+                    vLay->insertWidget(i->splitIdx.idx, &i->mySplitV);
 
-                allGL[i].get()->mySplitV.show();
+                i->mySplitV.show();
 
-                for (unsigned int k = 0; k < allCamCombo.size(); ++k)
+                for (auto &k : allCamCombo)
                 {
-                    if (allCamCombo[k]->myGL.get() == allGL[i].get())
-                         allCamCombo[k]->myGL.get()->resize(350, 350);
+                    if (k->myGL.get() == i.get())
+                         k->myGL->resize(350, 350);
                 }
 
                 stackedMain->insertWidget(1, blankW_main);
@@ -1078,17 +1143,17 @@ void MainWin::clearSel()
 {
     selB = 0;
 
-    for (unsigned int i = 0; i < allObj.size(); ++i)
-        allObj[i]->selected = 0;
+    for (auto &i : allObj)
+        i->selected = false;
 }
 
 unsigned int MainWin::countSel()
 {
-    int count = 0;
+    auto count = 0;
 
-    for (unsigned int i = 0; i < allObj.size(); ++i)
+    for (auto &i : allObj)
     {
-        if (allObj[i]->selected)
+        if (i->selected)
             count += 1;
     }
 
@@ -1097,127 +1162,130 @@ unsigned int MainWin::countSel()
 
 int MainWin::countLights()
 {
-    int count = 0;
+    auto count = 0;
 
-    for (unsigned int i = 0; i < allObj.size(); ++i)
+    for (auto &i : allObj)
     {
-        if (!allObj[i]->ref && allObj[i]->v->val_b && allObj[i]->camLiTypeGet("light"))
+        if (!i->ref && i->v->val_b && i->camLiTypeGet("light"))
             count += 1;
     }
 
     return count;
 }
 
-bool MainWin::tryAddSwitchLight(QString type)
+bool MainWin::tryAddSwitchLight(string type)
 {
-    bool lessThanMax = 0;
+    auto lessThanMax = false;
 
     if (type == "AREA" || "DIR" || "POINT" || "SPOT")
     {
         if (lightCt < 3)
-            lessThanMax = 1;
+            lessThanMax = true;
     }
 
     else
-        lessThanMax = 1;
+        lessThanMax = true;
 
     return lessThanMax;
 }
 
 void MainWin::setLightsDirty()
 {
-    for (unsigned int i = 0; i < allObj.size(); ++i)
+    for (auto &i : allObj)
     {
-        if (allObj[i]->v->val_b && allObj[i]->type == "CAMLI" && allObj[i]->camLiTypeGet("light"))
-            allObj[i]->setDirty();
+        if (i->v->val_b && i->type == "CAMLI" && i->camLiTypeGet("light"))
+            i->setDirty();
     }
 }
 
 void MainWin::gizInit()
 {
-    loadO = myGLWidgetSh->VBOup(0, "GIZ", "giz", 0);
-    for (unsigned int i = 0; i < loadO.size(); ++i)
+    newObj = myGLWidgetSh->VBOup("999", "GIZ", "giz", 0);
+    for (auto &i : newObj)
     {
-        loadO[i]->v->val_b = 0;
-        loadO[i]->ignoreOutliner = 1;
-        loadO[i]->deletable = 0;
-        loadO[i]->selectable = 0;
-        allObj.push_back(loadO[i]);
-        myGizNull = loadO[i]; // parent to this
+        i->v->val_b = false;
+        i->ignoreOutliner = true;
+        i->deletable = false;
+        i->selectable = false;
+        allObj.push_back(i);
+        myGizNull = i; // parent to this
     }
 
     float dualP = .5f; // dual axis handle P
 
     GizSetup myGizSetup[] =
     {
-        { "GIZ_CIRC", "gizCirc", {.2f, .2f, .2f} },
-        { "GIZ_CIRC_HALF", "gizCircHalfX", {1.f, 0.f, 0.f} },
-        { "GIZ_CIRC_HALF", "gizCircHalfY", {0.f, 1.f, 0.f} },
-        { "GIZ_CIRC_HALF", "gizCircHalfZ", {0.f, 0.f, 1.f} },
+        { "GIZ_CIRC", "gizCirc", { .2f, .2f, .2f } },
+        { "GIZ_CIRC_HALF", "gizCircHalfX", { 1.f, 0.f, 0.f } },
+        { "GIZ_CIRC_HALF", "gizCircHalfY", { 0.f, 1.f, 0.f } },
+        { "GIZ_CIRC_HALF", "gizCircHalfZ", { 0.f, 0.f, 1.f } },
 
-        { "GIZ_CONE", "gizConeX", {1.f, 0.f, 0.f} },
-        { "GIZ_CONE", "gizConeY", {0.f, 1.f, 0.f} },
-        { "GIZ_CONE", "gizConeZ", {0.f, 0.f, 1.f} },
+        { "GIZ_CONE", "gizConeX", { 1.f, 0.f, 0.f } },
+        { "GIZ_CONE", "gizConeY", { 0.f, 1.f, 0.f } },
+        { "GIZ_CONE", "gizConeZ", { 0.f, 0.f, 1.f } },
 
-        { "GIZ_CUBE", "gizCubeX", {1.f, 0.f, 0.f}, {0.f, 0.f, 0.f}, {1.f, 0.f, 0.f} },
-        { "GIZ_CUBE", "gizCubeY", {0.f, 1.f, 0.f}, {0.f, 0.f, 0.f}, {0.f, 1.f, 0.f} },
-        { "GIZ_CUBE", "gizCubeZ", {0.f, 0.f, 1.f}, {0.f, 0.f, 0.f}, {0.f, 0.f, 1.f} },
-        { "GIZ_CUBE", "gizCubeXYZ", {0.f, 0.f, 0.f} },
+        { "GIZ_CUBE", "gizCubeX", { 1.f, 0.f, 0.f }, { 0.f, 0.f, 0.f }, { 1.f, 0.f, 0.f } },
+        { "GIZ_CUBE", "gizCubeY", { 0.f, 1.f, 0.f }, { 0.f, 0.f, 0.f }, { 0.f, 1.f, 0.f } },
+        { "GIZ_CUBE", "gizCubeZ", { 0.f, 0.f, 1.f }, { 0.f, 0.f, 0.f }, { 0.f, 0.f, 1.f } },
+        { "GIZ_CUBE", "gizCubeXYZ", { 0.f, 0.f, 0.f } },
 
-        { "GIZ_DUAL_HANDLE", "gizDualXZ", {0.f, 1.f, 0.f}, {90.f, 0.f, 0.f}, {dualP, 0.f, dualP} },
-        { "GIZ_DUAL_HANDLE", "gizDualXY", {0.f, 0.f, 1.f}, {0.f, 0.f, 0.f}, {dualP, dualP, 0.f} },
-        { "GIZ_DUAL_HANDLE", "gizDualYZ", {1.f, 0.f, 0.f}, {0.f, 90.f, 0.f}, {0.f, dualP, dualP} },
+        { "GIZ_DUAL_HANDLE", "gizDualXZ", { 0.f, 1.f, 0.f }, { 90.f, 0.f, 0.f }, { dualP, 0.f, dualP } },
+        { "GIZ_DUAL_HANDLE", "gizDualXY", { 0.f, 0.f, 1.f }, { 0.f, 0.f, 0.f }, { dualP, dualP, 0.f } },
+        { "GIZ_DUAL_HANDLE", "gizDualYZ", { 1.f, 0.f, 0.f }, { 0.f, 90.f, 0.f }, { 0.f, dualP, dualP } },
 
-        { "GIZ_LINE", "gizLineX", {1.f, 0.f, 0.f} },
-        { "GIZ_LINE", "gizLineY", {0.f, 1.f, 0.f} },
-        { "GIZ_LINE", "gizLineZ", {0.f, 0.f, 1.f} },
+        { "GIZ_LINE", "gizLineX", { 1.f, 0.f, 0.f } },
+        { "GIZ_LINE", "gizLineY", { 0.f, 1.f, 0.f } },
+        { "GIZ_LINE", "gizLineZ", { 0.f, 0.f, 1.f } },
     };
 
-    for (unsigned int i = 0; i < arraySize(myGizSetup); ++i)
+    for (auto &i : myGizSetup)
     {
-        loadO = myGLWidgetSh->VBOup(0, myGizSetup[i].type, myGizSetup[i].name, 0);
+        newObj = myGLWidgetSh->VBOup("999", i.type, i.name, 0);
 
-        for (unsigned int j = 0; j < loadO.size(); ++j)
+        for (auto &j : newObj)
         {
-            loadO[j]->Cgiz = myGizSetup[i].Cgiz;
-            loadO[j]->Cgiz_stored = myGizSetup[i].Cgiz;
+            j->Cgiz = i.Cgiz;
+            j->Cgiz_stored = i.Cgiz;
 
-            if (myGizSetup[i].type == "GIZ_CUBE") loadO[j]->s->val_3 = glm::vec3(.15f);
-            else if (myGizSetup[i].type == "GIZ_DUAL_HANDLE") loadO[j]->s->val_3 = glm::vec3(.1f);
+            if (i.type == "GIZ_CUBE")
+                j->s->val_3 = glm::vec3(.15f);
 
-            loadO[j]->r->val_3 = myGizSetup[i].r;
-            loadO[j]->t->val_3 = myGizSetup[i].t;
-            loadO[j]->piv->val_3 = myGizSetup[i].t;
-            loadO[j]->deletable = 0;
-            loadO[j]->selectable = 0;
-            loadO[j]->ignoreOutliner = 1;
-            loadO[j]->parentObj("giz");
-            allObj.push_back(loadO[j]);
-            allGiz.push_back(loadO[j]);
+            else if (i.type == "GIZ_DUAL_HANDLE")
+                j->s->val_3 = glm::vec3(.1f);
+
+            j->r->val_3 = i.r;
+            j->t->val_3 = i.t;
+            j->piv->val_3 = i.t;
+            j->deletable = false;
+            j->selectable = false;
+            j->ignoreOutliner = true;
+            j->parentObj("giz");
+            allObj.push_back(j);
+            allGiz.push_back(j);
         }
     }
 
     GizSetup myGizSetupSide[] =
     {
-        { "GIZ_LINE", "gizLineXSide", {1.f, 0.f, 0.f} },
-        { "GIZ_LINE", "gizLineYSide", {0.f, 1.f, 0.f} },
-        { "GIZ_LINE", "gizLineZSide", {0.f, 0.f, 1.f} },
+        { "GIZ_LINE", "gizLineXSide", { 1.f, 0.f, 0.f } },
+        { "GIZ_LINE", "gizLineYSide", { 0.f, 1.f, 0.f } },
+        { "GIZ_LINE", "gizLineZSide", { 0.f, 0.f, 1.f } },
     };
 
-    for (unsigned int i = 0; i < arraySize(myGizSetupSide); ++i)
+    for (auto &i : myGizSetupSide)
     {
-        loadO = myGLWidgetSh->VBOup(0, myGizSetupSide[i].type, myGizSetupSide[i].name, 0);
+        newObj = myGLWidgetSh->VBOup("999", i.type, i.name, 0);
 
-        for (unsigned int j = 0; j < loadO.size(); ++j)
+        for (auto &j : newObj)
         {
-            loadO[j]->Cgiz = myGizSetupSide[i].Cgiz;
-            loadO[j]->Cgiz_stored = myGizSetupSide[i].Cgiz;
-            loadO[j]->deletable = 0;
-            loadO[j]->selectable = 0;
-            loadO[j]->ignoreOutliner = 1;
-            loadO[j]->gizSideObj = 1;
-            allObj.push_back(loadO[j]);
-            allGizSide.push_back(loadO[j]);
+            j->Cgiz = i.Cgiz;
+            j->Cgiz_stored = i.Cgiz;
+            j->deletable = false;
+            j->selectable = false;
+            j->ignoreOutliner = true;
+            j->gizSideObj = true;
+            allObj.push_back(j);
+            allGizSide.push_back(j);
         }
     }
 }
@@ -1226,43 +1294,43 @@ void MainWin::gizShow(string gizTypeShow)
 {
     if (selB)
     {
-        for (unsigned int i = 0; i < allObj.size(); ++i)
+        for (auto &i : allObj)
         {
-            QString type = allObj[i]->type;
+            auto type = i->type;
 
             if (gizTypeShow == "T")
             {
-                if (type == "GIZ_CIRC") allObj[i]->v->val_b = 0;
-                else if (type == "GIZ_CIRC_HALF") allObj[i]->v->val_b = 0;
-                else if (type == "GIZ_CONE") allObj[i]->v->val_b = 1;
-                else if (type == "GIZ_CUBE") allObj[i]->v->val_b = 0;
-                else if (type == "GIZ_DUAL_HANDLE") allObj[i]->v->val_b = 1;
-                else if (type == "GIZ_LINE") allObj[i]->v->val_b = 1;
+                if (type == "GIZ_CIRC") i->v->val_b = false;
+                else if (type == "GIZ_CIRC_HALF") i->v->val_b = false;
+                else if (type == "GIZ_CONE") i->v->val_b = true;
+                else if (type == "GIZ_CUBE") i->v->val_b = false;
+                else if (type == "GIZ_DUAL_HANDLE") i->v->val_b = true;
+                else if (type == "GIZ_LINE") i->v->val_b = true;
             }
 
             else if (gizTypeShow == "R")
             {
-                if (type == "GIZ_CIRC") allObj[i]->v->val_b = 1;
-                else if (type == "GIZ_CIRC_HALF") allObj[i]->v->val_b = 1;
-                else if (type == "GIZ_CONE") allObj[i]->v->val_b = 0;
-                else if (type == "GIZ_CUBE") allObj[i]->v->val_b = 0;
-                else if (type == "GIZ_DUAL_HANDLE") allObj[i]->v->val_b = 0;
-                else if (type == "GIZ_LINE") allObj[i]->v->val_b = 0;
+                if (type == "GIZ_CIRC") i->v->val_b = true;
+                else if (type == "GIZ_CIRC_HALF") i->v->val_b = true;
+                else if (type == "GIZ_CONE") i->v->val_b = false;
+                else if (type == "GIZ_CUBE") i->v->val_b = false;
+                else if (type == "GIZ_DUAL_HANDLE") i->v->val_b = false;
+                else if (type == "GIZ_LINE") i->v->val_b = false;
             }
 
             else if (gizTypeShow == "S")
             {
-                if (type == "GIZ_CIRC") allObj[i]->v->val_b = 0;
-                else if (type == "GIZ_CIRC_HALF") allObj[i]->v->val_b = 0;
-                else if (type == "GIZ_CONE") allObj[i]->v->val_b = 0;
-                else if (type == "GIZ_CUBE" && allObj[i] != myPivot) allObj[i]->v->val_b = 1;
-                else if (type == "GIZ_DUAL_HANDLE") allObj[i]->v->val_b = 1;
-                else if (type == "GIZ_LINE") allObj[i]->v->val_b = 1;
+                if (type == "GIZ_CIRC") i->v->val_b = false;
+                else if (type == "GIZ_CIRC_HALF") i->v->val_b = false;
+                else if (type == "GIZ_CONE") i->v->val_b = false;
+                else if (type == "GIZ_CUBE" && i != myPivot) i->v->val_b = true;
+                else if (type == "GIZ_DUAL_HANDLE") i->v->val_b = true;
+                else if (type == "GIZ_LINE") i->v->val_b = true;
             }
         }
 
         myGizNull->parentTo = selB;
-        myGizNull->v->val_b = 1;
+        myGizNull->v->val_b = true;
         myGizNull->gizType = gizTypeShow;
 
         myOutliner->refreshOutliner(1);
@@ -1282,8 +1350,8 @@ void MainWin::gizPivAutoShow()
 
     else
     {
-        myGizNull->v->val_b = 0;
-        myPivot->v->val_b = 0;
+        myGizNull->v->val_b = false;
+        myPivot->v->val_b = false;
     }
 }
 
@@ -1294,42 +1362,42 @@ void MainWin::gizSpaceSwitch()
 
 void MainWin::newScene()
 {
-    qDebug() << "newScene";
+    cout << "newScene" << endl;
 }
 
 void MainWin::openScene()
 {
-    qDebug() << "openScene";
+    cout << "openScene" << endl;
 }
 
 void MainWin::saveScene()
 {
-    qDebug() << "saveScene";
+//    cout << "saveScene" << endl;
 
-    QString savedSceneName = "abj - ";
-    savedSceneName += "savedSceneName";
+    string savedSceneName = "ABJ - ";
+    savedSceneName.append("savedSceneNameGoesHere");
 
-    setWindowTitle(savedSceneName);
+    setWindowTitle(QString::fromStdString(savedSceneName));
 }
 
 void MainWin::saveSceneAs()
 {
-    qDebug() << "saveSceneAs";
+    cout << "saveSceneAs" << endl;
 }
 
 void MainWin::pivMatchTest()
 {
-    for (unsigned int i = 0; i < allObj.size(); ++i)
+    for (auto &i : allObj)
     {
-        if (allObj[i]->selected)
+        if (i->selected)
         {
-            allObj[i]->piv->val_3 = glm::vec3(2.f, 2.f, 0.f);
-            //allObj[i]->piv->val_3 = glm::vec3(2.f, 1.414f, -1.414f);
+            i->piv->val_3 = glm::vec3(2.f, 2.f, 0.f);
+            //i->piv->val_3 = glm::vec3(2.f, 1.414f, -1.414f);
 
-            glm::vec3 t(allObj[i]->t->val_3);
-            glm::vec3 r(allObj[i]->r->val_3);
-            glm::vec3 piv(allObj[i]->piv->val_3);
-            glm::vec3 pivRt(allObj[i]->pivRt);
+            glm::vec3 t(i->t->val_3);
+            glm::vec3 r(i->r->val_3);
+            glm::vec3 piv(i->piv->val_3);
+            glm::vec3 pivRt(i->pivRt);
 
             cout << "t = " << glm::to_string(t) << endl;
     //            cout << "rp_os = " << glm::to_string(t - piv) << endl;
@@ -1337,14 +1405,14 @@ void MainWin::pivMatchTest()
             cout << "rp_ws = " << glm::to_string(piv) << endl;
             cout << "rt_os = " << glm::to_string(t - pivRt) << endl;
             cout << "rt_ws = " << glm::to_string(pivRt) << endl;
-    //            cout << "ra = " << glm::to_string(allObj[i]->t->val_3) << endl; //axis
+    //            cout << "ra = " << glm::to_string(i->t->val_3) << endl; //axis
             cout << "ro = " << glm::to_string(r) << endl;
-    //            cout << "roo = " << glm::to_string(allObj[i]->r->val_3) << endl; //xyz
+    //            cout << "roo = " << glm::to_string(i->r->val_3) << endl; //xyz
 
-            cout << "MM[0] = " << glm::to_string(allObj[i]->MM[0]) << endl;
-            cout << "MM[1] = " << glm::to_string(allObj[i]->MM[1]) << endl;
-            cout << "MM[2] = " << glm::to_string(allObj[i]->MM[2]) << endl;
-            cout << "MM[3] = " << glm::to_string(allObj[i]->MM[3]) << endl << endl;
+            cout << "MM[0] = " << glm::to_string(i->MM[0]) << endl;
+            cout << "MM[1] = " << glm::to_string(i->MM[1]) << endl;
+            cout << "MM[2] = " << glm::to_string(i->MM[2]) << endl;
+            cout << "MM[3] = " << glm::to_string(i->MM[3]) << endl << endl;
         }
     }
 }
@@ -1353,16 +1421,16 @@ void MainWin::pivCenter()
 {
 //    pivMatchTest();
 
-//    for (int i = 0; i < allObj.size(); ++i)
+//    for (auto &i : allObj)
 //    {
-//        if (allObj[i]->selected)
+//        if (i->selected)
 //        {
-//            glm::vec3 cent = glm::vec3(5.f, 0.f, -2.f);
-//            allObj[i]->piv->val_3 = glm::vec3(cent);
+//            glm::vec3 cent(5.f, 0.f, -2.f);
+//            i->piv->val_3 = glm::vec3(cent);
 
-//            glm::mat4 oM = allObj[i]->TM * allObj[i]->RM * allObj[i]->SM;
+//            glm::mat4 oM = i->TM * i->RM * i->SM;
 
-//            glm::mat4 invM = glm::inverse(allObj[i]->MM);
+//            glm::mat4 invM = glm::inverse(i->MM);
 ////            glm::mat4 invM = glm::inverse(oM);
 
 //            glm::vec3 off = glm::mat3(invM) * cent;
@@ -1372,24 +1440,24 @@ void MainWin::pivCenter()
 //            glm::vec3 pivMovePlusOff(cent - off);
 //            cout << "pivMovePlusOff = " << glm::to_string(pivMovePlusOff) << endl;
 
-////            allObj[i]->pivRtM = glm::translate(glm::mat4(), cent);
-//            allObj[i]->pivRtM = glm::translate(glm::mat4(), pivMovePlusOff);
+//            //i->pivRtM = glm::translate(glm::mat4(), cent);
+//            i->pivRtM = glm::translate(glm::mat4(), pivMovePlusOff);
 //        }
 //    }
 }
 
-//void MainWin::pivCenter() //good
+//void MainWin::pivCenter() // blender
 //{
-//    for (int i = 0; i < allObj.size(); ++i)
+//    for (auto &i : allObj)
 //    {
-//        if (allObj[i]->selected)
+//        if (i->selected)
 //        {
-//            glm::mat4 centerM = glm::translate(allObj[i]->bbCenter) * allObj[i]->MM;
+//            glm::mat4 centerM = glm::translate(i->bbCenter) * i->MM;
 //            glm::vec3 center = glm::vec3(centerM[3].x, centerM[3].y, centerM[3].z);
 
 //            //Blender
-//            allObj[i]->t->val_3 = center;
-//            allObj[i]->piv->val_3 = glm::vec3(0.f);
+//            i->t->val_3 = center;
+//            i->piv->val_3 = glm::vec3(0.f);
 //        }
 //    }
 
@@ -1409,20 +1477,20 @@ void MainWin::pivTgl()
 
 void MainWin::pivHide()
 {
-    myPivot->v->val_b = 0;
+    myPivot->v->val_b = false;
 }
 
 void MainWin::getChild()
 {
     if (selB)
     {
-        for (unsigned int i = 0; i < allObj.size(); ++i)
+        for (auto &i : allObj)
         {
-            if (allObj[i]->parentTo == selB)
+            if (i->parentTo == selB)
             {
                 clearSel();
-                allObj[i]->selected = 1;
-                selB = allObj[i];
+                i->selected = true;
+                selB = i;
             }
         }
 
@@ -1435,13 +1503,13 @@ void MainWin::getParent()
 {
     if (selB)
     {
-        for (unsigned int i = 0; i < allObj.size(); ++i)
+        for (auto &i : allObj)
         {
-            if (selB->parentTo == allObj[i])
+            if (selB->parentTo == i)
             {
                 clearSel();
-                allObj[i]->selected = 1;
-                selB = allObj[i];
+                i->selected = true;
+                selB = i;
             }
         }
 
@@ -1458,37 +1526,37 @@ void MainWin::searchUp_intermediate(shared_ptr<Object> obj)
         {
             if (obj->parentTo->v->val_b)
             {
-                bool found = 0;
-                int newIdx;
+                auto found = false;
+                shared_ptr<Object> tempObj;
 
-                for (unsigned int i = 0; i < allObj.size(); ++i)
+                for (auto &i : allObj)
                 {
-                    if (obj->parentTo->parentTo == allObj[i])
+                    if (obj->parentTo->parentTo == i)
                     {
-                        found = 1;
-                        newIdx = i;
+                        found = true;
+                        tempObj = i;
 
                         continue;
                     }
                 }
 
                 if (!found)
-                    searchB = 1;
+                    searchB = true;
 
                 else
-                    searchUp_intermediate(allObj[newIdx]);
+                    searchUp_intermediate(tempObj);
             }
 
             else
-                searchB = 0;
+                searchB = false;
         }
 
         else
-            searchB = 1;
+            searchB = true;
     }
 
     else
-        searchB = 0;
+        searchB = false;
 }
 
 bool MainWin::searchUp(shared_ptr<Object> obj)
@@ -1496,52 +1564,66 @@ bool MainWin::searchUp(shared_ptr<Object> obj)
     searchUp_intermediate(obj);
 
     if (searchB)
-        return 1;
+        return true;
 
     else
-        return 0;
+        return false;
+}
+
+void MainWin::boundingBoxTgl()
+{
+    for (auto &i : allObj)
+    {
+        if (i->selected)
+        {
+            i->bb->val_b = !i->bb->val_b;
+            setLightsDirty();
+        }
+    }
+
+    attrTable->refreshTable();
 }
 
 void MainWin::delete_()
 {
-    myGizNull->v->val_b = 0;
+    myGizNull->v->val_b = false;
     myGizNull->parentTo = 0;
     myPivot->parentTo = 0;
-    bool needsShadowRefresh = 0;
+    auto needsShadowRefresh = false;
 
     pivHide();
 
-    for (unsigned int i = 0; i < allObj.size(); ++i) //select downstream as well
+    for (auto &i : allObj) //select downstream, too
     {
-        if (allObj[i]->selected)
+        if (i->selected)
         {
-            for (unsigned int j = 0; j < allObj.size(); ++j)
+            for (auto &j : allObj)
             {
-                if (allObj[j]->parentTo == allObj[i])
-                    allObj[j]->selected = 1;
+                if (j->parentTo == i)
+                    j->selected = true;
             }
         }
     }
 
-    for (vector<shared_ptr<Object>>::iterator it = allObj.begin(); it != allObj.end();)
+    for (auto it = allObj.begin(); it != allObj.end();)
     {
         if ((*it)->deletable && (*it)->selected)
         {
-            for (unsigned int i = 0; i < allObj.size(); ++i) //reset dupeStenFix
+            for (auto &i : allObj)
             {
-                if ((*it)->dupeStenFix == allObj[i]->name->val_s)
+                if ((*it)->dupeStenFix == i->name->val_s)
                 {
-                    allObj[i]->dupeStenFix = "";
-                    allObj[i]->v->val_b = 1;
+                    //reset
+                    i->dupeStenFix = "999";
+                    i->v->val_b = true;
                 }
             }
 
             if ((*it)->camLiTypeGet("light"))
                 needsShadowRefresh = 1;
 
-            (*it)->delete_();
+            (*it)->deleteVAO_VBO();
             it = allObj.erase(it);
-
         }
 
         else
@@ -1556,30 +1638,31 @@ void MainWin::delete_()
     myOutliner->refreshOutliner(0);
     attrTable->refreshTable();
 
-    for (unsigned int i = 0; i < allCamCombo.size(); ++i)
-        allCamCombo[i]->refresh();
+    for (auto &i : allCamCombo)
+        i->refresh();
 }
 
 void MainWin::dupe()
 {
     if (selB)
     {
-        int GLidx;
+        shared_ptr<GLWidget> activeGL;
 
-        for (unsigned int i = 0; i < allGL.size(); ++i)
+        for (auto &i : allGL)
         {
-            if (allGL[i].get()->isVisible())
+            if (i->isVisible())
             {
-                GLidx = i;
+                activeGL = i;
+
                 break;
             }
         }
 
-        bool gizWasOn = 0;
+        auto gizWasOn = false;
 
         if (myGizNull->v->val_b)
         {
-            myGizNull->v->val_b = 0;
+            myGizNull->v->val_b = false;
             myGizNull->parentTo = 0;
 
             gizWasOn = 1;
@@ -1587,32 +1670,34 @@ void MainWin::dupe()
 
         vector<shared_ptr<Object>> dupeTemp;
 
-        for (unsigned int i = 0; i < allObj.size(); ++i)
+        for (auto &i : allObj)
         {
-            if (allObj[i]->selected)
-                dupeTemp.push_back(allObj[i]);
+            if (i->selected)
+                dupeTemp.push_back(i);
         }
 
-        for (unsigned int i = 0; i < dupeTemp.size(); ++i)
+        for (auto &i : dupeTemp)
         {
-            loadO = myGLWidgetSh->VBOup(0, dupeTemp[i]->type, dupeTemp[i]->name->val_s, make_shared<Object>(*dupeTemp[i]));
+            newObj = myGLWidgetSh->VBOup("999", i->type, i->name->val_s, make_shared<Object>(*i));
 
-            bool changedLight = 0;
+            auto changedLight = false;
 
-            if (loadO[0]->camLiTypeGet("light"))
+            if (newObj[0]->camLiTypeGet("light"))
             {
-                if (!tryAddSwitchLight(loadO[0]->camLiType->val_s))
-                    loadO[0]->camLiType->val_s = "PERSP";
+                if (!tryAddSwitchLight(newObj[0]->camLiType->val_s))
+                    newObj[0]->camLiType->val_s = "PERSP";
 
                 changedLight = 1;
             }
 
-            loadO[0]->dupeStenFix = dupeTemp[i]->name->val_s;
+            newObj[0]->dupeStenFix = i->name->val_s;
 
-            allObj.push_back(loadO[0]);
-            loadO[0]->loadVAO(allGL[GLidx]);
-            selB = loadO[0];
-            dupeTemp[i]->selected = 0;
+            allObj.push_back(newObj[0]);
+
+            newObj[0]->loadVAO(activeGL);
+
+            selB = newObj[0];
+            i->selected = false;
 
             if (changedLight)
                 lightCt = countLights();
@@ -1620,15 +1705,15 @@ void MainWin::dupe()
 
         if (gizWasOn)
         {
-            myGizNull->v->val_b = 1;
+            myGizNull->v->val_b = true;
             myGizNull->parentTo = selB;
         }
 
         myOutliner->refreshOutliner(1);
         attrTable->refreshTable();
 
-        for (unsigned int i = 0; i < allCamCombo.size(); ++i)
-            allCamCombo[i]->refresh();
+        for (auto &i : allCamCombo)
+            i->refresh();
 
         setLightsDirty();
     }
@@ -1636,17 +1721,17 @@ void MainWin::dupe()
 
 void MainWin::hide()
 {
-    bool changedLight = 0;
+    auto changedLight = false;
 
-    for (unsigned int i = 0; i < allObj.size(); ++i)
+    for (auto &i : allObj)
     {
-        if (allObj[i]->selected)
+        if (i->selected)
         {
-            allObj[i]->v->val_b = 0; //turn off viz
+            i->v->val_b = false; //turn off viz
 
-            if (allObj[i]->camLiTypeGet("light"))
+            if (i->camLiTypeGet("light"))
             {
-                allObj[i]->setDirty();
+                i->setDirty();
                 changedLight = 1;
             }
         }
@@ -1665,22 +1750,22 @@ void MainWin::hide()
 
 void MainWin::unHide()
 {
-    bool changedLight = 0;
+    auto changedLight = false;
 
-    for (unsigned int i = 0; i < allObj.size(); ++i)
+    for (auto &i : allObj)
     {
-        if (allObj[i]->selected)
+        if (i->selected)
         {
-            if (allObj[i]->camLiTypeGet("light"))
+            if (i->camLiTypeGet("light"))
             {
-                if (!tryAddSwitchLight(allObj[i]->camLiType->val_s))
-                    allObj[i]->camLiType->val_s = "PERSP";
+                if (!tryAddSwitchLight(i->camLiType->val_s))
+                    i->camLiType->val_s = "PERSP";
 
-                allObj[i]->setDirty();
+                i->setDirty();
                 changedLight = 1;
             }
 
-            allObj[i]->v->val_b = 1;
+            i->v->val_b = true;
         }
     }
 
@@ -1701,17 +1786,17 @@ void MainWin::invertSel()
     {
         selB = 0;
 
-        for (unsigned int i = 0; i < allObj.size(); ++i)
+        for (auto &i : allObj)
         {
-            if (!allObj[i]->ignoreOutliner)
+            if (!i->ignoreOutliner)
             {
-                if (allObj[i]->selected)
-                    allObj[i]->selected = 0;
+                if (i->selected)
+                    i->selected = false;
 
                 else
                 {
-                    allObj[i]->selected = 1;
-                    selB = allObj[i];
+                    i->selected = true;
+                    selB = i;
                 }
             }
         }
@@ -1725,25 +1810,25 @@ void MainWin::parent()
 {
     if (countSel() > 1)
     {
-        for (unsigned int i = 0; i < allObj.size(); ++i)
+        for (auto &i : allObj)
         {
-            if (allObj[i]->selected)
+            if (i->selected)
             {
-                if (allObj[i]->parentTo && allObj[i]->parentTo != selB)
+                if (i->parentTo && i->parentTo != selB)
                 {
-                    if (allObj[i] != selB)
+                    if (i != selB)
                     {
-                        allObj[i]->parentTo = selB;
-                        allObj[i]->s->val_3 /= allObj[i]->parentTo->s->val_3;
+                        i->parentTo = selB;
+                        i->s->val_3 /= i->parentTo->s->val_3;
                     }
                 }
 
                 else
                 {
-                    if (allObj[i] != selB)
+                    if (i != selB)
                     {
-                        allObj[i]->parentTo = selB;
-                        allObj[i]->s->val_3 /= allObj[i]->parentTo->s->val_3;
+                        i->parentTo = selB;
+                        i->s->val_3 /= i->parentTo->s->val_3;
                     }
                 }
             }
@@ -1756,12 +1841,12 @@ void MainWin::parent()
 
 void MainWin::parentWorld()
 {
-    for (unsigned int i = 0; i < allObj.size(); ++i)
+    for (auto &i : allObj)
     {
-        if (allObj[i]->selected)
+        if (i->selected && i->parentTo)
         {
-            allObj[i]->s->val_3 *= allObj[i]->parentTo->s->val_3;
-            allObj[i]->parentTo = 0;
+            i->s->val_3 *= i->parentTo->s->val_3;
+            i->parentTo = 0;
         }
     }
 
@@ -1771,25 +1856,59 @@ void MainWin::parentWorld()
 
 void MainWin::centerToScreen(QWidget *widget)
 {
-    QDesktopWidget *dw = QApplication::desktop();
-    QRect desk_rect = dw->screenGeometry(dw->screenNumber(QCursor::pos()));
-    int desk_x = desk_rect.width();
-    int desk_y = desk_rect.height();
-    int x = widget->width();
-    int y = widget->height();
-    widget->move(desk_x / 2 - x / 2 + desk_rect.left(), desk_y / 2 - y / 2 + desk_rect.top());
+    auto *dw = QApplication::desktop();
+    auto desk_rect = dw->screenGeometry(dw->screenNumber(QCursor::pos()));
+
+    auto desk_x = desk_rect.width();
+    auto desk_y = desk_rect.height();
+    auto desk_L = desk_rect.left();
+    auto desk_U = desk_rect.top();
+
+    auto widget_x = widget->width();
+    auto widget_y = widget->height();
+
+    //auto chosenMonitor = "default";
+    auto chosenMonitor = "abj1080_120";
+
+    if (chosenMonitor == "abj1080_120")
+    {
+        desk_x = 1920;
+        desk_y = 1080;
+        desk_L = 0;
+        desk_U = 0;
+    }
+
+//    cout << "desk_x / y = " << desk_x << desk_y << endl;
+//    cout << "desk_rect L / U = " << desk_L << desk_U << endl;
+//    cout << "widget_x / y = " << widget_x << widget_y << endl << endl;
+
+    widget->move(desk_x / 2 - widget_x / 2 + desk_L, desk_y / 2 - widget_y / 2 + desk_U);
 }
 
-double MainWin::GetTickCount2()
+string MainWin::stringToUpper(string myString)
 {
-#if __unix__
-    struct timespec now;
+    auto out = myString;
 
-    if (clock_gettime(CLOCK_MONOTONIC, &now))
-        return 0;
+    for (unsigned int i = 0; i < out.length(); ++i)
+        out[i] = toupper(out[i]);
 
-    return now.tv_sec * 1000.0 + now.tv_nsec / 1000000.0;
-#else
-    return GetTickCount();
-#endif
+    return out;
+}
+
+vector<string> MainWin::stringSplit(string data, string token)
+{
+    vector<string> output;
+    auto pos = string::npos;
+
+    do
+    {
+        pos = data.find(token);
+        output.push_back(data.substr(0, pos));
+
+        if (string::npos != pos)
+            data = data.substr(pos + token.size());
+
+    } while (string::npos != pos);
+
+    return output;
 }

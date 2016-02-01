@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -59,58 +59,53 @@ IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#version 450 core
-#extension GL_ARB_bindless_texture : require
-
 /*
 reference:
     http://casual-effects.blogspot.com/2014/08/screen-space-ray-tracing.html
-
     http://www.kode80.com/blog/2015/03/11/screen-space-reflections-in-unity-5/
-
     http://www.gamedev.net/topic/638355-screen-space-reflections-issues/
 */
+
+#version 450 core
+#extension GL_ARB_bindless_texture : require
 
 in Vert
 {
     vec2 uv;
 } v;
 
-layout(bindless_sampler, location = 0) uniform usampler2D gbuf2_64; //N_VS;
-layout(bindless_sampler, location = 1) uniform sampler2D gbuf_DS_64;
-layout(bindless_sampler, location = 2) uniform sampler2D depthRev_DS_64;
-layout(bindless_sampler, location = 3) uniform sampler2D tonemap_noGiz_64;
+layout(bindless_sampler, location = 0) uniform usampler2D gBuf2; //N_VS;
+layout(bindless_sampler, location = 1) uniform usampler2D gBuf3; //ruffM
+layout(binding = 2) uniform sampler2D gBuf_DS;
+layout(bindless_sampler, location = 3) uniform sampler2D depthRev_DS;
+layout(bindless_sampler, location = 4) uniform sampler2D tonemap_noGiz;
+
 layout(location = 0) out vec4 Ci;
 
-uniform bool vign;
-uniform float farClip, nearClip;
 uniform mat4 PM, PMinv, PM_SS_d3d, VM;
-vec2 screenSize = textureSize(gbuf2_64, 0);
+vec2 screenSize = textureSize(gBuf2, 0);
 
-uniform int ssrIter; // maximum ray iterations
-uniform int ssrRefine; // maximum binary sear ch refinement iterations
-uniform int ssrPixStride; // number of pixels per ray step close to camera
-uniform float ssrPixStrideZ; // ray origin Z at this distance will have a pixel stride of 1.0
-uniform float ssrPixZSize; // Z size in camera space of a pixel in the depth buffer
-uniform float ssrMaxRayDist; // maximum distance of a ray
-uniform float ssrEdgeFade; // distance to screen edge that ray hits will start to fade 0..1
-uniform float ssrEyeFade0; // ray direction's Z that ray hits will start to fade 0..1
-uniform float ssrEyeFade1; // ray direction's Z that ray hits will be cut 0..1
+uniform vec4 comboU0; //vec4(farClip, nearClip, ssrIter, ssrRefine)
+uniform vec4 comboU1; //vec4(ssrPixStride, ssrPixStrideZ, ssrPixZSize, ssrMaxRayDist)
+uniform vec4 comboU2; //vec4(ssrEdgeFade, ssrEyeFade0, ssrEyeFade1, debug0)
+
+uvec4 data3 = texelFetch(gBuf3, ivec2(gl_FragCoord.xy), 0);
+float ruffM = unpackHalf2x16(data3.z).x;
 
 vec3 reconstructP(vec2 UV)
 {
     vec4 vProjectedPos = vec4(1.f);
-    vProjectedPos.xy = UV * 2.f - 1.f;
-    vProjectedPos.z = texture(gbuf_DS_64, UV).x * 2.f - 1.f;
-    vec4 vPosVS = PMinv * vProjectedPos;
+    vProjectedPos.rg = UV * 2.f - 1.f;
+    vProjectedPos.b = texture(gBuf_DS, UV).r * 2.f - 1.f;
+    vec4 vPositionVS = PMinv * vProjectedPos;
 
-    return vPosVS.xyz / vPosVS.w;
+    return vPositionVS.rgb / vPositionVS.a;
 }
 
 float Linear01Depth(float myDepth)
 {
     vec2 _ZBufferParams;
-    float fn = farClip / nearClip;
+    float fn = comboU0.x / comboU0.y;
 
     _ZBufferParams.x = 1.f - fn;
     _ZBufferParams.y = fn;
@@ -136,29 +131,29 @@ void swapIfBigger(inout float aa, inout float bb)
 
 bool rayIntersectsDepthBF(float zA, float zB, vec2 UV)
 {
-    float cameraZ = Linear01Depth(texture(gbuf_DS_64, UV).r) * -farClip;
-    float backZ = Linear01Depth(texture(depthRev_DS_64, UV).r) * -farClip;
+    float cameraZ = Linear01Depth(texture(gBuf_DS, UV).r) * -comboU0.x;
+    float backZ = Linear01Depth(texture(depthRev_DS, UV).r) * -comboU0.x;
 
-    return zB <= cameraZ && zA >= backZ - ssrPixZSize;
+    return zB <= cameraZ && zA >= backZ - comboU1.z;
 }
 
-float calculateAlphaForIntersect(bool intersect, float iterCt, float Kr, vec2 hitPix, vec3 hitPt, vec3 rayOrigin_VS, vec3 rayDir_VS)
+float calculateAlphaForIntersect(bool intersect, float iterCt, vec2 hitPix, vec3 hitPt, vec3 rayOrigin_VS, vec3 rayDir_VS)
 {
-    float alpha = min(1.f, Kr);
-    alpha *= 1.f - (iterCt / ssrIter); //fade ray hits that approach the max iters
+    float alpha = min(1.f, 1.f - ruffM);
+    alpha *= 1.f - (iterCt / comboU0.z); //fade ray hits that approach the max iters
 
     //fade ray hits that approach the screen edge
-    float screenFade = ssrEdgeFade;
+    float screenFade = comboU2.x;
     vec2 hitPixelNDC = (hitPix * 2.f - 1.f);
     float maxDim = min(1.f, max(abs(hitPixelNDC.x), abs(hitPixelNDC.y)));
     alpha *= 1.f - (max(0.f, maxDim - screenFade) / (1.f - screenFade));
 
     //fade ray hits based on how much they face the camera
-    float eyeDir = clamp(rayDir_VS.z, ssrEyeFade0, ssrEyeFade1);
-    alpha *= 1.f - ((eyeDir - ssrEyeFade0) / (ssrEyeFade1 - ssrEyeFade0));
+    float eyeDir = clamp(rayDir_VS.z, comboU2.y, comboU2.z);
+    alpha *= 1.f - ((eyeDir - comboU2.y) / (comboU2.z - comboU2.y));
 
     //fade ray hits based on dist from ray origin
-    alpha *= 1.f - clamp(distance(rayOrigin_VS, hitPt) / ssrMaxRayDist, 0.f, 1.f);
+    alpha *= 1.f - clamp(distance(rayOrigin_VS, hitPt) / comboU1.w, 0.f, 1.f);
     alpha *= int(intersect);
 
     return alpha;
@@ -168,7 +163,7 @@ float calculateAlphaForIntersect(bool intersect, float iterCt, float Kr, vec2 hi
 bool traceScreenSpaceRay(vec3 rayOrigin_VS, vec3 R_VS, float jitter, out vec2 hitPix, out vec3 hitPt, out float iterCt)
 {
     // Clip to the near plane
-    float rayLen = ((rayOrigin_VS.z + R_VS.z * ssrMaxRayDist) > nearClip) ? (nearClip - rayOrigin_VS.z) / R_VS.z : ssrMaxRayDist;
+    float rayLen = ((rayOrigin_VS.z + R_VS.z * comboU1.w) > -comboU0.y) ? (-comboU0.y - rayOrigin_VS.z) / R_VS.z : comboU1.w;
     vec3 rayEnd = rayOrigin_VS + R_VS * rayLen;
 
     // Project into homogeneous clip space
@@ -212,8 +207,8 @@ bool traceScreenSpaceRay(vec3 rayOrigin_VS, vec3 R_VS, float jitter, out vec2 hi
     vec2 dP = vec2(stepDir, delta.y * invdx);
 
     // Calculate pixel stride based on distance of ray origin from camera. Since perspective means distant objects will be smaller in screen space we can use this to have higher quality reflections for far away objects while still using a large pixel stride for near objects (and increase performance) this also helps mitigate artifacts on distant reflections when we use a large pixel stride.
-    float strideScaler = 1.f - min(1.f, -rayOrigin_VS.z / ssrPixStrideZ);
-    float pixelStride = 1.f + strideScaler * ssrPixStride;
+    float strideScaler = 1.f - min(1.f, -rayOrigin_VS.z / comboU1.y);
+    float pixelStride = 1.f + strideScaler * comboU1.x;
 
     // Scale derivatives by the desired pixel stride and then offset the starting values by the jitter fraction
     dP *= pixelStride;
@@ -233,7 +228,7 @@ bool traceScreenSpaceRay(vec3 rayOrigin_VS, vec3 R_VS, float jitter, out vec2 hi
     vec4 dPQK = vec4(dP, dQ.z, dK);
     bool intersect = false;
 
-    for (i = 0; i < ssrIter && intersect == false; ++i)
+    for (i = 0; i < comboU0.z && intersect == false; ++i)
     {
         pqk += dPQK;
 
@@ -258,7 +253,7 @@ bool traceScreenSpaceRay(vec3 rayOrigin_VS, vec3 R_VS, float jitter, out vec2 hi
         zA = pqk.z / pqk.w;
         zB = zA;
 
-        for (float j = 0; j < ssrRefine; ++j)
+        for (float j = 0; j < comboU0.w; ++j)
         {
             pqk += dPQK * stride;
 
@@ -286,8 +281,8 @@ void main()
 {
     vec3 P_VS = reconstructP(v.uv);
 
-    uvec4 data2 = texelFetch(gbuf2_64, ivec2(gl_FragCoord.xy), 0);
-    vec3 N_VS = vec3(unpackHalf2x16(data2.y).y, unpackHalf2x16(data2.z));
+    uvec4 data2 = texelFetch(gBuf2, ivec2(gl_FragCoord.xy), 0);
+    vec3 N_VS = vec3(unpackHalf2x16(data2.g).g, unpackHalf2x16(data2.b));
 
     vec3 R_VS = normalize(reflect(normalize(P_VS), normalize(N_VS)));
 
@@ -296,14 +291,13 @@ void main()
     vec3 hitPt;
 
     vec2 uv2 = v.uv * screenSize;
-    float c = (uv2.x + uv2.y) * .25f;
+    float c = (uv2.r + uv2.g) * .25f;
     float jitter = mod(c, 1.f);
 
     bool intersect = traceScreenSpaceRay(P_VS, R_VS, jitter, hitPix, hitPt, iterCt);
+    float alpha = calculateAlphaForIntersect(intersect, iterCt, hitPix, hitPt, P_VS, R_VS);
 
-    float specularStrength = 1.f;
-    float alpha = calculateAlphaForIntersect(intersect, iterCt, specularStrength, hitPix, hitPt, P_VS, R_VS);
     hitPix = mix(v.uv, hitPix, intersect);
-
-    Ci = vec4(texture(tonemap_noGiz_64, hitPix).rgb, alpha);
+    Ci = vec4(texture(tonemap_noGiz, hitPix).rgb, alpha);
 }
+

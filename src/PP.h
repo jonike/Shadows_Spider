@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -34,12 +34,12 @@ public:
 
     bool fboPrep(shared_ptr<GLWidget>); //ep
     void bloomBufferCreate();
-    AbjNode gaussNode_create(QString, GLenum, int, int);
-    AbjNode depthRev_node_create();
-    AbjNode gbuffer_node_create();
-    AbjNode simp_node_create();
-    AbjNode tonemap_node_create();
-    AbjNode singleNode_create(QString, GLenum, int, int);
+    AbjNode depthRevN_create();
+    AbjNode bgN_create();
+    AbjNode tonemapN_create();
+    AbjNode singleN_create(string, GLenum, int, int);
+    AbjNode dualN_create(string, GLenum, int, int);
+    AbjNode gBufN_create();
 
     void bloomRender();
     void downSampRender(AbjNode, AbjNode, int);
@@ -47,9 +47,12 @@ public:
     GLuint gaussianLinear(GLuint, AbjNode);
     void gaussianRecursivePasses(GLuint, AbjNode, int, int);
     GLuint gaussianBlur(AbjNode, AbjNode, int);
+    GLuint gaussianBlur2(GLuint, AbjNode, int);
 
     void postFX(shared_ptr<GLWidget>); //ep
     void resizeTexClearMem(shared_ptr<GLWidget>); //ep
+
+    void printFilterTypeD(int filterIn);
 };
 
 #endif // PP_H

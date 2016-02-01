@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -31,12 +31,11 @@ public:
     MainWin &myWin;
     Outliner(MainWin &, QWidget *parent = 0);
 
-    bool keepSel, lmbTgl, rmbTgl, mmbTgl, ctrlTgl, shiftTgl;
-    bool ignoreChangeName = 0;
+    bool keepSel, lmbTgl, rmbTgl, mmbTgl, altTgl, ctrlTgl, shiftTgl;
+    bool ignoreChangeName = false;
     unsigned int outLinerItemCt;
 
     vector<QTreeWidgetItem*> allLabels;
-
 
     void refreshOutliner(bool);
 
@@ -53,13 +52,10 @@ protected:
     void keyPressEvent(QKeyEvent *);
     void keyReleaseEvent(QKeyEvent *);
     void mousePressEvent(QMouseEvent *);
-    void dropEvent(QDropEvent *); //
+    void dropEvent(QDropEvent *);
     bool eventFilter(QObject *, QEvent *);
 
-    void prepItems(QTreeWidgetItem *, QString);
-
-    void visitTree(QStringList &list, QTreeWidgetItem *item);
-    QStringList visitTree(QTreeWidget *tree);
+    void prepItems(QTreeWidgetItem *, string);
 };
 
 #endif // OUTLINER_H

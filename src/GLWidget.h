@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -32,75 +32,101 @@ public:
     QSplitter &mySplitV;
     GLWidget(MainWin &, QSplitter &, const QGLWidget *shareWidget = 0, QWidget *parent = 0);
 
+    int prevCursorShape;
+
     bool lmbTgl, mmbTgl, rmbTgl, altTgl, ctrlTgl, shiftTgl, spaceTgl;
     bool aTgl, bTgl, cTgl, dTgl, eTgl, fTgl, gTgl, hTgl, iTgl, jTgl, kTgl, lTgl, mTgl, nTgl, oTgl, pTgl, qTgl, rTgl, sTgl, tTgl, uTgl, vTgl, wTgl, xTgl, yTgl, zTgl;
-    bool colorPickTgl, disableSelRect, gizSideTgl, gizSpaceTgl, mpfTgl, rezGateTgl, rezGateTgl_sel, singleShot, statsTgl, wireOverTgl, rttVizTgl;
+    bool colorPickTgl, disableSelRect, gizSideTgl, gizSpaceTgl, mpfTgl, rezGateTgl, rezGateTgl_sel, singleShotRC, statsTgl, wireOverTgl;
+
     float aspect, aspectSide, NDC_x, NDC_y, rayIntersectDist;
 
-    glm::mat4 VMgizSide, PM, PMgizSide, PMinv_cube, PMrtt;
-    glm::vec2 pNew, pOld, pD, rayP;
+    glm::mat4 VMgizSide, PM, PMgizSide, PMinv_cube;
+    glm::vec2 pMouseNew, pMouseNew_stored, pMouseOld, pMouseDiff, rayP, texelSize;
     glm::vec2 selRect_LD, selRect_RU, rezGate_LD, rezGate_RU;
-    glm::vec3 upWorld, from_OBB, to_OBB;
+    glm::vec3 upWorld, from_OBB, to_OBB, aspectXYZ;
+    vector<Stroke> strokes_brush, strokes_eraser, strokes_brush_cursor, strokes_eraser_cursor, strokes_cursor;
 
     //giz
     string gizHoverType = "NONE";
     string gizTransType = "NONE";
-    glm::vec3 gizN, gizMouseDown, giz_rayOrigin, giz_rayDir;
-    glm::vec3 gizHoverCheckX, gizHoverCheckY, gizHoverCheckZ;
+    glm::vec3 gizN, gizMouseDown, giz_rayOrigin, giz_rayDir, gizHoverCheckX, gizHoverCheckY, gizHoverCheckZ;
+
+    glm::vec3 brushRGB;
+    glm::vec4 brushRGBA;
+    float brushA;
 
     string mpf;
-    QVector<QPoint> selRectPts_color, selRectPts_usable;
+    vector<glm::vec2> selRectPts_color, selRectPts_usable;
+
     FourGrid_idx splitIdx;
     shared_ptr<Object> selCamLi;
+    shared_ptr<GLWidget> activeGL;
 
-    int debugID;
-    bool debugBool = 0;
-    int GLidx;
+    int ID_GLWidget;
+    int blendModeD = 999;
+    int copyTgt = 0;
+    bool debug0 = false;
+    bool moveDist_paint = false;
+    bool firstPress = true;
+    bool doEraserDebug = true;
+    bool paintCursorResizeTgl = false;
+    float distDragPaint = 15.f;
+    glm::vec2 paintCursorResize_p;
+    glm::vec2 P_currF, P_prevF;
+    Map myLayerIdx, sobelMap;
 
     //timer
-    double tick_new, tick_old, tick_diff, tick_newFPS, tick_oldFPS, tick_diffFPS;
     unsigned int tick_frames = 0;
-    double lastTime, currentTime;
-    float deltaTime, deltaTime_resize, fpsTime, mpfTime;
-    QTimer *upTimer;
+    double tick_new, tick_old, tick_diff, tick_newFPS, tick_oldFPS, tick_diffFPS;
+    float deltaTime, mpfTime;
+    QTimer *upTimer, *cursorTimer;
     float dTime = 0.f;
+
+//    chrono::high_resolution_clock chrono0;
+//    chrono::time_point<chrono::system_clock> chronoPt0, chronoPt1;
 
     //FBO
     bool fboReady;
     int currLum = 0;
 
-    GLuint gbuf0_32, gbuf1_32, gbuf2_32, gbuf3_32, gbuf4_32, gbuf5_32, gbuf_DS_32;
-    GLuint64 gbuf0_64, gbuf1_64, gbuf2_64, gbuf3_64, gbuf4_64, gbuf5_64, gbuf_DS_64;
+    GLuint gBuf0_32, gBuf1_32, gBuf2_32, gBuf3_32, gBuf4_32, gBuf5_32, gBuf_DS_32;
+    GLuint64 gBuf0_64, gBuf1_64, gBuf2_64, gBuf3_64, gBuf4_64, gBuf5_64, gBuf_DS_64;
 
     GLuint rttGaussIn32, tempGauss;
     GLuint64 rttGaussIn64, downSamp_64, extractHLfromSrc_64;
-    AbjNode gbuf_node, bloomC_node, bloom_node, bloom_gauss_node[6], deferred_node, depthRev_node, down_node[6], fxaa_node, lumaAdapt[2], lumaInit, simp_node, ssao_node, ssao_gauss_node, ssr_node, tonemap_node, tonemap_exposure_node;
-    glm::vec2 texelSize;
 
-    bool storedPM = 0;
+    AbjNode gBufN, bloomCN, bloomN, bloomGaussN[6], deferredN, depthRevN, downN[6], fxaaN, lumaAdaptN[2], lumaInitN, bgN, ssaoN, ssaoGaussN, ssrN, tonemapN, tonemapExpN, alphaGaussN;
+    AbjNode brushN, brushBGN, brushTempN, eraserN, cursorN, sobelN;
+
+    bool bakeNow = false;
     glm::mat4 PMd, PMstored;
 
-    //DRAG DROP
-    bool dragDrop = 0;
+    float tabletPressure;
+    string penOrientation = "PEN";
+    string paintType = "NONE";
+    bool paintMode = false;
+    bool dragDrop = false;
+    int edgeDetect_mode = 0;
 
     void resizeGL(int, int);
     void changeCamLiType_();
     void VMup(shared_ptr<Object>);
     void overlay2D();
-    int getGLidx();
+    shared_ptr<GLWidget> getActiveGL();
     glm::vec2 toNDC(glm::vec2, string);
     bool jumpSwitch();
-    void dupeStenFix(int);
+    void dupeStenFix_check(shared_ptr<Object>);
 
-    virtual void gizSideTgl_() { gizSideTgl = !gizSideTgl; }
-    virtual void gizSpaceTgl_() { gizSpaceTgl = !gizSpaceTgl; }
-    virtual void mpfTgl_() { mpfTgl = !mpfTgl; }
-    virtual void rezGateTgl_() { rezGateTgl = !rezGateTgl; }
-    virtual void rttVizTgl_() { rttVizTgl = !rttVizTgl; }
-    virtual void statsTgl_() { statsTgl = !statsTgl; }
-    virtual void wireOverTgl_() { wireOverTgl = !wireOverTgl; }
+    virtual void gizSideTgl_swap() { gizSideTgl = !gizSideTgl; }
+    virtual void gizSpaceTgl_swap() { gizSpaceTgl = !gizSpaceTgl; }
+    virtual void mpfTgl_swap() { mpfTgl = !mpfTgl; }
+    virtual void rezGateTgl_swap() { rezGateTgl = !rezGateTgl; }
+    virtual void statsTgl_swap() { statsTgl = !statsTgl; }
+    virtual void wireOverTgl_swap() { wireOverTgl = !wireOverTgl; }
 
 public slots:
+    void clearCanvas();
+    void paintAndCursorDrawHideTimer1();
 
 protected:
     void enterEvent(QEvent *);
@@ -110,32 +136,41 @@ protected:
     void mousePressEvent(QMouseEvent *);
     void mouseReleaseEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
+    void tabletEvent(QTabletEvent *);
     void wheelEvent(QWheelEvent *);
     void initializeGL();
     void paintGL();
-
     void dragEnterEvent(QDragEnterEvent *);
     void dragLeaveEvent(QDragLeaveEvent *);
     void dropEvent(QDropEvent *);
 
-    void mpfTimerStart();
-
     bool checkForHits();
-    void matchFoundRaycast(int);
+    void matchFoundRaycast(shared_ptr<Object>);
 
-    void switchGL_layout();
-    void getIndexIntoSplit();
-    void updateCamAttrs(QString);
-    void getPtsBetweenRect();
+    //timers
+    void mpfTimerStart();
     void fpsCtrls();
-    void radPop_GL(QString);
+    void getIndexIntoSplit();
+    void getPtsBetweenRect();
+    bool gridMatch(shared_ptr<Object>);
     void PMupOrtho();
-    bool gridMatch(int idx);
+    void radPop_GL(string);
+    void switchGL_layout();
+    void updateCamAttrs(string);
+
+    bool paintCursorResize_request();
+    vector <glm::vec2> bresenham(glm::vec2, glm::vec2, int);
+    void bakeSomething();
+    void paintSomething0();
+    void paintSomething1(string);
+    void clearCursor(bool);
+    void brushOutlineUp();
+    Map getCurrPaintLayer();
+    void blendModeDebug(string);
+    void paintAndCursorDrawHideTimer0();
 
 signals:
     void changed(const QMimeData *mimeData = 0);
-
 };
-
 
 #endif // GLWIDGET_H

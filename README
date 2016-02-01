@@ -1,24 +1,33 @@
-Shadow's Spider is a cross platform realtime 3d rendering application. It's built around OpenGL 4.5 and Qt.
+Shadow's Spider is a realtime 3d rendering application. It's built around OpenGL 4.5 and Qt.
+
+NEW - 2/1/2016 :
+- huge rewrite / redesign
+- much easier to understand, faster, bugs fixes
+- key shaders and default settings improved
+- obj and texture files located at https://drive.google.com/file/d/0B5Eg0nuMXxh9b0ZPWWxQR1VneFE/view?usp=sharing
+- Win7 support only
 
 FEATURES:
-- intuitive, fluid interface
-- multiple page attribute editor with radial popups
-- translate, rotate, scale gizmos
-- PBR-ish IBL workflow
-- Up to 3 lights
+- intuitive interface with multiple page attribute editor and radial popups
+- transform gizmos
+- defferred shading, PBR
+- C++11
 
-Video demo at https://youtu.be/ll6h43GsIdM
+HOW TO BUILD:
+- Qt Creator 3.4.82
+- glew 1.11
+- glm 972
+- search for pathObj->val_s / pathTex->val_s and change path to your name
 
-The controls are similar to other DCC applications, with an alt-LMB / RMB camera navigation with shift, ctrl, and space modifiers.
+UPCOMING:
+- point light shadows
+- transparency
+
+Video demo at https://youtu.be/ll6h43GsIdM (VERY OLD)
+
+The controls are Alt-LMB / RMB camera navigation with shift, ctrl, and space modifiers.
 
 Dragging manipulators and changing the values of attribute editor cells is done with MMB with ctrl or shift modifiers to slow down or speed up the value change.
 
 Every QComboBox is a radial menu opened by holding RMB over it.
 
-The obj files that can be used have to be very simple at this point since the loader needs work.
-
-DDS reflection cubemaps need to be 16f, 16f, 16f, 16f, convolved to take a roughness parameter, with GGX. The irradiance map needs to also be present for IBL workflow.
-
-
-UPCOMING:
-- bugfix

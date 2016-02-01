@@ -1,6 +1,6 @@
-/*
 
-Copyright 2015 Aleksander Berg-Jones
+/*
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -20,26 +20,21 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #version 450 core
+#extension GL_ARB_bindless_texture : require
 
-layout(location = 0) in vec3 pE;
-layout(location = 1) in vec2 uvE;
-layout(location = 2) in vec3 tE;
-layout(location = 3) in vec3 nE;
-
-uniform mat3 NM;
-uniform mat4 MVP, MV;
-
-out Vert
+in Vert
 {
-    vec2 UV;
-    vec3 T_VS, N_VS;
+    vec2 uv;
 } v;
+
+layout(bindless_sampler, location = 0) uniform sampler2D tex;
+layout(location = 0) out vec4 Ci;
+
+uniform vec4 brushRGBA;
 
 void main()
 {
-    gl_Position = MVP * vec4(pE, 1.f);
+    vec4 tex = texture(tex, v.uv);
 
-    v.T_VS = normalize(NM * tE);
-    v.N_VS = normalize(NM * nE);
-    v.UV = uvE;
+    Ci = vec4(tex.a);
 }

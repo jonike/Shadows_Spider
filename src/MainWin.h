@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -37,63 +37,42 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 #include <gtx/string_cast.hpp>
 #include <gtx/euler_angles.hpp>
 #include <gtx/compatibility.hpp>
+#include <gtx/color_space.hpp>
 
 #include <QApplication>
 #include <QMainWindow>
 #include <QWidget>
 #include <QGLWidget>
-#include <QDialog>
 #include <QDockWidget>
 #include <QTreeWidget>
 #include <QTableWidget>
-#include <QTableWidgetItem>
+#include <QListWidget>
 #include <QHeaderView>
 #include <QSizePolicy>
-#include <QList>
-#include <QGraphicsWidget>
-#include <QDebug>
 #include <QStackedLayout>
 #include <QMenuBar>
 #include <QComboBox>
 #include <QWheelEvent>
-#include <QGraphicsSceneEvent>
 #include <QDesktopWidget>
 #include <QSplitter>
 #include <QShortcut>
 #include <QLineEdit>
 #include <QModelIndex>
-#include <QTime>
 #include <QTimer>
-#include <QElapsedTimer>
-#include <QVector>
 #include <QPushButton>
-#include <QColorDialog>
-#include <QButtonGroup>
 #include <QFileDialog>
-#include <QItemDelegate>
+#include <QProgressBar>
+#include <QTabletEvent>
 #include <QStyledItemDelegate>
 #include <QAbstractItemDelegate>
-#include <QDesktopServices>
 #include <QMimeData>
-#include <QProgressBar>
-#include <QLabel>
+#include <QDebug>
 
-#if __unix__
-    #include <curses.h>
-#else
-    #include <conio.h>
-#endif
-
-#include <stdio.h>
-#include <stdlib.h>
 #include <iostream>
 #include <iomanip>
-#include <fstream>
 #include <sstream>
-#include <vector>
-#include <string>
 #include <memory>
-#include <algorithm>
+#include <chrono>
 #include <random>
 
 using namespace std;
@@ -103,7 +82,6 @@ class Attrs;
 class CamCombo;
 class Combo;
 class CPop;
-class CPopWin;
 class FocusCtrlDel;
 class GLWidget;
 class GLWidgetSh;
@@ -113,6 +91,8 @@ class MenuBarTop;
 class MultiAttr;
 class Object;
 class Outliner;
+class LayerSel;
+class PaintWin;
 class Prefs;
 class PrefWin;
 class PP;
@@ -127,54 +107,63 @@ public:
     Qt::WindowFlags framelessWin, framedWin;
     QSplitter *gridLay, *hLayU, *hLayD, *vLay;
     QStackedLayout *stackedMain, *stackedAttrTable;
-    MenuBarTop *myMenuBar_top;
-
-    shared_ptr<Object> selB, myBB, myTxt, myFSQ, myPivot, myGizNull, myAreaLight, myDirLight, myPointLight, mySpotLight, myVolCone;
-
-    float gamma = 1.f / 2.2f;
-    string gizSpace = "world";
-    float gizScale = 1.75f;
     QIcon myIconCam, myIconLight;
-    int lightCt = 0;
-
-    vector<shared_ptr<CamCombo>> allCamCombo;
-    vector<shared_ptr<GLWidget>> allGL;
-    vector<shared_ptr<Object>> allObj, allGiz, allGizSide, loadO;
-
-    Anim *myAnim;
-    Attrs *attrTable, *etcTable, *glslTable, *cutTable, *pathTable;
-    CPopWin *myCPopWin;
-    PrefWin *myPrefWin;
-    GLWidgetSh *myGLWidgetSh;
-    Outliner *myOutliner;
-    RadPop *myRadPop;
     QProgressBar *myProgress;
     QWidget *blankW_main;
-    Gizmo *myGizmo;
-    PP *myPP;
-
-    bool CPopWinTgl, PrefWinTgl, searchB;
-    int savedIdx = 2;
-    int lastFocusGL = 0;
-    QString lastScene, layoutType, myStyle, searchDownType, oldSelB;
     QMenu *ioMenu, *actMenu, *edMenu, *etcMenu, *renderMenu, *rigMenu;
-    string selMode = "OBJ";
-
-    bool creatingDynCubeRGB = 0;
-    bool doCubeMap = 0;
-
     QDockWidget *dock_attrTable, *dock_outliner;
     QWidget *dock_attrTable_holder, *attrTable_holder, *dock_outliner_holder;
     QFont menuSmallF;
 
+    shared_ptr<Object> selB, myBB, myTxt, myFSQ, myPivot, myGizNull, myAreaLight, myDirLight, myPointLight, mySpotLight, myVolCone, paintStroke;
+
+    float gamma = 1.f / 2.2f;
+    string gizSpace = "world";
+    float gizScale = 1.75f;
+    int lightCt = 0;
+
+    vector<shared_ptr<CamCombo>> allCamCombo;
+    vector<shared_ptr<GLWidget>> allGL;
+    vector<shared_ptr<Object>> allObj, allGiz, allGizSide, newObj;
+
+    MenuBarTop *myMenuBar_top;
+    Anim *myAnim;
+    Attrs *attrTable, *etcTable, *glslTable, *cutTable, *pathTable;
+    PaintWin *myPaintWin;
+    LayerSel *objectLay, *typeLay, *mapLay, *layerLay;
+    PrefWin *myPrefWin;
+    GLWidgetSh *myGLWidgetSh;
+    Outliner *myOutliner;
+    RadPop *myRadPop;
+    Gizmo *myGizmo;
+    PP *myPP;
     GLuint cubeM_specular_32, cubeM_irradiance_32;
+
+    bool searchB;
+    int savedIdx = 2;
+    int ID_lastFocused = 0;
+
+    string lastScene, oldSelB, layoutType, myStyle;
+    string selMode = "OBJ";
+
+    bool creatingDynCubeRGB = false;
+    bool doCubeMap = false;
+
+    int brushSize = 10;
+    int brushHard = 100;
 
     virtual glm::vec2 toVec2(QPoint in) { return glm::vec2(in.x(), in.y()); }
     virtual QPoint toQP(glm::vec2 in) { return QPoint(in.x, in.y); }
+    virtual QColor toQC(glm::vec3 in) { return QColor::fromRgbF(in.r, in.g, in.b); }
+
     unsigned int countSel();
     int countLights();
-    bool tryAddSwitchLight(QString);
+    bool tryAddSwitchLight(string);
     void setLightsDirty();
+    string stringToUpper(string);
+    vector<string> stringSplit(string, string);
+
+    void MainWin::rgb2HSV_d();
 
 public slots:
     void progressAdd_init();
@@ -183,10 +172,11 @@ public slots:
     void saveScene();
     void saveSceneAs();
     void quitConfirm();
-    void startupScene(QString);
+    void startupScene(string);
 
     void pivCenter();
     void pivTgl();
+    void boundingBoxTgl();
     void delete_();
     void dupe();
     void hide();
@@ -199,7 +189,7 @@ public slots:
     void gridLayTgl();
 
     void camLiAdd();
-    void objAdd(QString, QString);
+    void objAdd(string, string);
 
     void getChild();
     void getParent();
@@ -212,8 +202,10 @@ public slots:
 
     void gizShow(string);
     void gizPivAutoShow();
-    void PrefWinOpen();
-    void TglCPopWin();
+
+    void refreshAllPaintTables();
+    void PaintWinTgl(bool, int);
+
     void clearSel();
     void attrTableVizToggle();
 
@@ -222,32 +214,31 @@ public slots:
 
     void deferredPrefs();
     void gridInit();
-    double GetTickCount2();
 
 protected:
+    void keyReleaseEvent(QKeyEvent *);
+
     void addIoMenu(); void addActMenu(); void addEtcMenu(); void addEdMenu(); void addRenderMenu(); void addRigMenu();
     void addAttrTables();
     void addOutliner();
     void centerToScreen(QWidget* widget);
-
     void camInit();
     void gizInit();
     void objInit();
     void glWidgetInit();
-
     void restoreZoomedLayout();
+    void loadSS();
 };
 
 typedef struct
 {
     GLenum face;
-    glm::vec3 targ;
-    glm::vec3 up;
+    glm::vec3 targ, up;
 } CubeShadowTable;
 
 typedef struct
 {
-    QString name;
+    string name;
     int width, height;
     GLuint fbo1, tex1_32;
     GLuint64 tex1_64;
@@ -255,34 +246,36 @@ typedef struct
     GLuint64 tex2_64;
     GLuint DS_32;
     GLuint64 DS_64;
+    int idx;
+    unsigned int ID;
 } AbjNode;
 
 typedef struct
 {
-    QString type, name;
+    string type, name;
     glm::vec3 t;
 } CamSetup;
 
 typedef struct
 {
-    QString name;
+    string name;
     glm::vec3 r;
 } GridSetup;
 
 typedef struct
 {
-    QString type, name;
+    string type, name;
     glm::vec3 Cgiz, r, t;
 } GizSetup;
 
 typedef struct
 {
-    QString type, name;
+    string type, name;
 } LightSetup;
 
 typedef struct
 {
-    QString attr;
+    string attr;
     float attrVal;
 } DynSelCamAttrs;
 
@@ -301,8 +294,8 @@ typedef struct
 
 typedef struct
 {
-    QString cam;
-    int idx;
+    string cam;
+    int splitIdx, ID;
     QSplitter &split;
 } GLSetup;
 
@@ -314,7 +307,7 @@ typedef struct
 
 typedef struct
 {
-    QString name, type;
+    string name, type;
     int sx, sy, offX, offY;
     QPolygon hoverTri;
     glm::vec2 move;
@@ -324,7 +317,7 @@ typedef struct
 typedef struct
 {
     QPushButton *button;
-    QString name;
+    string name;
 } TableButtons;
 
 typedef struct
@@ -332,16 +325,110 @@ typedef struct
     int row, col;
 } TableRowCol;
 
+typedef struct
+{
+    string name;
+    GLuint pro;
+} Pro;
+
+typedef struct
+{
+    string name, type, flat;
+    unsigned int ID;
+    vector<AbjNode> layer;
+} Map;
+
+typedef struct
+{
+    string name;
+    glm::vec3 scale;
+    float opac;
+    unsigned int ID;
+    glm::vec2 coord;
+} Brush;
+
+typedef struct
+{
+    glm::vec2 coord;
+    glm::vec3 scale;
+    float opac;
+} Stroke;
+
+typedef struct
+{
+    string name;
+    unsigned int ID;
+} NameID;
+
+typedef struct
+{
+    NameID x, y;
+} TwoNameID;
+
+typedef struct
+{
+    string type;
+    NameID map, layer;
+    vector<TwoNameID> typeMap, mapLayer;
+} TexSel;
+
+typedef struct
+{
+    glm::vec2 mouse, UV;
+} MouseToUV;
+
+typedef struct
+{
+    unsigned int dwSize;
+    unsigned int dwFlags;
+    unsigned int dwHeight;
+    unsigned int dwWidth;
+    unsigned int dwPitchOrLinearSize;
+    unsigned int dwDepth;
+    unsigned int dwMipMapCount;
+    unsigned int dwReserved1[11];
+
+    struct
+    {
+        unsigned int dwSize;
+        unsigned int dwFlags;
+        unsigned int dwFourCC;
+        unsigned int dwRGBBitCount;
+        unsigned int dwRBitMask;
+        unsigned int dwGBitMask;
+        unsigned int dwBBitMask;
+        unsigned int dwAlphaBitMask;
+    } sPixelFormat;
+
+    struct
+    {
+        unsigned int dwCaps1;
+        unsigned int dwCaps2;
+        unsigned int dwDDSX;
+        unsigned int dwReserved;
+    } sCaps;
+
+    unsigned int dwReserved2;
+
+} ddsHeader;
+
+struct lightUBO
+{
+    glm::vec4 Cl_type, falloff, lDirRot, lP;
+	glm::mat4 ShadowCoord;
+};
+
 #include "Anim.h"
 #include "Attrs.h"
 #include "CamCombo.h"
 #include "CPop.h"
-#include "CPopWin.h"
 #include "GLWidget.h"
 #include "GLWidgetSh.h"
 #include "Gizmo.h"
 #include "Object.h"
 #include "Outliner.h"
+#include "LayerSel.h"
+#include "PaintWin.h"
 #include "Prefs.h"
 #include "PrefWin.h"
 #include "PP.h"
@@ -393,18 +480,21 @@ public:
     MultiAttr() { ; }
     shared_ptr<MultiAttr> Clone() const { return(shared_ptr<MultiAttr>(CloneImpl())); }
 
-    QString name, type, typeX, val_s;
-    bool repop = 1;
+    string typeX = "ALL";
+    string grp, name, type, val_s;
+
+    bool repop = true;
     bool val_b;
     int val_i, idx_3;
     int tab = 0;
+    int idx;
     float val_f;
     float min = -9999.f;
     float max = 9999.f;
     glm::vec2 val_2;
     glm::vec3 val_3;
     glm::vec4 val_4;
-    QStringList comboList;
+    vector<string> comboList;
     QShortcut *cut;
 
     shared_ptr<Object> obj;
@@ -414,7 +504,25 @@ public:
 
 //    virtual void set(glm::vec3) { val_3 = val; if (name == "t") obj->piv->val_3 += val; }
 //    void set(float, float, float) { val_3 = glm::vec3(x, y, z); if (name == "t") obj->piv->val_3 += glm::vec3(x, y, z); }
+};
 
+template <typename T>
+class make_vector
+{
+public:
+  typedef make_vector<T> my_type;
+  my_type& operator<< (const T& val)
+  {
+    data_.push_back(val);
+    return *this;
+  }
+
+  operator std::vector<T>() const
+  {
+    return data_;
+  }
+private:
+  std::vector<T> data_;
 };
 
 

@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -24,14 +24,14 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 layout(location = 0) out vec4 rttC;
 layout(location = 1) out vec4 rttGiz;
 
-uniform bool CpickTgl;
-uniform vec4 Crand, Cwire;
+uniform vec3 Cwire;
+uniform vec4 comboU0; //(Crand.rgb, myGL->colorPickTgl)
 
 void main()
 {
-    if (CpickTgl)
-        rttC = Crand;
+    if (comboU0.a == 1.f)
+        rttC = vec4(comboU0.rgb, 1.f);
 
     else
-        rttGiz = Cwire;
+        rttGiz = vec4(Cwire, 1.f);
 }

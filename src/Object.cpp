@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -25,7 +25,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
 {
     name = make_shared<MultiAttr>();
     name->name = "name";
-    name->type = "QString";
+    name->type = "string";
     name->val_s = "renameMe";
 
     //TRANSFORM
@@ -55,13 +55,13 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     v = make_shared<MultiAttr>();
     v->name = "v";
     v->type = "bool";
-    v->val_b = 1;
+    v->val_b = true;
     multiObj.push_back(v);
 
     bb = make_shared<MultiAttr>();
     bb->name = "bb";
     bb->type = "bool";
-    bb->val_b = 0;
+    bb->val_b = false;
     multiObj.push_back(bb);
 
     //GLSL
@@ -92,7 +92,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     multiObj.push_back(anisoM);
 
     cubeM = make_shared<MultiAttr>();
-    cubeM->name = "cubeM";
+    cubeM->name = "cube_specM";
     cubeM->type = "enum";
     cubeM->typeX = "FBO";
 //    cubeM->val_s = "uffizi";
@@ -142,26 +142,9 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
         tileSep->tab = 1;
         multiObj.push_back(tileSep);
 
-        tileMaps(0, "set");
+        tileMaps(0, "create");
 
     //BASE
-    Kr = make_shared<MultiAttr>();
-    Kr->name = "Kr";
-    Kr->type = "float";
-    Kr->typeX = "OBJ";
-    Kr->val_f = .3f;
-    Kr->min = 0.008f;
-    Kr->max = 1.f;
-    multiObj.push_back(Kr);
-
-    Ksss = make_shared<MultiAttr>();
-    Ksss->name = "Ksss";
-    Ksss->type = "float";
-    Ksss->typeX = "OBJ";
-    Ksss->val_f = 10.f;
-    Ksss->min = 0.f;
-    multiObj.push_back(Ksss);
-
     Ko = make_shared<MultiAttr>();
     Ko->name = "Ko";
     Ko->type = "float";
@@ -189,14 +172,14 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     ruffA->max = 1.f;
     multiObj.push_back(ruffA);
 
-    ruffD = make_shared<MultiAttr>();
-    ruffD->name = "ruffD";
-    ruffD->type = "float";
-    ruffD->typeX = "OBJ";
-    ruffD->val_f = .5f;
-    ruffD->min = 0.f;
-    ruffD->max = 1.f;
-    multiObj.push_back(ruffD);
+    ruffOren = make_shared<MultiAttr>();
+    ruffOren->name = "ruffOren";
+    ruffOren->type = "float";
+    ruffOren->typeX = "OBJ";
+    ruffOren->val_f = .5f;
+    ruffOren->min = 0.f;
+    ruffOren->max = 1.f;
+    multiObj.push_back(ruffOren);
 
     sssSpread = make_shared<MultiAttr>();
     sssSpread->name = "sssSpread";
@@ -211,15 +194,17 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
         shadowCast->name = "shadowCast";
         shadowCast->type = "bool";
         shadowCast->tab = 1;
-        shadowCast->val_b = 1;
+        shadowCast->val_b = true;
         multiObj.push_back(shadowCast);
 
-        backface = make_shared<MultiAttr>();
-        backface->name = "backface";
-        backface->type = "bool";
-        backface->tab = 1;
-        backface->val_b = 0;
-        multiObj.push_back(backface);
+        twoSided = make_shared<MultiAttr>();
+        twoSided->name = "twoSided";
+        twoSided->type = "enum";
+        twoSided->val_s = "BLACK";
+        twoSided->comboList = { "OFF", "BLACK", "FULL" };
+        twoSided->repop = false;
+        twoSided->tab = 1;
+        multiObj.push_back(twoSided);
 
         Cwire = make_shared<MultiAttr>();
         Cwire->name = "Cwire";
@@ -229,32 +214,22 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
         Cwire->tab = 1;
         multiObj.push_back(Cwire);
 
-        normVLen = make_shared<MultiAttr>();
-        normVLen->name = "normVLen";
-        normVLen->type = "float";
-        normVLen->typeX = "OBJ";
-        normVLen->val_f = .3f;
-        normVLen->min = 0.f;
-        normVLen->max = 1.f;
-        normVLen->tab = 1;
-        multiObj.push_back(normVLen);
-
-        normWeight = make_shared<MultiAttr>();
-        normWeight->name = "normWeight";
-        normWeight->type = "float";
-        normWeight->typeX = "OBJ";
-        normWeight->val_f = 1.f;
-        normWeight->min = 0.f;
-        normWeight->max = 1.f;
-        normWeight->tab = 1;
-        multiObj.push_back(normWeight);
+        normWt = make_shared<MultiAttr>();
+        normWt->name = "normWt";
+        normWt->type = "float";
+        normWt->typeX = "OBJ";
+        normWt->val_f = 1.f;
+        normWt->min = 0.f;
+        normWt->max = 1.f;
+        normWt->tab = 1;
+        multiObj.push_back(normWt);
 
         rotOrder = make_shared<MultiAttr>();
         rotOrder->name = "rotOrder";
         rotOrder->type = "enum";
         rotOrder->val_s = "XZY";
-        rotOrder->comboList << "XYZ" << "YZX" << "ZXY" << "XZY" << "YXZ" << "ZYX";
-        rotOrder->repop = 0;
+        rotOrder->comboList = { "XYZ", "YZX", "ZXY", "XZY", "YXZ", "ZYX" };
+        rotOrder->repop = false;
         rotOrder->tab = 1;
         multiObj.push_back(rotOrder);
 
@@ -271,8 +246,8 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     camLiType->type = "enum";
     camLiType->typeX = "CAMLI";
     camLiType->val_s = "PERSP";
-    camLiType->comboList << "DIR" << "FPS" << "ORTHO" << "PERSP" << "POINT" << "SPOT";
-    camLiType->repop = 0;
+    camLiType->comboList = { "DIR", "FPS", "ORTHO", "PERSP", "POINT", "SPOT" };
+    camLiType->repop = false;
     multiObj.push_back(camLiType);
 
     camSep = make_shared<MultiAttr>();
@@ -328,7 +303,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     orthoFree->name = "orthoFree";
     orthoFree->type = "bool";
     orthoFree->typeX = "CAMLI";
-    orthoFree->val_b = 0;
+    orthoFree->val_b = false;
     multiObj.push_back(orthoFree);
 
     orthoType = make_shared<MultiAttr>();
@@ -336,8 +311,8 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     orthoType->type = "enum";
     orthoType->typeX = "CAMLI";
     orthoType->val_s = "TOP";
-    orthoType->comboList << "BACK" << "BOTTOM" << "FRONT" << "LEFT" << "RIGHT" << "TOP";
-    orthoType->repop = 0;
+    orthoType->comboList = { "BACK", "BOTTOM", "FRONT", "LEFT", "RIGHT", "TOP" };
+    orthoType->repop = false;
     multiObj.push_back(orthoType);
 
     orthoZoom = make_shared<MultiAttr>();
@@ -351,12 +326,14 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     // LIGHT
     lightSep = make_shared<MultiAttr>();
     lightSep->name = "light";
+    lightSep->grp = "light";
     lightSep->type = "sep";
     lightSep->typeX = "CAMLI";
     multiObj.push_back(lightSep);
 
     Cl = make_shared<MultiAttr>();
     Cl->name = "Cl";
+    Cl->grp = "light";
     Cl->type = "color";
     Cl->typeX = "CAMLI";
     Cl->val_3 = glm::vec3(1.f);
@@ -364,6 +341,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
 
     lInten = make_shared<MultiAttr>();
     lInten->name = "lInten";
+    lInten->grp = "light";
     lInten->type = "float";
     lInten->typeX = "CAMLI";
     lInten->val_f = 3.f; //
@@ -372,6 +350,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
 
     lSpotI = make_shared<MultiAttr>();
     lSpotI->name = "lSpotI";
+    lSpotI->grp = "light";
     lSpotI->type = "float";
     lSpotI->typeX = "CAMLI";
     lSpotI->val_f = 10.f;
@@ -380,6 +359,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
 
     lSpotO = make_shared<MultiAttr>();
     lSpotO->name = "lSpotO";
+    lSpotO->grp = "light";
     lSpotO->type = "float";
     lSpotO->typeX = "CAMLI";
     lSpotO->val_f = 30.f;
@@ -388,19 +368,22 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     //VOLUME LIGHT
     volSep = make_shared<MultiAttr>();
     volSep->name = "vol";
+    volSep->grp = "vol";
     volSep->type = "sep";
     volSep->typeX = "CAMLI";
     multiObj.push_back(volSep);
 
     volCone = make_shared<MultiAttr>();
     volCone->name = "volCone";
+    volCone->grp = "vol";
     volCone->type = "bool";
     volCone->typeX = "CAMLI";
-    volCone->val_b = 0;
+    volCone->val_b = false;
     multiObj.push_back(volCone);
 
     volDist = make_shared<MultiAttr>();
     volDist->name = "volDist";
+    volDist->grp = "vol";
     volDist->type = "float";
     volDist->typeX = "CAMLI";
     volDist->val_f = 5.5f;
@@ -409,6 +392,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
 
     volS = make_shared<MultiAttr>();
     volS->name = "volS";
+    volS->grp = "vol";
     volS->type = "vec3";
     volS->typeX = "CAMLI";
     volS->val_3 = glm::vec3(1.f);
@@ -418,12 +402,14 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     //BLOOM
     bloomSep = make_shared<MultiAttr>();
     bloomSep->name = "bloom";
+    bloomSep->grp = "bloom";
     bloomSep->type = "sep";
     bloomSep->typeX = "FBO";
     multiObj.push_back(bloomSep);
 
     bloomInten = make_shared<MultiAttr>();
     bloomInten->name = "inten";
+    bloomInten->grp = "bloom";
     bloomInten->type = "float";
     bloomInten->typeX = "FBO";
     bloomInten->val_f = .1f;
@@ -432,7 +418,8 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     multiObj.push_back(bloomInten);
 
     bloomLensInten = make_shared<MultiAttr>();
-    bloomLensInten->name = "lensInten";
+    bloomLensInten->name = "intenL";
+    bloomLensInten->grp = "bloom";
     bloomLensInten->type = "float";
     bloomLensInten->typeX = "FBO";
     bloomLensInten->val_f = .2f;
@@ -443,12 +430,14 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     // HDR
     hdrSep = make_shared<MultiAttr>();
     hdrSep->name = "hdr";
+    hdrSep->grp = "hdr";
     hdrSep->type = "sep";
     hdrSep->typeX = "FBO";
     multiObj.push_back(hdrSep);
 
     adaptTime = make_shared<MultiAttr>();
     adaptTime->name = "adaptTime";
+    adaptTime->grp = "hdr";
     adaptTime->type = "float";
     adaptTime->typeX = "FBO";
     adaptTime->val_f = .5f;
@@ -457,13 +446,15 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
 
     adaptAuto = make_shared<MultiAttr>();
     adaptAuto->name = "adaptAuto";
+    adaptAuto->grp = "hdr";
     adaptAuto->type = "bool";
     adaptAuto->typeX = "FBO";
-    adaptAuto->val_b = 0;
+    adaptAuto->val_b = true;
     multiObj.push_back(adaptAuto);
 
     expo = make_shared<MultiAttr>();
     expo->name = "expo";
+    expo->grp = "hdr";
     expo->type = "float";
     expo->typeX = "FBO";
     expo->val_f = 1.1f;
@@ -472,23 +463,26 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
 
     Kgi = make_shared<MultiAttr>();
     Kgi->name = "Kgi";
+    Kgi->grp = "hdr";
     Kgi->type = "float";
     Kgi->typeX = "FBO";
-//    Kgi->val_f = .2f;
-    Kgi->val_f = .3f;
+//    Kgi->val_f = 1.f;
+    Kgi->val_f = .75f;
     Kgi->min = 0.f;
     Kgi->max = 1.f;
     multiObj.push_back(Kgi);
 
     vign = make_shared<MultiAttr>();
     vign->name = "vign";
+    vign->grp = "hdr";
     vign->type = "bool";
     vign->typeX = "FBO";
-    vign->val_b = 1;
+    vign->val_b = false;
     multiObj.push_back(vign);
 
     vignDist = make_shared<MultiAttr>();
     vignDist->name = "vignDist";
+    vignDist->grp = "hdr";
     vignDist->type = "float";
     vignDist->typeX = "FBO";
     vignDist->val_f = 1.5f;
@@ -498,21 +492,24 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
         // FXAA
         fxaaSep = make_shared<MultiAttr>();
         fxaaSep->name = "fxaa";
+        fxaaSep->grp = "fxaa";
         fxaaSep->type = "sep";
         fxaaSep->typeX = "FBO";
         fxaaSep->tab = 1;
         multiObj.push_back(fxaaSep);
 
         fxaaBlur = make_shared<MultiAttr>();
-        fxaaBlur->name = "blur";
+        fxaaBlur->name = "fxaaBlur";
+        fxaaBlur->grp = "fxaa";
         fxaaBlur->type = "bool";
         fxaaBlur->typeX = "FBO";
-        fxaaBlur->val_b = 1;
+        fxaaBlur->val_b = true;
         fxaaBlur->tab = 1;
         multiObj.push_back(fxaaBlur);
 
         fxaaSubPix = make_shared<MultiAttr>();
         fxaaSubPix->name = "subPix";
+        fxaaSubPix->grp = "fxaa";
         fxaaSubPix->type = "float";
         fxaaSubPix->typeX = "FBO";
         fxaaSubPix->val_f = .75f;
@@ -522,6 +519,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
 
         fxaaEdgeThr = make_shared<MultiAttr>();
         fxaaEdgeThr->name = "edgeThr";
+        fxaaEdgeThr->grp = "fxaa";
         fxaaEdgeThr->type = "float";
         fxaaEdgeThr->typeX = "FBO";
         fxaaEdgeThr->val_f = .125f;
@@ -531,6 +529,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
 
         fxaaEdgeThrMin = make_shared<MultiAttr>();
         fxaaEdgeThrMin->name = "edgeThrMin";
+        fxaaEdgeThrMin->grp = "fxaa";
         fxaaEdgeThrMin->type = "float";
         fxaaEdgeThrMin->typeX = "FBO";
         fxaaEdgeThrMin->val_f = .0833f;
@@ -538,57 +537,94 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
         fxaaEdgeThrMin->tab = 1;
         multiObj.push_back(fxaaEdgeThrMin);
 
+    //PAINT
+    paintSep = make_shared<MultiAttr>();
+    paintSep->name = "paint";
+    paintSep->grp = "paint";
+    paintSep->type = "sep";
+    paintSep->typeX = "FBO";
+    multiObj.push_back(paintSep);
+
+    clearBehav = make_shared<MultiAttr>();
+    clearBehav->name = "clearBehav";
+    clearBehav->grp = "paint";
+    clearBehav->type = "enum";
+    clearBehav->typeX = "FBO";
+    clearBehav->val_s = "OnBake";
+    clearBehav->comboList = { "OnBake", "OnVMup", "Manual" };
+    clearBehav->repop = false;
+    multiObj.push_back(clearBehav);
+
+    displMode = make_shared<MultiAttr>();
+    displMode->name = "displMode";
+    displMode->grp = "paint";
+    displMode->type = "enum";
+    displMode->typeX = "FBO";
+    displMode->val_s = "FULL";
+    displMode->comboList = { "FULL", "LAYER", "MAP" };
+    displMode->repop = false;
+    multiObj.push_back(displMode);
+
+    edgeThr = make_shared<MultiAttr>();
+    edgeThr->name = "edgeThr";
+    edgeThr->grp = "paint";
+    edgeThr->type = "float";
+    edgeThr->typeX = "FBO";
+    edgeThr->val_f = .6f;
+    edgeThr->min = .001f;
+    multiObj.push_back(edgeThr);
+
     // SSAO
     ssaoSep = make_shared<MultiAttr>();
     ssaoSep->name = "ssao";
+    ssaoSep->grp = "ssao";
     ssaoSep->type = "sep";
     ssaoSep->typeX = "FBO";
     multiObj.push_back(ssaoSep);
 
     ssaoBias = make_shared<MultiAttr>();
     ssaoBias->name = "bias";
+    ssaoBias->grp = "ssao";
     ssaoBias->type = "float";
     ssaoBias->typeX = "FBO";
-    ssaoBias->val_f = .1f;
+    ssaoBias->val_f = .075f;
     ssaoBias->min = 0.f;
     ssaoBias->max = 1.f;
     multiObj.push_back(ssaoBias);
 
-    ssaoBlur = make_shared<MultiAttr>();
-    ssaoBlur->name = "blur";
-    ssaoBlur->type = "bool";
-    ssaoBlur->typeX = "FBO";
-    ssaoBlur->val_b = 1;
-    multiObj.push_back(ssaoBlur);
-
     ssaoInten = make_shared<MultiAttr>();
     ssaoInten->name = "inten";
+    ssaoInten->grp = "ssao";
     ssaoInten->type = "float";
     ssaoInten->typeX = "FBO";
-    ssaoInten->val_f = 5.f;
+//    ssaoInten->val_f = 4.f;
+    ssaoInten->val_f = 8.f;
     ssaoInten->min = 0.f;
     multiObj.push_back(ssaoInten);
 
+    ssaoKernel = make_shared<MultiAttr>();
+    ssaoKernel->name = "kernel";
+    ssaoKernel->grp = "ssao";
+    ssaoKernel->type = "enum";
+    ssaoKernel->typeX = "FBO";
+    ssaoKernel->val_s = "32";
+    ssaoKernel->comboList = { "32", "64" };
+    ssaoKernel->repop = false;
+    multiObj.push_back(ssaoKernel);
+
     ssaoRad = make_shared<MultiAttr>();
     ssaoRad->name = "rad";
+    ssaoRad->grp = "ssao";
     ssaoRad->type = "float";
     ssaoRad->typeX = "FBO";
-    ssaoRad->val_f = .25f;
+    ssaoRad->val_f = 1.f;
     ssaoRad->min = .001f;
     multiObj.push_back(ssaoRad);
-
-    ssaoRand = make_shared<MultiAttr>();
-    ssaoRand->name = "rand";
-    ssaoRand->type = "int";
-    ssaoRand->typeX = "FBO";
-    ssaoRand->val_i = 4;
-    ssaoRand->min = 2;
-    ssaoRand->max = 64;
-    multiObj.push_back(ssaoRand);
 
     //SSR
     ssrSep = make_shared<MultiAttr>();
     ssrSep->name = "ssr";
+    ssrSep->grp = "ssr";
     ssrSep->type = "sep";
     ssrSep->typeX = "FBO";
     ssrSep->tab = 1;
@@ -596,15 +632,17 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
 
     ssrIter = make_shared<MultiAttr>();
     ssrIter->name = "iter";
+    ssrIter->grp = "ssr";
     ssrIter->type = "int";
     ssrIter->typeX = "FBO";
-    ssrIter->val_i = 10;
+    ssrIter->val_i = 75;
     ssrIter->min = 1;
     ssrIter->tab = 1;
     multiObj.push_back(ssrIter);
 
     ssrRefine = make_shared<MultiAttr>();
     ssrRefine->name = "refine";
+    ssrRefine->grp = "ssr";
     ssrRefine->type = "int";
     ssrRefine->typeX = "FBO";
     ssrRefine->val_i = 4;
@@ -614,24 +652,27 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
 
     ssrPixStride = make_shared<MultiAttr>();
     ssrPixStride->name = "pixStride";
+    ssrPixStride->grp = "ssr";
     ssrPixStride->type = "int";
     ssrPixStride->typeX = "FBO";
-    ssrPixStride->val_i = 30;
+    ssrPixStride->val_i = 10;
     ssrPixStride->min = 0;
     ssrPixStride->tab = 1;
     multiObj.push_back(ssrPixStride);
 
     ssrPixStrideZ = make_shared<MultiAttr>();
     ssrPixStrideZ->name = "pixStrideZ";
+    ssrPixStrideZ->grp = "ssr";
     ssrPixStrideZ->type = "float";
     ssrPixStrideZ->typeX = "FBO";
-    ssrPixStrideZ->val_f = 100.f;
+    ssrPixStrideZ->val_f = 13.f;
     ssrPixStrideZ->min = 0.f;
     ssrPixStrideZ->tab = 1;
     multiObj.push_back(ssrPixStrideZ);
 
     ssrPixZSize = make_shared<MultiAttr>();
     ssrPixZSize->name = "pixZSize";
+    ssrPixZSize->grp = "ssr";
     ssrPixZSize->type = "float";
     ssrPixZSize->typeX = "FBO";
     ssrPixZSize->val_f = .1f;
@@ -641,6 +682,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
 
     ssrMaxRayDist = make_shared<MultiAttr>();
     ssrMaxRayDist->name = "maxRayDist";
+    ssrMaxRayDist->grp = "ssr";
     ssrMaxRayDist->type = "float";
     ssrMaxRayDist->typeX = "FBO";
     ssrMaxRayDist->val_f = 10.f;
@@ -650,6 +692,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
 
     ssrEdgeFade = make_shared<MultiAttr>();
     ssrEdgeFade->name = "edgeFade";
+    ssrEdgeFade->grp = "ssr";
     ssrEdgeFade->type = "float";
     ssrEdgeFade->typeX = "FBO";
     ssrEdgeFade->val_f = .75f;
@@ -660,6 +703,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
 
     ssrEyeFade0 = make_shared<MultiAttr>();
     ssrEyeFade0->name = "eyeFade0";
+    ssrEyeFade0->grp = "ssr";
     ssrEyeFade0->type = "float";
     ssrEyeFade0->typeX = "FBO";
     ssrEyeFade0->val_f = 0.f;
@@ -670,6 +714,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
 
     ssrEyeFade1 = make_shared<MultiAttr>();
     ssrEyeFade1->name = "eyeFade1";
+    ssrEyeFade1->grp = "ssr";
     ssrEyeFade1->type = "float";
     ssrEyeFade1->typeX = "FBO";
     ssrEyeFade1->val_f = 1.f;
@@ -680,24 +725,28 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
 
     populateTexCombos();
 
-    //UPDATE
-    dirtyShadow = dirtyVM = 1;
-
-    //ETC
-    expand = gridV = ignoreOutliner = ref = selected = 0;
-    deletable = selectable = 1;
+    dirtyShadow = dirtyVM = true;
+    expand = gridV = ignoreOutliner = ref = selected = false;
+    deletable = selectable = true;
     type = "EMPTY";
 
-    //GLSL
     biasM = glm::mat4(
-        .5f, 0.f, 0.f, 0.f,
+        .5f, 0.f, 0.f, 0.f,\
         0.f, .5f, 0.f, 0.f,
         0.f, 0.f, .5f, 0.f,
         .5f, .5f, .5f, 1.f);
 
     Crand = genColorID();
-    showN = 0;
-    nType = 0;
+
+    // TEXSEL
+    texSel.type = "ALBEDO"; //
+//    texSel.type = "ALPHA";
+    texSel.map.name = "BLANK";
+    texSel.map.ID = 9999;
+    texSel.layer.name = "layer0";
+    texSel.layer.ID = 9999;
+
+    setTexSel_init(); // for non selected storage
 
     //GIZ
     Cgiz = glm::vec3(0.f);
@@ -715,6 +764,44 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
 
     //TXT
     txtOrigin = glm::vec2(-.95f, .8f);
+}
+
+void Object::setTexSel_init()
+{
+    for (auto &i : myWin.myGLWidgetSh->typeList)
+    {
+        //typeList << "ALBEDO" << "ALPHA" << "LENS" << "METALLIC" << "RUFF" << "SSS";
+
+        for (auto &j : myWin.myGLWidgetSh->allMaps)
+        {
+            //GET STARTING TEXSEL.MAP.ID AND TEXSEL.LAYER.ID
+            if (j.type == texSel.type && j.name == texSel.map.name)
+            {
+                texSel.map.ID = j.ID;
+
+                for (auto &k : j.layer)
+                {
+                    if (k.name == texSel.layer.name)
+                        texSel.layer.ID = k.ID;
+                }
+            }
+
+            if (j.type == i)
+            {
+                if (j.name == texSel.map.name) //"BLANK"
+                {
+                    //texSel (on init) is: type, ID (0), name, ID
+                    texSel.typeMap.push_back( { j.type, 0, j.name, j.ID } );
+                }
+
+                for (auto &k : j.layer)
+                {
+                    if (k.name == texSel.layer.name) //"layer0"
+                        texSel.mapLayer.push_back( { j.name, j.ID, k.name, k.ID } );
+                }
+            }
+        }
+    }
 }
 
 Object::Object(const Object &obj) : myWin(obj.myWin) //COPY CONSTRUCTOR
@@ -746,28 +833,20 @@ Object::Object(const Object &obj) : myWin(obj.myWin) //COPY CONSTRUCTOR
             else if (multiObj[i]->name == "ruffM") ruffM = multiObj[i];
             else if (multiObj[i]->name == "sssM") sssM = multiObj[i];
 
-                //sep
+                //tile
                 else if (multiObj[i]->name == "tile") tileSep = multiObj[i];
-                else if (multiObj[i]->name == "albTile") albTile = multiObj[i];
-                else if (multiObj[i]->name == "anisoTile") anisoTile = multiObj[i];
-                else if (multiObj[i]->name == "normTile") normTile = multiObj[i];
-                else if (multiObj[i]->name == "ruffTile") ruffTile = multiObj[i];
-                else if (multiObj[i]->name == "sssTile") sssTile = multiObj[i];
 
             //BASE
-            else if (multiObj[i]->name == "Kr") Kr = multiObj[i];
-            else if (multiObj[i]->name == "Ksss") Ksss = multiObj[i];
             else if (multiObj[i]->name == "Ko") Ko = multiObj[i];
             else if (multiObj[i]->name == "ior") ior = multiObj[i];
             else if (multiObj[i]->name == "ruffA") ruffA = multiObj[i];
-            else if (multiObj[i]->name == "ruffD") ruffD = multiObj[i];
+            else if (multiObj[i]->name == "ruffOren") ruffOren = multiObj[i];
             else if (multiObj[i]->name == "sssSpread") sssSpread = multiObj[i];
 
                 else if (multiObj[i]->name == "shadowCast") shadowCast = multiObj[i];
-                else if (multiObj[i]->name == "backface") backface = multiObj[i];
+                else if (multiObj[i]->name == "twoSided") twoSided = multiObj[i];
                 else if (multiObj[i]->name == "Cwire") Cwire = multiObj[i];
-                else if (multiObj[i]->name == "normVLen") normVLen = multiObj[i];
-                else if (multiObj[i]->name == "normWeight") normWeight = multiObj[i];
+                else if (multiObj[i]->name == "normWt") normWt = multiObj[i];
                 else if (multiObj[i]->name == "piv") piv = multiObj[i];
                 else if (multiObj[i]->name == "rotOrder") rotOrder = multiObj[i];
 
@@ -824,15 +903,20 @@ Object::Object(const Object &obj) : myWin(obj.myWin) //COPY CONSTRUCTOR
                 else if (multiObj[i]->name == "fxaaEdgeThr") fxaaEdgeThr = multiObj[i];
                 else if (multiObj[i]->name == "fxaaEdgeThrMin") fxaaEdgeThrMin = multiObj[i];
 
+            //PAINT
+            else if (multiObj[i]->name == "paint") paintSep = multiObj[i];
+            else if (multiObj[i]->name == "clearBehav") clearBehav = multiObj[i];
+            else if (multiObj[i]->name == "displMode") displMode = multiObj[i];
+            else if (multiObj[i]->name == "edgeThr") edgeThr = multiObj[i];
+
             //SSAO
             else if (multiObj[i]->name == "ssao") ssaoSep = multiObj[i];
             else if (multiObj[i]->name == "ssaoBias") ssaoBias = multiObj[i];
-            else if (multiObj[i]->name == "ssaoBlur") ssaoBlur = multiObj[i];
             else if (multiObj[i]->name == "ssaoInten") ssaoInten = multiObj[i];
+            else if (multiObj[i]->name == "ssaoKernel") ssaoKernel = multiObj[i];
             else if (multiObj[i]->name == "ssaoRad") ssaoRad = multiObj[i];
-            else if (multiObj[i]->name == "ssaoRand") ssaoRand = multiObj[i];
 
-            //SSAO
+            //SSR
             else if (multiObj[i]->name == "ssrSep") ssrSep = multiObj[i];
             else if (multiObj[i]->name == "ssrIter") ssrIter = multiObj[i];
             else if (multiObj[i]->name == "ssrRefine") ssrRefine = multiObj[i];
@@ -870,7 +954,6 @@ Object::Object(const Object &obj) : myWin(obj.myWin) //COPY CONSTRUCTOR
     //UPDATE
     dirtyShadow = obj.dirtyShadow;
     dirtyVM = obj.dirtyVM;
-    savedShader = obj.savedShader;
 
     //ETC
     deletable = obj.deletable;
@@ -882,14 +965,12 @@ Object::Object(const Object &obj) : myWin(obj.myWin) //COPY CONSTRUCTOR
     ref = obj.ref;
     vertsOnObj = obj.vertsOnObj;
     dupeStenFix = obj.dupeStenFix;
-    manipTypeO = obj.manipTypeO;
     type = obj.type;
 
     //GLSL
     Crand = genColorID();
     showN = obj.showN;
     gaussStage = obj.gaussStage;
-    nType = obj.nType;
 
     //GIZ
     Cgiz = obj.Cgiz;
@@ -931,18 +1012,20 @@ Object::Object(const Object &obj) : myWin(obj.myWin) //COPY CONSTRUCTOR
 
 void Object::populateTexCombos()
 {
-    for (unsigned int i = 0; i < multiObj.size(); ++i)
+    //repop is for MAP enums which could change in name / size as opposed to a regular enum like clearBehav
+    for (auto &i : multiObj)
     {
-        if (multiObj[i]->type == "enum" && multiObj[i]->repop)
+        if (i->type == "enum" && i->repop)
         {
-            multiObj[i]->comboList.clear();
-            QString multiUp = multiObj[i]->name.toUpper();
-            multiUp.chop(1);
+            i->comboList.clear();
 
-            for (unsigned int j = 0; j < myWin.myGLWidgetSh->allTex.size(); ++j)
+            auto multiUp = myWin.stringToUpper(i->name);
+            multiUp.resize(multiUp.size() - 1);
+
+            for (auto &j : myWin.myGLWidgetSh->allMaps)
             {
-                if (multiUp == myWin.myGLWidgetSh->allTex[j].type)
-                    multiObj[i]->comboList.push_back(myWin.myGLWidgetSh->allTex[j].name);
+                if (multiUp == j.type)
+                    i->comboList.push_back(j.name);
             }
         }
     }
@@ -952,75 +1035,75 @@ void Object::loadVAO(shared_ptr<GLWidget> myGL)
 {
     glGetError();
 
-    for (unsigned int i = 0; i < dynVAO_perGL.size(); ++i)
+    for (auto &i : dynVAO_perGL)
     {
-        if (dynVAO_perGL[i].GL == myGL && !dynVAO_perGL[i].loaded)
+        if (i.GL == myGL && !i.loaded)
         {
-            for (unsigned int j = 0; j < myWin.myGLWidgetSh->GLDataSh.size(); ++j)
+            for (auto &j : myWin.myGLWidgetSh->GLDataSh)
             {
-                if (myWin.myGLWidgetSh->GLDataSh[j].obj.get() == this)
+                if (j.obj.get() == this)
                 {
-                    glCreateVertexArrays(1, &dynVAO_perGL[i].VAO);
+                    glCreateVertexArrays(1, &i.VAO);
 
                     if (type == "BB")
                     {
-                        glEnableVertexArrayAttrib(dynVAO_perGL[i].VAO, 0);
-                        glVertexArrayVertexBuffer(dynVAO_perGL[i].VAO, 0, myWin.myGLWidgetSh->GLDataSh[j].VBO_P, 0, 12);
-                        glVertexArrayAttribFormat(dynVAO_perGL[i].VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
+                        glEnableVertexArrayAttrib(i.VAO, 0);
+                        glVertexArrayVertexBuffer(i.VAO, 0, j.VBO_P, 0, 12);
+                        glVertexArrayAttribFormat(i.VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
 
-                        glVertexArrayElementBuffer(dynVAO_perGL[i].VAO, myWin.myGLWidgetSh->GLDataSh[j].VBO_IDX);
+                        glVertexArrayElementBuffer(i.VAO, j.VBO_IDX);
                     }
 
                     else if (type == "GRID")
                     {
-                        glEnableVertexArrayAttrib(dynVAO_perGL[i].VAO, 0);
-                        glVertexArrayVertexBuffer(dynVAO_perGL[i].VAO, 0, myWin.myGLWidgetSh->GLDataSh[j].VBO_P, 0, 12);
-                        glVertexArrayAttribFormat(dynVAO_perGL[i].VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
+                        glEnableVertexArrayAttrib(i.VAO, 0);
+                        glVertexArrayVertexBuffer(i.VAO, 0, j.VBO_P, 0, 12);
+                        glVertexArrayAttribFormat(i.VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
                     }
 
                     else if (type == "TXT")
                     {
-                        glEnableVertexArrayAttrib(dynVAO_perGL[i].VAO, 0);
-                        glVertexArrayVertexBuffer(dynVAO_perGL[i].VAO, 0, myWin.myGLWidgetSh->GLDataSh[j].VBO_P, 0, 1);
-                        glVertexArrayAttribIFormat(dynVAO_perGL[i].VAO, 0, 1, GL_UNSIGNED_BYTE, 0);
+                        glEnableVertexArrayAttrib(i.VAO, 0);
+                        glVertexArrayVertexBuffer(i.VAO, 0, j.VBO_P, 0, 1);
+                        glVertexArrayAttribIFormat(i.VAO, 0, 1, GL_UNSIGNED_BYTE, 0);
                     }
 
                     else if (type == "GIZ_CIRC" || type == "GIZ_CONE" || type == "GIZ_CUBE" || type == "GIZ_DUAL_HANDLE" || type == "GIZ_CIRC_HALF" || type == "GIZ_LINE" || type == "CAMLI")
                     {
-                        glEnableVertexArrayAttrib(dynVAO_perGL[i].VAO, 0);
-                        glVertexArrayVertexBuffer(dynVAO_perGL[i].VAO, 0, myWin.myGLWidgetSh->GLDataSh[j].VBO_P, 0, 12);
-                        glVertexArrayAttribFormat(dynVAO_perGL[i].VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
+                        glEnableVertexArrayAttrib(i.VAO, 0);
+                        glVertexArrayVertexBuffer(i.VAO, 0, j.VBO_P, 0, 12);
+                        glVertexArrayAttribFormat(i.VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
 
                         if (type == "GIZ_CUBE")
-                            glVertexArrayElementBuffer(dynVAO_perGL[i].VAO, myWin.myGLWidgetSh->GLDataSh[j].VBO_IDX);
+                            glVertexArrayElementBuffer(i.VAO, j.VBO_IDX);
                     }
 
                     else if (type == "OBJ" || type == "VOL")
                     {
-                        glEnableVertexArrayAttrib(dynVAO_perGL[i].VAO, 0);
-                        glVertexArrayVertexBuffer(dynVAO_perGL[i].VAO, 0, myWin.myGLWidgetSh->GLDataSh[j].VBO_P, 0, 12);
-                        glVertexArrayAttribFormat(dynVAO_perGL[i].VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
+                        glEnableVertexArrayAttrib(i.VAO, 0);
+                        glVertexArrayVertexBuffer(i.VAO, 0, j.VBO_P, 0, 12);
+                        glVertexArrayAttribFormat(i.VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
 
-                        glEnableVertexArrayAttrib(dynVAO_perGL[i].VAO, 1);
-                        glVertexArrayVertexBuffer(dynVAO_perGL[i].VAO, 1, myWin.myGLWidgetSh->GLDataSh[j].VBO_UV, 0, 8);
-                        glVertexArrayAttribFormat(dynVAO_perGL[i].VAO, 1, 2, GL_FLOAT, GL_FALSE, 0);
+                        glEnableVertexArrayAttrib(i.VAO, 1);
+                        glVertexArrayVertexBuffer(i.VAO, 1, j.VBO_UV, 0, 8);
+                        glVertexArrayAttribFormat(i.VAO, 1, 2, GL_FLOAT, GL_FALSE, 0);
 
-                        glEnableVertexArrayAttrib(dynVAO_perGL[i].VAO, 2);
-                        glVertexArrayVertexBuffer(dynVAO_perGL[i].VAO, 2, myWin.myGLWidgetSh->GLDataSh[j].VBO_T, 0, 12);
-                        glVertexArrayAttribFormat(dynVAO_perGL[i].VAO, 2, 3, GL_FLOAT, GL_FALSE, 0);
+                        glEnableVertexArrayAttrib(i.VAO, 2);
+                        glVertexArrayVertexBuffer(i.VAO, 2, j.VBO_T, 0, 12);
+                        glVertexArrayAttribFormat(i.VAO, 2, 3, GL_FLOAT, GL_FALSE, 0);
 
-                        glEnableVertexArrayAttrib(dynVAO_perGL[i].VAO, 3);
-                        glVertexArrayVertexBuffer(dynVAO_perGL[i].VAO, 3, myWin.myGLWidgetSh->GLDataSh[j].VBO_N, 0, 12);
-                        glVertexArrayAttribFormat(dynVAO_perGL[i].VAO, 3, 3, GL_FLOAT, GL_FALSE, 0);
+                        glEnableVertexArrayAttrib(i.VAO, 3);
+                        glVertexArrayVertexBuffer(i.VAO, 3, j.VBO_N, 0, 12);
+                        glVertexArrayAttribFormat(i.VAO, 3, 3, GL_FLOAT, GL_FALSE, 0);
 
-                        glVertexArrayElementBuffer(dynVAO_perGL[i].VAO, myWin.myGLWidgetSh->GLDataSh[j].VBO_IDX);
+                        glVertexArrayElementBuffer(i.VAO, j.VBO_IDX);
                     }
 
                     vertsOnObj = (int)pE.size();
                 }
             }
 
-            dynVAO_perGL[i].loaded = 1;
+            i.loaded = true;
         }
     }
 
@@ -1032,10 +1115,10 @@ void Object::BBup()
     bbMin = (pE.empty()) ? glm::vec3(0.f) : pE[0];
     bbMax = (pE.empty()) ? glm::vec3(0.f) : pE[0];
 
-    for (unsigned int i = 0; i < pE.size(); ++i)
+    for (auto &i : pE)
     {
-        bbMin = glm::min(pE[i], bbMin);
-        bbMax = glm::max(pE[i], bbMax);
+        bbMin = glm::min(i, bbMin);
+        bbMax = glm::max(i, bbMax);
     }
 
     bbSize = bbMax - bbMin;
@@ -1051,7 +1134,7 @@ void Object::setTarg(glm::vec3 foc, float minD)
     if (minD != 0.f)
         distO = min(minD, distO);
 
-    glm::mat4 V = glm::lookAt(t->val_3, targO, upO);
+    auto V = glm::lookAt(t->val_3, targO, upO);
 
     if (V[0][0] < 0)
         r->val_3.x = glm::degrees((float)(PI - asinf(-V[2][0])));
@@ -1064,11 +1147,11 @@ void Object::setTarg(glm::vec3 foc, float minD)
     setDirty();
 }
 
-glm::mat4 Object::rotOrderUse(QString myRotOrder)
+glm::mat4 Object::rotOrderUse(string myRotOrder)
 {
-    QString rotOrder0 = myRotOrder.mid(0, 1);
-    QString rotOrder1 = myRotOrder.mid(1, 1);
-    QString rotOrder2 = myRotOrder.mid(2, 1);
+    string rotOrder0(1, myRotOrder.at(0));
+    string rotOrder1(1, myRotOrder.at(1));
+    string rotOrder2(1, myRotOrder.at(2));
 
     glm::vec3 axX(1.f, 0.f, 0.f);
     glm::vec3 axY(0.f, 1.f, 0.f);
@@ -1094,13 +1177,13 @@ glm::mat4 Object::rotOrderUse(QString myRotOrder)
     return order0 * order1 * order2;
 }
 
-bool Object::camLiTypeGet(QString toFind)
+bool Object::camLiTypeGet(string toFind)
 {
-    bool found = 0;
+    auto found = false;
 
     if (type == "CAMLI")
     {
-        QString myType = camLiType->val_s;
+        auto myType = camLiType->val_s;
 
         if (toFind == "cam")
         {
@@ -1126,11 +1209,7 @@ bool Object::camLiTypeGet(QString toFind)
 
 void Object::mvpGet(shared_ptr<GLWidget> myGL)
 {
-    glm::vec3 usableScale = s->val_3;
-
-    if (type == "RTT")
-        usableScale = glm::vec3(myGL->width() * s->val_3.x, myGL->height() * s->val_3.x, 0.f) / 100.f;
-
+    auto usableScale = s->val_3;
     SM = glm::scale(glm::mat4(), usableScale);
 
     if (type == "CAMLI" && camLiType->val_s != "DIR")
@@ -1140,6 +1219,12 @@ void Object::mvpGet(shared_ptr<GLWidget> myGL)
         RM = rotOrderUse(rotOrder->val_s);
 
     TM = glm::translate(glm::mat4(), t->val_3);
+
+    if (this == myWin.paintStroke.get())
+    {
+        PM2D = glm::ortho(-1.f * myGL->aspect, 1.f * myGL->aspect, -1.f, 1.f, -1.f, 1.f);
+        TM = glm::translate(glm::mat4(), t->val_3 * myGL->aspectXYZ);
+    }
 
     if (name->val_s == "giz")
     {
@@ -1196,7 +1281,7 @@ void Object::mvpGet(shared_ptr<GLWidget> myGL)
     }
 
     if (bb->val_b) MVP = PM * MV * obbMVP;
-    else if (type == "RTT") MVP = myGL->PMrtt * MM;
+    else if (this == myWin.paintStroke.get()) MVP = PM2D * MM;
     else MVP = PM * MV;
 
     if (myWin.creatingDynCubeRGB)
@@ -1218,37 +1303,37 @@ void Object::mvpGet(shared_ptr<GLWidget> myGL)
 
 void Object::proUse(shared_ptr<GLWidget> myGL)
 {
-    for (unsigned int i = 0; i < myWin.myGLWidgetSh->GLDataSh.size(); ++i)
+    for (auto &i : myWin.myGLWidgetSh->GLDataSh)
     {
-        if (myWin.myGLWidgetSh->GLDataSh[i].obj.get() == this)
+        if (i.obj.get() == this)
         {
-            GLuint &proH = myWin.myGLWidgetSh->pro;
-            QString proN = myWin.myGLWidgetSh->proN;
+            auto &proH = myWin.myGLWidgetSh->pro;
+            auto proN = myWin.myGLWidgetSh->proN;
 
-//            if ((proN == "pDef") && myWin.lightCt > 0)
-//                shadowPass(proH);
+            if ((proN == "pGBuffer") && myWin.lightCt > 0)
+                shadowPass();
 
             //OBJ MATRIX
             glUniformMatrix4fv(glGetUniformLocation(proH, "MVP"), 1, GL_FALSE, &MVP[0][0]);
             glUniformMatrix3fv(glGetUniformLocation(proH, "NM"), 1, GL_FALSE, &NM[0][0]);
 
+            glm::vec4 comboU;
+
             if (proN == "pBB" || proN == "pWireframe")
             {
                 if (proN == "pBB")
                 {
-                    glUniform1i(glGetUniformLocation(proH, "CpickTgl"), myGL->colorPickTgl);
-                    glUniform4fv(glGetUniformLocation(proH, "Crand"), 1, &Crand.r);
+                    comboU = glm::vec4(Crand, myGL->colorPickTgl);
+                    glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.r);
                 }
 
-                glm::vec3 temp = (selected) ? myWin.glslTable->Csel->val_3 : Cwire->val_3;
-                glm::vec4 Cwire(temp, 1.f);
-                glUniform4fv(glGetUniformLocation(proH, "Cwire"), 1, &Cwire.r);
+                auto temp = (selected) ? myWin.glslTable->Csel->val_3 : Cwire->val_3;
+                glUniform3fv(glGetUniformLocation(proH, "Cwire"), 1, &temp.r);
             }
 
             if (proN == "pSky")
             {
                 glUniformMatrix4fv(glGetUniformLocation(proH, "PMinv_cube"), 1, GL_FALSE, &myGL->PMinv_cube[0][0]);
-
                 glUniformMatrix4fv(glGetUniformLocation(proH, "VM"), 1, GL_FALSE, &VM[0][0]);
                 glBindTextureUnit(0, myWin.cubeM_specular_32);
             }
@@ -1260,101 +1345,100 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
             {
                 glm::mat4 PM_shadow, VM_shadow, depthMVP;
 
-                if (myWin.allObj[myWin.myGLWidgetSh->shadowIdx]->camLiType->val_s == "DIR") //
+                if (myWin.myGLWidgetSh->shadowObj->camLiType->val_s == "DIR") //
                 {
                     PM_shadow = glm::ortho(-10.f, 10.f, -10.f, 10.f, -10.f, 20.f);
-                    VM_shadow = glm::inverse(myWin.allObj[myWin.myGLWidgetSh->shadowIdx]->RM);
+                    VM_shadow = glm::inverse(myWin.myGLWidgetSh->shadowObj->RM);
                     depthMVP = PM_shadow * VM_shadow * MM;
                 }
 
-                else if (myWin.allObj[myWin.myGLWidgetSh->shadowIdx]->camLiType->val_s == "POINT")
+                else if (myWin.myGLWidgetSh->shadowObj->camLiType->val_s == "POINT")
                 {
                     PM_shadow = glm::perspective(glm::radians(90.f), 1.f, 1.f, 100.f);
                     VM_shadow = myWin.myGLWidgetSh->VMcubeShadow;
                     depthMVP = PM_shadow * VM_shadow * myWin.myGLWidgetSh->negCubeCenter2 * MM;
                 }
 
-                else if (myWin.allObj[myWin.myGLWidgetSh->shadowIdx]->camLiType->val_s == "SPOT")
+                else if (myWin.myGLWidgetSh->shadowObj->camLiType->val_s == "SPOT")
                 {
-                    PM_shadow = glm::perspective(glm::radians(myWin.allObj[myWin.myGLWidgetSh->shadowIdx]->fov->val_f), 1.f, 2.f, 100.f);
-                    VM_shadow = myWin.allObj[myWin.myGLWidgetSh->shadowIdx]->VM;
+                    PM_shadow = glm::perspective(glm::radians(myWin.myGLWidgetSh->shadowObj->fov->val_f), 1.f, 2.f, 100.f);
+                    VM_shadow = myWin.myGLWidgetSh->shadowObj->VM;
                     depthMVP = PM_shadow * VM_shadow * MM;
                 }
 
                 glUniformMatrix4fv(glGetUniformLocation(proH, "depthMVP"), 1, GL_FALSE, &depthMVP[0][0]);
             }
 
-            else if (proN == "pBaseDef")
+            else if (proN == "pGBuffer")
             {
-                glUniformMatrix4fv(glGetUniformLocation(proH, "MV"), 1, GL_FALSE, &MV[0][0]);
+                comboU = glm::vec4(ior->val_f, ruffOren->val_f, Ko->val_f, myGL->debug0);
+                glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
 
-                glm::vec4 matPrefs0(Kr->val_f, ior->val_f, ruffD->val_f, Ko->val_f);
-                glUniform4fv(glGetUniformLocation(proH, "matPrefs0"), 1, &matPrefs0.r);
-
-                float shadowCastF = (shadowCast->val_b) ? 1.f : 0.f;
-                glm::vec4 matPrefs1(ruffA->val_2, shadowCastF, 0.f);
-                glUniform4fv(glGetUniformLocation(proH, "matPrefs1"), 1, &matPrefs1.r);
-
-                glm::vec4 sssSend(Ksss->val_f, sssSpread->val_f, 0.f, 0.f);
-                glUniform4fv(glGetUniformLocation(proH, "matPrefs2"), 1, &sssSend.r);
+                auto shadowCastF = (shadowCast->val_b) ? 1.f : 0.f;
+                comboU = glm::vec4(ruffA->val_2, shadowCastF, sssSpread->val_f);
+                glUniform4fv(glGetUniformLocation(proH, "comboU1"), 1, &comboU.x);
 
                 tileMaps(proH, "get");
 
-                for (unsigned int j = 0; j < myWin.myGLWidgetSh->allTex.size(); ++j)
+                for (auto &j : myWin.myGLWidgetSh->allMaps)
                 {
-                    if (myWin.myGLWidgetSh->allTex[j].name == albedoM->val_s && myWin.myGLWidgetSh->allTex[j].type == "ALBEDO")
-                        glProgramUniformHandleui64ARB(proH, 0, myWin.myGLWidgetSh->allTex[j].tex_64);
+                    if (j.name == albedoM->val_s && j.type == "ALBEDO")
+                        glProgramUniformHandleui64ARB(proH, 0, myWin.myGLWidgetSh->topLayer(j).tex1_64);
 
-                    else if (myWin.myGLWidgetSh->allTex[j].name == alphaM->val_s && myWin.myGLWidgetSh->allTex[j].type == "ALPHA")
-                        glProgramUniformHandleui64ARB(proH, 1, myWin.myGLWidgetSh->allTex[j].tex_64);
+                    else if (j.name == alphaM->val_s && j.type == "ALPHA")
+                        glProgramUniformHandleui64ARB(proH, 1, myWin.myGLWidgetSh->topLayer(j).tex1_64);
 
-                    else if (myWin.myGLWidgetSh->allTex[j].name == anisoM->val_s && myWin.myGLWidgetSh->allTex[j].type == "ANISO")
+                    else if (j.name == anisoM->val_s && j.type == "ANISO")
                     {
                         int anisoType;
 
-                        if (anisoM->val_s == "BLANK") anisoType = -2; //0
-                        else if (anisoM->val_s == "VIEW") anisoType = -1;
-                        else anisoType = 1;
+                        if (anisoM->val_s == "BLANK")
+                            anisoType = 0;
+
+                        else if (anisoM->val_s == "VIEW")
+                            anisoType = 1;
+
+                        else
+                            anisoType = 2;
 
                         glUniform1i(glGetUniformLocation(proH, "anisoType"), anisoType);
-
-                        glProgramUniformHandleui64ARB(proH, 2, myWin.myGLWidgetSh->allTex[j].tex_64);
+                        glProgramUniformHandleui64ARB(proH, 2, myWin.myGLWidgetSh->topLayer(j).tex1_64);
                     }
 
-                    else if (myWin.myGLWidgetSh->allTex[j].name == metallicM->val_s && myWin.myGLWidgetSh->allTex[j].type == "METALLIC")
-                        glProgramUniformHandleui64ARB(proH, 3, myWin.myGLWidgetSh->allTex[j].tex_64);
+                    else if (j.name == metallicM->val_s && j.type == "METALLIC")
+                        glProgramUniformHandleui64ARB(proH, 3, myWin.myGLWidgetSh->topLayer(j).tex1_64);
 
-                    else if (myWin.myGLWidgetSh->allTex[j].name == normalM->val_s && myWin.myGLWidgetSh->allTex[j].type == "NORMAL")
-                        glProgramUniformHandleui64ARB(proH, 4, myWin.myGLWidgetSh->allTex[j].tex_64);
+                    else if (j.name == normalM->val_s && j.type == "NORMAL")
+                        glProgramUniformHandleui64ARB(proH, 4, myWin.myGLWidgetSh->topLayer(j).tex1_64);
 
-                    else if (myWin.myGLWidgetSh->allTex[j].name == ruffM->val_s && myWin.myGLWidgetSh->allTex[j].type == "RUFF")
-                        glProgramUniformHandleui64ARB(proH, 5, myWin.myGLWidgetSh->allTex[j].tex_64);
+                    else if (j.name == ruffM->val_s && j.type == "RUFF")
+                        glProgramUniformHandleui64ARB(proH, 5, myWin.myGLWidgetSh->topLayer(j).tex1_64);
 
-                    else if (myWin.myGLWidgetSh->allTex[j].name == sssM->val_s && myWin.myGLWidgetSh->allTex[j].type == "SSS")
-                        glProgramUniformHandleui64ARB(proH, 6, myWin.myGLWidgetSh->allTex[j].tex_64);
+                    else if (j.name == sssM->val_s && j.type == "SSS")
+                        glProgramUniformHandleui64ARB(proH, 6, myWin.myGLWidgetSh->topLayer(j).tex1_64);
                 }
 
-//                glUniform1i(glGetUniformLocation(proH, "vign"), myWin.myFSQ->vign->val_b);
+                glUniform1i(glGetUniformLocation(proH, "NUM_LIGHTS"), myWin.lightCt);
+
+                for (unsigned int j = 0; j < myWin.myGLWidgetSh->allShadow.size(); ++j)
+                    glProgramUniformHandleui64ARB(proH, 7 + j, myWin.myGLWidgetSh->allShadow[j].tex1_64);
             }
 
             else if (proN == "pLumaInit")
             {
-                glProgramUniformHandleui64ARB(proH, 0, myGL->deferred_node.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 0, myGL->deferredN.tex1_64);
             }
 
             else if (proN == "pLumaAdapt")
             {
-                glProgramUniformHandleui64ARB(proH, 0, myGL->lumaAdapt[!myGL->currLum].tex1_64);
-                glProgramUniformHandleui64ARB(proH, 1, myGL->lumaInit.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 0, myGL->lumaAdaptN[!myGL->currLum].tex1_64);
+                glProgramUniformHandleui64ARB(proH, 1, myGL->lumaInitN.tex1_64);
 
                 glUniform1f(glGetUniformLocation(proH, "dTime"), myGL->dTime);
             }
 
             else if (proN == "pLumaAdapt_viz")
-                glProgramUniformHandleui64ARB(proH, 0, myGL->lumaAdapt[!myGL->currLum].tex1_64);
-
-            else if (proN == "pRtt")
-                glProgramUniformHandleui64ARB(proH, 0, myGL->tonemap_exposure_node.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 0, myGL->lumaAdaptN[!myGL->currLum].tex1_64);
 
             else if (proN == "pDown")
             {
@@ -1371,179 +1455,280 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
             else if (proN == "pBloom")
             {
                 for (int j = 0; j < 6; ++j)
-                    glProgramUniformHandleui64ARB(proH, j, myGL->bloom_gauss_node[j].tex2_64);
+                    glProgramUniformHandleui64ARB(proH, j, myGL->bloomGaussN[j].tex2_64);
 
-                glProgramUniformHandleui64ARB(proH, 6, myGL->deferred_node.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 6, myGL->deferredN.tex1_64);
 
-                for (unsigned int j = 0; j < myWin.myGLWidgetSh->allTex.size(); ++j)
+                for (auto &j : myWin.myGLWidgetSh->allMaps)
                 {
-                    if (myWin.myGLWidgetSh->allTex[j].name == lensM->val_s && myWin.myGLWidgetSh->allTex[j].type == "LENS")
-                        glProgramUniformHandleui64ARB(proH, 7, myWin.myGLWidgetSh->allTex[j].tex_64);
+                    if (j.name == lensM->val_s && j.type == "LENS")
+                        glProgramUniformHandleui64ARB(proH, 7, myWin.myGLWidgetSh->topLayer(j).tex1_64);
                 }
 
-                glUniform1f(glGetUniformLocation(proH, "bloomInten"), myWin.myFSQ->bloomInten->val_f);
-                glUniform1f(glGetUniformLocation(proH, "bloomLensInten"), myWin.myFSQ->bloomLensInten->val_f);
+                comboU = glm::vec4(myWin.myFSQ->bloomInten->val_f, myWin.myFSQ->bloomLensInten->val_f, 0.f, 0.f);
+                glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
             }
 
-            else if (proN == "pSSAO")
+            else if (proN == "pBloomC")
             {
-                glm::mat4 PMinv = glm::inverse(myGL->selCamLi->PM);
+                glProgramUniformHandleui64ARB(proH, 0, myGL->deferredN.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 1, myGL->bloomN.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 2, myGL->ssaoGaussN.tex2_64);
+            }
+
+            else if (proN == "pSSAO_32" || proN == "pSSAO_64")
+            {
+                glUniformMatrix4fv(glGetUniformLocation(proH, "PM"), 1, GL_FALSE, &PM[0][0]);
+
+                auto PMinv = glm::inverse(myGL->selCamLi->PM);
                 glUniformMatrix4fv(glGetUniformLocation(proH, "PMinv"), 1, GL_FALSE, &PMinv[0][0]);
 
-                glProgramUniformHandleui64ARB(proH, 0, myGL->gbuf2_64);
-                glProgramUniformHandleui64ARB(proH, 1, myGL->gbuf_DS_64);
+                glProgramUniformHandleui64ARB(proH, 0, myGL->gBuf2_64);
+                glBindTextureUnit(1, myGL->gBuf_DS_32);
 
-                for (unsigned int j = 0; j < myWin.myGLWidgetSh->allTex.size(); ++j)
+                for (auto &j : myWin.myGLWidgetSh->allMaps)
                 {
-                    if (myWin.myGLWidgetSh->allTex[j].name == "rand")
-                        glProgramUniformHandleui64ARB(proH, 2, myWin.myGLWidgetSh->allTex[j].tex_64);
+                    if (j.name == "rand")
+                        glProgramUniformHandleui64ARB(proH, 2, myWin.myGLWidgetSh->topLayer(j).tex1_64);
                 }
 
-                glUniform1f(glGetUniformLocation(proH, "ssaoBias"), ssaoBias->val_f);
-                glUniform1f(glGetUniformLocation(proH, "ssaoInten"), ssaoInten->val_f);
-                glUniform1f(glGetUniformLocation(proH, "ssaoRad"), ssaoRad->val_f);
-                glUniform1i(glGetUniformLocation(proH, "ssaoRand"), ssaoRand->val_i);
+                comboU = glm::vec4(ssaoBias->val_f, ssaoInten->val_f, ssaoRad->val_f, 0.f);
+                glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
             }
 
             else if (proN == "pSSR")
             {
                 glUniformMatrix4fv(glGetUniformLocation(proH, "PM"), 1, GL_FALSE, &PM[0][0]);
 
-                glm::mat4 PMinv = glm::inverse(PM);
+                auto PMinv = glm::inverse(PM);
                 glUniformMatrix4fv(glGetUniformLocation(proH, "PMinv"), 1, GL_FALSE, &PMinv[0][0]);
 
                 // projection matrix that maps to screen pixels (not NDC)
-                glm::mat4 screenScaleM = glm::scale(glm::mat4(), glm::vec3(myGL->width(), myGL->height(), 1.f));
+                auto screenScaleM = glm::scale(glm::mat4(), glm::vec3(myGL->width(), myGL->height(), 1.f));
 
-                glm::mat4 trs = glm::mat4(1.f);
+                auto trs = glm::mat4(1.f);
                 trs[0][0] = .5f;
                 trs[0][3] = .5f;
                 trs[1][1] = .5f;
                 trs[1][3] = .5f;
 
-                glm::mat4 PM_d3d = PM;
+                auto PM_d3d = PM;
                 float temp23 = PM_d3d[2][3];
                 PM_d3d[2][3] = PM_d3d[3][2];
                 PM_d3d[3][2] = temp23;
 
-                glm::mat4 PM_SS_d3d = PM_d3d * trs * screenScaleM;
+                auto PM_SS_d3d = PM_d3d * trs * screenScaleM;
                 glUniformMatrix4fv(glGetUniformLocation(proH, "PM_SS_d3d"), 1, GL_FALSE, &PM_SS_d3d[0][0]);
-
                 glUniformMatrix4fv(glGetUniformLocation(proH, "VM"), 1, GL_FALSE, &VM[0][0]);
 
-                glProgramUniformHandleui64ARB(proH, 0, myGL->gbuf2_64);
-                glProgramUniformHandleui64ARB(proH, 1, myGL->gbuf_DS_64);
-                glProgramUniformHandleui64ARB(proH, 2, myGL->depthRev_node.DS_64);
-                glProgramUniformHandleui64ARB(proH, 3, myGL->tonemap_node.tex2_64);
+                glProgramUniformHandleui64ARB(proH, 0, myGL->gBuf2_64);
+                glProgramUniformHandleui64ARB(proH, 1, myGL->gBuf3_64);
+                glBindTextureUnit(2, myGL->gBuf_DS_32);
+                glProgramUniformHandleui64ARB(proH, 3, myGL->depthRevN.DS_64);
+                glProgramUniformHandleui64ARB(proH, 4, myGL->tonemapN.tex2_64);
 
-                glUniform1f(glGetUniformLocation(proH, "farClip"), myGL->selCamLi->farClip->val_f);
-                glUniform1f(glGetUniformLocation(proH, "nearClip"), myGL->selCamLi->nearClip->val_f);
-                glUniform1i(glGetUniformLocation(proH, "vign"), myWin.myFSQ->vign->val_b);
+                comboU = glm::vec4(myGL->selCamLi->farClip->val_f, myGL->selCamLi->nearClip->val_f, myWin.myFSQ->ssrIter->val_i, myWin.myFSQ->ssrRefine->val_i);
+                glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
 
-                //ssr uniforms
-                glUniform1i(glGetUniformLocation(proH, "ssrIter"), myWin.myFSQ->ssrIter->val_i);
-                glUniform1i(glGetUniformLocation(proH, "ssrRefine"), myWin.myFSQ->ssrRefine->val_i);
-                glUniform1i(glGetUniformLocation(proH, "ssrPixStride"), myWin.myFSQ->ssrPixStride->val_i);
+                comboU = glm::vec4(myWin.myFSQ->ssrPixStride->val_i, myWin.myFSQ->ssrPixStrideZ->val_f, myWin.myFSQ->ssrPixZSize->val_f, myWin.myFSQ->ssrMaxRayDist->val_f);
+                glUniform4fv(glGetUniformLocation(proH, "comboU1"), 1, &comboU.x);
 
-                glUniform1f(glGetUniformLocation(proH, "ssrPixZSize"), myWin.myFSQ->ssrPixZSize->val_f);
-                glUniform1f(glGetUniformLocation(proH, "ssrPixStrideZ"), myWin.myFSQ->ssrPixStrideZ->val_f);
-                glUniform1f(glGetUniformLocation(proH, "ssrMaxRayDist"), myWin.myFSQ->ssrMaxRayDist->val_f);
-                glUniform1f(glGetUniformLocation(proH, "ssrEdgeFade"), myWin.myFSQ->ssrEdgeFade->val_f);
-                glUniform1f(glGetUniformLocation(proH, "ssrEyeFade0"), myWin.myFSQ->ssrEyeFade0->val_f);
-                glUniform1f(glGetUniformLocation(proH, "ssrEyeFade1"), myWin.myFSQ->ssrEyeFade1->val_f);
-            }
-
-            else if (proN == "pBloomC")
-            {
-                glProgramUniformHandleui64ARB(proH, 0, myGL->deferred_node.tex1_64);
-                glProgramUniformHandleui64ARB(proH, 1, myGL->bloom_node.tex1_64);
-                glProgramUniformHandleui64ARB(proH, 2, myGL->ssao_gauss_node.tex2_64);
+                comboU = glm::vec4(myWin.myFSQ->ssrEdgeFade->val_f, myWin.myFSQ->ssrEyeFade0->val_f, myWin.myFSQ->ssrEyeFade1->val_f, myGL->debug0);
+                glUniform4fv(glGetUniformLocation(proH, "comboU2"), 1, &comboU.x);
             }
 
             else if (proN == "pDef")
             {
-                glm::mat4 PMinv = glm::inverse(myGL->selCamLi->PM);
+                auto PMinv = glm::inverse(myGL->selCamLi->PM);
                 glUniformMatrix4fv(glGetUniformLocation(proH, "PMinv"), 1, GL_FALSE, &PMinv[0][0]);
 
                 glUniformMatrix4fv(glGetUniformLocation(proH, "VM"), 1, GL_FALSE, &VM[0][0]);
 
-                glm::mat3 VMinv = glm::inverse(glm::mat3(myGL->selCamLi->VM));
+                auto VMinv = glm::inverse(glm::mat3(myGL->selCamLi->VM));
                 glUniformMatrix3fv(glGetUniformLocation(proH, "VMinv"), 1, GL_FALSE, &VMinv[0][0]);
 
-//                glProgramUniformHandleui64ARB(proH, 0, myGL->gbuf0_64);
-                glProgramUniformHandleui64ARB(proH, 1, myGL->gbuf1_64);
-                glProgramUniformHandleui64ARB(proH, 2, myGL->gbuf2_64);
-                glProgramUniformHandleui64ARB(proH, 3, myGL->gbuf3_64);
-                glProgramUniformHandleui64ARB(proH, 4, myGL->gbuf4_64);
-                glProgramUniformHandleui64ARB(proH, 5, myGL->gbuf5_64);
-                glProgramUniformHandleui64ARB(proH, 7, myGL->ssao_gauss_node.tex2_64);
-                glProgramUniformHandleui64ARB(proH, 8, myGL->simp_node.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 0, myGL->gBuf0_64);
+                glProgramUniformHandleui64ARB(proH, 1, myGL->gBuf1_64);
+                glProgramUniformHandleui64ARB(proH, 2, myGL->gBuf2_64);
+                glProgramUniformHandleui64ARB(proH, 3, myGL->gBuf3_64);
+                glProgramUniformHandleui64ARB(proH, 4, myGL->gBuf4_64);
+                glProgramUniformHandleui64ARB(proH, 5, myGL->gBuf5_64);
+                glProgramUniformHandleui64ARB(proH, 7, myGL->ssaoGaussN.tex2_64);
+                glProgramUniformHandleui64ARB(proH, 8, myGL->bgN.tex1_64); // sky
                 glBindTextureUnit(9, myWin.cubeM_specular_32);
                 glBindTextureUnit(10, myWin.cubeM_irradiance_32);
-                glProgramUniformHandleui64ARB(proH, 12, myGL->gbuf_DS_64); //
+                glBindTextureUnit(11, myGL->gBuf_DS_32);
 
-                for (unsigned int j = 0; j < myWin.myGLWidgetSh->allTex.size(); ++j)
+                for (auto &j : myWin.myGLWidgetSh->allMaps)
                 {
-                    if (myWin.myGLWidgetSh->allTex[j].name == "sssLookup")
-                        glProgramUniformHandleui64ARB(proH, 11, myWin.myGLWidgetSh->allTex[j].tex_64);
+                    if (j.name == "sssLookup")
+                        glProgramUniformHandleui64ARB(proH, 12, myWin.myGLWidgetSh->topLayer(j).tex1_64);
                 }
 
-                glUniform1f(glGetUniformLocation(proH, "Kgi"), myWin.myFSQ->Kgi->val_f);
-                glUniform1i(glGetUniformLocation(proH, "vign"), myWin.myFSQ->vign->val_b);
-                glUniform1i(glGetUniformLocation(proH, "NUM_LIGHTS"), myWin.lightCt);
+                comboU = glm::vec4(myWin.myFSQ->Kgi->val_f, myWin.lightCt, myGL->debug0, 0.f);
+                glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
             }
 
             else if (proN == "pTonemap")
             {
-                glProgramUniformHandleui64ARB(proH, 0, myGL->bloomC_node.tex1_64);
-                glProgramUniformHandleui64ARB(proH, 1, myGL->lumaAdapt[myGL->currLum].tex1_64);
-                glProgramUniformHandleui64ARB(proH, 2, myGL->simp_node.tex2_64);
+                glProgramUniformHandleui64ARB(proH, 0, myGL->bloomCN.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 1, myGL->lumaAdaptN[myGL->currLum].tex1_64);
+                glProgramUniformHandleui64ARB(proH, 2, myGL->bgN.tex2_64);
 
-                glUniform1f(glGetUniformLocation(proH, "expo"), log(myWin.myFSQ->expo->val_f));
-                glUniform1i(glGetUniformLocation(proH, "adaptAuto"), myWin.myFSQ->adaptAuto->val_b);
-//                glUniform1i(glGetUniformLocation(proH, "vign"), myWin.myFSQ->vign->val_b);
-                glUniform1f(glGetUniformLocation(proH, "vignDist"), myWin.myFSQ->vignDist->val_f);
+                comboU = glm::vec4(log(myWin.myFSQ->expo->val_f), myWin.myFSQ->adaptAuto->val_b, myGL->debug0, myWin.myFSQ->vignDist->val_f);
+                glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
             }
 
             else if (proN == "pFxaa")
             {
-                glProgramUniformHandleui64ARB(proH, 0, myGL->tonemap_node.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 0, myGL->tonemapN.tex1_64);
 
-                glUniform1f(glGetUniformLocation(proH, "fxaaSubPix"), myWin.myFSQ->fxaaSubPix->val_f);
-                glUniform1f(glGetUniformLocation(proH, "fxaaEdgeThr"), myWin.myFSQ->fxaaEdgeThr->val_f);
-                glUniform1f(glGetUniformLocation(proH, "fxaaEdgeThrMin"), myWin.myFSQ->fxaaEdgeThrMin->val_f);
+                comboU = glm::vec4(myGL->edgeDetect_mode, myWin.myFSQ->fxaaSubPix->val_f, myWin.myFSQ->fxaaEdgeThr->val_f, myWin.myFSQ->fxaaEdgeThrMin->val_f);
+                glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
 
-                glUniform2fv(glGetUniformLocation(proH, "texelSize"), 1, &myGL->texelSize.r);
+                glUniform1i(glGetUniformLocation(proH, "debug0"), myGL->debug0);
             }
 
             else if (proN == "pFinal")
             {
-                glProgramUniformHandleui64ARB(proH, 0, myGL->fxaa_node.tex1_64);
-                glProgramUniformHandleui64ARB(proH, 1, myGL->ssr_node.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 0, myGL->fxaaN.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 1, myGL->ssrN.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 2, myGL->cursorN.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 3, myGL->deferredN.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 4, myGL->brushN.tex2_64);
 
-                //REZGATE
-                bool rezGateTgl = (myGL->rezGateTgl || myGL->rezGateTgl_sel) ? 1 : 0;
-                glUniform1i(glGetUniformLocation(proH, "rezGateTgl"), rezGateTgl);
-                glUniform2fv(glGetUniformLocation(proH, "rezGate_LD"), 1, &myGL->rezGate_LD.x);
-                glUniform2fv(glGetUniformLocation(proH, "rezGate_RU"), 1, &myGL->rezGate_RU.x);
-                glUniform1i(glGetUniformLocation(proH, "dragDrop"), myGL->dragDrop);
+                comboU = glm::vec4(myGL->rezGate_LD, myGL->rezGate_RU);
+                glUniform4fv(glGetUniformLocation(proH, "LDRU"), 1, &comboU.x);
 
-                glUniform1i(glGetUniformLocation(proH, "vign"), myWin.myFSQ->vign->val_b);
+                auto rezGateTgl = (myGL->rezGateTgl || myGL->rezGateTgl_sel) ? true : false;
+                comboU = glm::vec4(rezGateTgl, myGL->dragDrop, myGL->debug0, 0.f);
+                glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
+            }
+
+            else if (proN == "pEdgeDetect")
+            {
+                glProgramUniformHandleui64ARB(proH, 0, myGL->alphaGaussN.tex2_64);
+
+//                comboU = glm::vec4(myGL->edgeDetect_mode, myWin.myFSQ->edgeThr->val_f, 0.f, 0.f);
+                comboU = glm::vec4(myGL->edgeDetect_mode, .6f, 0.f, 0.f);
+                glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
+            }
+
+            else if (proN == "pPaintStroke")
+            {
+                for (auto &j : myWin.myGLWidgetSh->allMaps)
+                {
+                    if (j.type == "BRUSH")
+                    {
+                        if (j.name == myWin.myGLWidgetSh->selBrush->name)
+                        {
+                            if (myGL->paintType == "BRUSH")
+                                glProgramUniformHandleui64ARB(proH, 0, myWin.myGLWidgetSh->topLayer(j).tex1_64);
+
+                            else if (myGL->paintType == "BRUSH_CURSOR")
+                                glProgramUniformHandleui64ARB(proH, 0, myWin.myGLWidgetSh->topLayer(j).tex2_64);
+                        }
+
+                        else if (j.name == myWin.myGLWidgetSh->selEraser->name)
+                        {
+                            if (myGL->paintType == "ERASER")
+                                glProgramUniformHandleui64ARB(proH, 0, myWin.myGLWidgetSh->topLayer(j).tex1_64);
+
+                            else if (myGL->paintType == "ERASER_CURSOR")
+                                glProgramUniformHandleui64ARB(proH, 0, myWin.myGLWidgetSh->topLayer(j).tex2_64);
+                        }
+                    }
+                }
+
+                glUniform4fv(glGetUniformLocation(proH, "brushRGBA"), 1, &myGL->brushRGBA.x);
+            }
+
+            else if (proN == "pEraseMix")
+            {
+                glProgramUniformHandleui64ARB(proH, 0, myGL->brushBGN.tex2_64);
+                glProgramUniformHandleui64ARB(proH, 1, myGL->eraserN.tex1_64);
+            }
+
+            else if (proN == "pCopyTex")
+            {
+                if (myGL->copyTgt == 0)
+                    glProgramUniformHandleui64ARB(proH, 0, myGL->brushTempN.tex1_64);
+
+                else if (myGL->copyTgt == 1)
+                    glProgramUniformHandleui64ARB(proH, 0, myGL->brushTempN.tex2_64);
+
+                else if (myGL->copyTgt == 2)
+                    glProgramUniformHandleui64ARB(proH, 0, myGL->brushBGN.tex1_64);
+
+                else if (myGL->copyTgt == 3)
+                    glProgramUniformHandleui64ARB(proH, 0, myGL->brushBGN.tex2_64);
+
+                else if (myGL->copyTgt == 4)
+                    glProgramUniformHandleui64ARB(proH, 0, myGL->brushN.tex1_64);
+
+                else if (myGL->copyTgt == 5)
+                    glProgramUniformHandleui64ARB(proH, 0, myGL->brushN.tex2_64);
+
+                else if (myGL->copyTgt == 10)
+                    glProgramUniformHandleui64ARB(proH, 0, myGL->myLayerIdx.layer[0].tex1_64);
+
+                else if (myGL->copyTgt == 11)
+                    glProgramUniformHandleui64ARB(proH, 0, myGL->eraserN.tex1_64);
+
+                else if (myGL->copyTgt == 12)
+                    glProgramUniformHandleui64ARB(proH, 0, myGL->eraserN.tex2_64);
+
+                else if (myGL->copyTgt == 99)
+                {
+                    glProgramUniformHandleui64ARB(proH, 0, myGL->eraserN.tex2_64);
+
+                    for (auto &j : myWin.myGLWidgetSh->allMaps)
+                    {
+                        if (j.name == "debugBG")
+                            glProgramUniformHandleui64ARB(proH, 0, myWin.myGLWidgetSh->topLayer(j).tex1_64);
+                    }
+                }
+            }
+
+            else if (proN == "pPaintProj")
+            {
+                glProgramUniformHandleui64ARB(proH, 0, myGL->brushN.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 1, myGL->myLayerIdx.layer[0].tex2_64);
+
+                glUniformMatrix4fv(glGetUniformLocation(proH, "VM"), 1, GL_FALSE, &myGL->selCamLi->VM[0][0]);
+
+                auto ProjectorM = biasM * myGL->selCamLi->PM * myGL->selCamLi->VM * MM;
+                glUniformMatrix4fv(glGetUniformLocation(proH, "ProjectorM"), 1, GL_FALSE, &ProjectorM[0][0]);
+            }
+
+            else if (proN == "pAlphaAsRGBA")
+            {
+                glProgramUniformHandleui64ARB(proH, 0, myWin.myGLWidgetSh->topLayer(myGL->sobelMap).tex1_64);
+            }
+
+            else if (proN == "pBlendMode")
+            {
+                for (auto &j : myWin.myGLWidgetSh->allMaps)
+                {
+                    if (j.name == "REPLACEME")
+                        glProgramUniformHandleui64ARB(proH, 0, myWin.myGLWidgetSh->topLayer(j).tex1_64);
+                }
             }
 
             //GIZ
             else if (proN == "pGiz")
                 glUniform3fv(glGetUniformLocation(proH, "Cgiz"), 1, &Cgiz.r);
 
-            else if (proN == "pGiz_circ")
+            else if (proN == "pGiz_circ") //NEW
             {
                 glUniform3fv(glGetUniformLocation(proH, "Cgiz"), 1, &Cgiz.r);
 
                 if (type == "GIZ_CIRC")
                 {
                     glUniform3fv(glGetUniformLocation(proH, "circRight"), 1, &myGL->selCamLi->rightO.x);
-                    glUniform3fv(glGetUniformLocation(proH, "circUpOrFront"), 1, &myGL->selCamLi->upO.x);
-                    glUniform1i(glGetUniformLocation(proH, "fullCirc"), 1);
+
+                    comboU = glm::vec4(myGL->selCamLi->upO, 1);
+                    glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
                 }
 
                 else if (type == "GIZ_CIRC_HALF")
@@ -1588,21 +1773,16 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                     }
 
                     glUniform3fv(glGetUniformLocation(proH, "circRight"), 1, &circHalfRight.x);
-                    glUniform3fv(glGetUniformLocation(proH, "circUpOrFront"), 1, &circHalfFront.x);
-                    glUniform1i(glGetUniformLocation(proH, "fullCirc"), 0);
-                }
-            }
 
-            else if (proN == "pNViz")
-            {
-                glUniform1i(glGetUniformLocation(proH, "nType"), nType);
-                glUniform1f(glGetUniformLocation(proH, "normVLen"), normVLen->val_f);
+                    comboU = glm::vec4(circHalfFront, 0);
+                    glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
+                }
             }
 
             else if (type == "SELRECT")
             {
-                glUniform2fv(glGetUniformLocation(proH, "selRect_LD"), 1, &myGL->selRect_LD.x);
-                glUniform2fv(glGetUniformLocation(proH, "selRect_RU"), 1, &myGL->selRect_RU.x);
+                glm::vec4 LDRU(myGL->selRect_LD, myGL->selRect_RU);
+                glUniform4fv(glGetUniformLocation(proH, "LDRU"), 1, &LDRU.x);
             }
 
             else if (proN == "pStencilHi")
@@ -1612,87 +1792,78 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
 
             else if (proN == "pTxt")
             {
-                for (unsigned int j = 0; j < myWin.myGLWidgetSh->allTex.size(); ++j)
+                for (auto &j : myWin.myGLWidgetSh->allMaps)
                 {
-                    if (myWin.myGLWidgetSh->allTex[j].name == "atlas")
-                        glProgramUniformHandleui64ARB(proH, 0, myWin.myGLWidgetSh->allTex[j].tex_64);
+                    if (j.name == "atlas")
+                        glProgramUniformHandleui64ARB(proH, 0, myWin.myGLWidgetSh->topLayer(j).tex1_64);
                 }
 
                 glUniform3fv(glGetUniformLocation(proH, "Ctxt"), 1, &myWin.glslTable->Ctxt->val_3.r);
 
                 glm::vec2 txtCellSize(1.f / 16, (300.f / 384) / 6);
-                glUniform2fv(glGetUniformLocation(proH, "txtCellSize"), 1, &txtCellSize.x);
-
                 glm::vec2 txtCellOffset(.5f / 256);
-                glUniform2fv(glGetUniformLocation(proH, "txtCellOffset"), 1, &txtCellOffset.x);
 
-                glUniform2fv(glGetUniformLocation(proH, "txtOrigin"), 1, &txtOrigin.x);
-
-                float txtSize = .8f;
+                auto txtSize = .8f;
                 glm::vec2 txtSizeUse(.75f * 16 / (myGL->width() / txtSize), .75f * 33.33 / (myGL->height() / txtSize));
-                glUniform2fv(glGetUniformLocation(proH, "txtSize"), 1, &txtSizeUse.x);
+
+                comboU = glm::vec4(txtCellSize, txtCellOffset);
+                glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
+
+                comboU = glm::vec4(txtSizeUse, txtOrigin);
+                glUniform4fv(glGetUniformLocation(proH, "comboU1"), 1, &comboU.x);
             }
 
             else if (proN == "pVolumeLight")
             {
                 glUniformMatrix4fv(glGetUniformLocation(proH, "MV"), 1, GL_FALSE, &MV[0][0]);
 
-                glm::vec3 volTip = parentTo->t->val_3;
-                glm::vec3 volTipView = glm::vec3(VM * glm::vec4(parentTo->t->val_3, 1.f));
-
                 glUniform3fv(glGetUniformLocation(proH, "parentCl"), 1, &parentTo->Cl->val_3.r);
 
-                glUniform3fv(glGetUniformLocation(proH, "volTip"), 1, &volTip.x);
-                glUniform3fv(glGetUniformLocation(proH, "volTipView"), 1, &volTipView.x);
-                glUniform1f(glGetUniformLocation(proH, "volDist"), parentTo->volDist->val_f);
+                auto volTipView = glm::vec3(VM * glm::vec4(parentTo->t->val_3, 1.f));
+
+                comboU = glm::vec4(volTipView, parentTo->volDist->val_f);
+                glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
             }
         }
     }
 }
 
-void Object::shadowPass(GLuint /*proH*/)
+void Object::shadowPass()
 {
-//    //READING FROM MULTIPLE LIGHTS
-//    int lightIter = 1;
+    //READ FROM MULTIPLE LIGHTS
+    auto lightIter = 1;
 
-//    stringstream ss;
-//    ss << "myLightType[" << 0 << "]";
-//    glUniform1i(glGetUniformLocation(proH, ss.str().c_str()), 999);
-//    ss.str(""); ss.clear();
+    for (auto &i : myWin.allObj)
+    {
+        if (i->v->val_b && i->camLiTypeGet("light"))
+        {
+            //SHADOW
+            glm::mat4 PM_shadow, VM_shadow;
 
-//    for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
-//    {
-//        if (myWin.allObj[i]->v->val_b && myWin.allObj[i]->camLiTypeGet("light"))
-//        {
-//            //SHADOW
-//            glm::mat4 PM_shadow, VM_shadow;
+            if (i->camLiType->val_s == "DIR")
+            {
+                PM_shadow = glm::ortho(-10.f, 10.f, -10.f, 10.f, -10.f, 20.f);
+                VM_shadow = glm::inverse(i->RM);
+            }
 
-//            if (myWin.allObj[i]->camLiType->val_s == "DIR")
-//            {
-//                PM_shadow = glm::ortho(-10.f, 10.f, -10.f, 10.f, -10.f, 20.f);
-//                VM_shadow = glm::inverse(myWin.allObj[i]->RM);
-//            }
+            else if (i->camLiType->val_s == "POINT")
+            {
+                PM_shadow = glm::perspective(glm::radians(90.f), 1.f, i->nearShadow->val_f, i->farShadow->val_f);
+                VM_shadow = i->VM;
+            }
 
-//            else if (myWin.allObj[i]->camLiType->val_s == "POINT")
-//            {
-//                PM_shadow = glm::perspective(glm::radians(90.f), 1.f, myWin.allObj[i]->nearShadow->val_f, myWin.allObj[i]->farShadow->val_f);
-//                VM_shadow = myWin.allObj[i]->VM;
-//            }
+            else if (i->camLiType->val_s == "SPOT")
+            {
+                PM_shadow = glm::perspective(glm::radians(50.f), 1.f, i->nearShadow->val_f, i->farShadow->val_f);
+                VM_shadow = i->VM;
+            }
 
-//            else if (myWin.allObj[i]->camLiType->val_s == "SPOT")
-//            {
-//                PM_shadow = glm::perspective(glm::radians(50.f), 1.f, myWin.allObj[i]->nearShadow->val_f, myWin.allObj[i]->farShadow->val_f);
-//                VM_shadow = myWin.allObj[i]->VM;
-//            }
+            glm::mat4 depthBiasMVP = biasM * PM_shadow * VM_shadow * MM;
+            glNamedBufferSubData(myWin.myGLWidgetSh->UBO_lights, lightIter * sizeof(lightUBO) - sizeof(glm::mat4), sizeof(depthBiasMVP), &depthBiasMVP);
 
-//            ss << "depthBiasMVP" << lightIter;
-//            glm::mat4 depthBiasMVP = biasM * PM_shadow * VM_shadow * MM;
-//            glUniformMatrix4fv(glGetUniformLocation(proH, ss.str().c_str()), 1, GL_FALSE, &depthBiasMVP[0][0]);
-//            ss.str(""); ss.clear();
-
-//            lightIter++;
-//        }
-//    }
+            ++lightIter;
+        }
+    }
 }
 
 void Object::render(shared_ptr<GLWidget> myGL)
@@ -1717,7 +1888,7 @@ void Object::render(shared_ptr<GLWidget> myGL)
 
             else
             {
-                if (type == "FBO" || type == "RTT" || type == "SELRECT")
+                if (type == "FBO" || type == "SELRECT")
                 {
                     glBindVertexArray(dynVAO_perGL[i].VAO);
                     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -1831,20 +2002,20 @@ void Object::render(shared_ptr<GLWidget> myGL)
     }
 }
 
-glm::vec4 Object::genColorID()
+glm::vec3 Object::genColorID()
 {
-    bool preExist = 0;
+    auto preExist = false;
 
     int myRand = rand();
     int r = (myRand & 0x000000FF) >>  0;
     int g = (myRand & 0x0000FF00) >>  8;
     int b = (myRand & 0x00FF0000) >> 16;
 
-    glm::vec4 myColorID(r / 255.f, g / 255.f, b / 255.f, 1.f);
+    glm::vec3 myColorID(r / 255.f, g / 255.f, b / 255.f);
 
-    for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
+    for (auto &i : myWin.allObj)
     {
-        if (myWin.allObj[i]->Crand == myColorID)
+        if (i->Crand == myColorID)
             preExist = 1;
     }
 
@@ -1852,7 +2023,7 @@ glm::vec4 Object::genColorID()
     {
         genColorID();
 
-        return glm::vec4(1.f);
+        return glm::vec3(1.f);
     }
 
     else
@@ -1877,51 +2048,51 @@ void Object::glErrorPrint(const char *msg)
     }
 }
 
-void Object::parentObj(QString parentName)
+void Object::parentObj(string parentName)
 {
-    bool found = 0;
+    auto found = false;
 
-    for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
+    for (auto &i : myWin.allObj)
     {
-        if (myWin.allObj[i]->name->val_s == parentName)
+        if (i->name->val_s == parentName)
         {
             found = 1;
-            parentTo = myWin.allObj[i];
+            parentTo = i;
 
             break;
         }
     }
 
     if (!found)
-        qDebug() << "parentObj() could not find " << parentName;
+        cout << "parentObj() could not find " << parentName;
 }
 
-void Object::rename(QString newName) //recursive
+void Object::rename(string newName) //recursive
 {
     if (!ref)
     {
-        bool preExist = 0;
+        auto preExist = false;
 
-        for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
+        for (auto &i : myWin.allObj)
         {
-            if (myWin.allObj[i]->name->val_s == newName)
+            if (i->name->val_s == newName)
                 preExist = 1;
         }
 
         if (preExist)
         {
-            newName = QString::fromStdString(getIncName(newName.toStdString()));
+            newName = getIncName(newName);
             rename(newName);
         }
 
         else
         {
-            for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
+            for (auto &i : myWin.allObj)
             {
-                if (myWin.allObj[i]->parentTo && myWin.allObj[i]->name->val_s != "pivot")
+                if (i->parentTo && i->name->val_s != "pivot")
                 {
-                    if (myWin.allObj[i]->parentTo->name->val_s == name->val_s)
-                        myWin.allObj[i]->parentTo->name->val_s = newName;
+                    if (i->parentTo->name->val_s == name->val_s)
+                        i->parentTo->name->val_s = newName;
                 }
             }
 
@@ -1944,61 +2115,61 @@ string Object::getIncName(string dupeName)
     return incrementedName.str();
 }
 
-void Object::tileMaps(GLuint proH, QString mode)
+void Object::tileMaps(GLuint proH, string mode)
 {
     if (mode == "get")
     {
         glm::vec4 albedoAlphaTile, metallicRuffTile, normalTile, anisoSssTile;
 
-        for (unsigned int i = 0; i < multiObj.size(); ++i)
+        for (auto &i : multiObj)
         {
-            if (multiObj[i].get()->type == "vec2" && multiObj[i].get()->name.endsWith("T"))
+            if (i->type == "vec2" && i->name.back() == 'T')
             {
                 //albedoAlpha
-                if (multiObj[i].get()->name == "albedoT")
+                if (i->name == "albedoT")
                 {
-                    albedoAlphaTile.x = multiObj[i].get()->val_2.x;
-                    albedoAlphaTile.y = multiObj[i].get()->val_2.y;
+                    albedoAlphaTile.x = i->val_2.x;
+                    albedoAlphaTile.y = i->val_2.y;
                 }
 
-                else if (multiObj[i].get()->name == "alphaT")
+                else if (i->name == "alphaT")
                 {
-                    albedoAlphaTile.z = multiObj[i].get()->val_2.x;
-                    albedoAlphaTile.w = multiObj[i].get()->val_2.y;
+                    albedoAlphaTile.z = i->val_2.x;
+                    albedoAlphaTile.w = i->val_2.y;
                 }
 
                 //anisoSss
-                else if (multiObj[i].get()->name == "anisoT")
+                else if (i->name == "anisoT")
                 {
-                    anisoSssTile.x = multiObj[i].get()->val_2.x;
-                    anisoSssTile.y = multiObj[i].get()->val_2.y;
+                    anisoSssTile.x = i->val_2.x;
+                    anisoSssTile.y = i->val_2.y;
                 }
 
-                else if (multiObj[i].get()->name == "sssT")
+                else if (i->name == "sssT")
                 {
-                    anisoSssTile.z = multiObj[i].get()->val_2.x;
-                    anisoSssTile.w = multiObj[i].get()->val_2.y;
+                    anisoSssTile.z = i->val_2.x;
+                    anisoSssTile.w = i->val_2.y;
                 }
 
                 //metallicRuff
-                else if (multiObj[i].get()->name == "metallicT")
+                else if (i->name == "metallicT")
                 {
-                    metallicRuffTile.x = multiObj[i].get()->val_2.x;
-                    metallicRuffTile.y = multiObj[i].get()->val_2.y;
+                    metallicRuffTile.x = i->val_2.x;
+                    metallicRuffTile.y = i->val_2.y;
                 }
 
-                else if (multiObj[i].get()->name == "ruffT")
+                else if (i->name == "ruffT")
                 {
-                    metallicRuffTile.z = multiObj[i].get()->val_2.x;
-                    metallicRuffTile.w = multiObj[i].get()->val_2.y;
+                    metallicRuffTile.z = i->val_2.x;
+                    metallicRuffTile.w = i->val_2.y;
                 }
 
                 //normal
-                else if (multiObj[i].get()->name == "normalT")
+                else if (i->name == "normalT")
                 {
-                    normalTile.x = multiObj[i].get()->val_2.x;
-                    normalTile.y = multiObj[i].get()->val_2.y;
-                    normalTile.z = normWeight->val_f;
+                    normalTile.x = i->val_2.x;
+                    normalTile.y = i->val_2.y;
+                    normalTile.z = normWt->val_f;
                 }
             }
         }
@@ -2009,18 +2180,20 @@ void Object::tileMaps(GLuint proH, QString mode)
         glUniform4fv(glGetUniformLocation(proH, "anisoSssTile"), 1, &anisoSssTile.r);
     }
 
-    else if (mode == "set")
+    else if (mode == "create")
     {
-        for (unsigned int i = 0; i < multiObj.size(); ++i)
-        {
-            if (multiObj[i].get()->type == "enum" && multiObj[i].get()->name.endsWith("M"))
-            {
-                QString tileName = multiObj[i].get()->name;
-                tileName.chop(1);
-                QString myTile = tileName + "T";
+        vector<shared_ptr<MultiAttr>> multiObjTemp = multiObj;
 
-                shared_ptr<MultiAttr> newTileAttr = make_shared<MultiAttr>();
-                newTileAttr->name = myTile;
+        for (auto &i : multiObjTemp)
+        {
+            if (i->type == "enum" && i->name.back() == 'M')
+            {
+                string tileName = i->name;
+                tileName.resize(tileName.size() - 1);
+                tileName.append("T");
+
+                auto newTileAttr = make_shared<MultiAttr>();
+                newTileAttr->name = tileName;
                 newTileAttr->type = "vec2";
                 newTileAttr->typeX = "OBJ";
                 newTileAttr->val_2 = glm::vec2(1.f, 1.f);
@@ -2032,11 +2205,11 @@ void Object::tileMaps(GLuint proH, QString mode)
     }
 }
 
-void Object::delete_()
+void Object::deleteVAO_VBO()
 {
     glGetError();
 
-    for (vector<GLSharedData>::iterator it = myWin.myGLWidgetSh->GLDataSh.begin(); it != myWin.myGLWidgetSh->GLDataSh.end(); )
+    for (auto it = myWin.myGLWidgetSh->GLDataSh.begin(); it != myWin.myGLWidgetSh->GLDataSh.end(); )
     {
         if ((*it).obj.get() == this)
         {
@@ -2055,10 +2228,11 @@ void Object::delete_()
     }
 
     glBindVertexArray(0);
-    for (unsigned int i = 0; i < dynVAO_perGL.size(); ++i)
+
+    for (auto &i : dynVAO_perGL)
     {
-        glDeleteVertexArrays(1, &dynVAO_perGL[i].VAO);
-        dynVAO_perGL[i].loaded = 0;
+        glDeleteVertexArrays(1, &i.VAO);
+        i.loaded = false;
     }
 
     glErrorPrint("Couldnt delete VAOs");
@@ -2066,8 +2240,8 @@ void Object::delete_()
 
 void Object::setDirty()
 {
-    dirtyVM = 1;
+    dirtyVM = true;
 
     if (camLiTypeGet("light"))
-        dirtyShadow = 1;
+        dirtyShadow = true;
 }

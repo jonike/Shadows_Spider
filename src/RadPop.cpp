@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -25,15 +25,15 @@ RadPop::RadPop(MainWin &myWinTemp, QWidget *parent) : QMainWindow(parent), myWin
 {
     setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Popup);
     setAttribute(Qt::WA_TranslucentBackground, 1);
-    setStyleSheet(myWin.myStyle); //
+    setStyleSheet(QString::fromStdString(myWin.myStyle)); //
 
-    QDesktopWidget *dw = QApplication::desktop();
+    auto *dw = QApplication::desktop();
     setFixedSize(dw->width(), dw->height());
 
-    QShortcut *quit_s = new QShortcut(tr("CTRL+Q"), this);
+    auto *quit_s = new QShortcut(tr("CTRL+Q"), this);
     connect(quit_s, SIGNAL(activated()), qApp, SLOT(quit()));
 
-    QTimer *upTimer = new QTimer(this);
+    auto *upTimer = new QTimer(this);
     connect(upTimer, SIGNAL(timeout()), this, SLOT(update()));
     upTimer->start(16); //update every 16ms
 }
@@ -41,7 +41,7 @@ RadPop::RadPop(MainWin &myWinTemp, QWidget *parent) : QMainWindow(parent), myWin
 void RadPop::keyReleaseEvent(QKeyEvent *e)
 {
     if (e->key() == Qt::Key_Escape)
-        quitTgl = 1;
+        quitTgl = true;
 }
 
 void RadPop::mouseMoveEvent(QMouseEvent *e)
@@ -51,19 +51,22 @@ void RadPop::mouseMoveEvent(QMouseEvent *e)
     hoverHighlight();
 }
 
-void RadPop::mouseReleaseEvent(QMouseEvent *)
+void RadPop::mouseReleaseEvent(QMouseEvent *e)
 {
-    for (unsigned int i = 0; i < allPop.size(); ++i)
-    {
-        if (allPop[i].hovered)
-        {
-            hitFind(allPop[i].name);
+     if (e->button() == Qt::RightButton)
+     {
+         for (auto &i : allPop)
+         {
+             if (i.hovered)
+             {
+                 hitFind(i.name);
 
-            break;
-        }
-    }
+                 break;
+             }
+         }
 
-    quitTgl = 1;
+         quitTgl = true;
+     }
 }
 
 void RadPop::paintEvent(QPaintEvent *)
@@ -76,107 +79,109 @@ void RadPop::paintEvent(QPaintEvent *)
     QRect rectCircPopupCenter(0, 0, myWin.glslTable->popCenterXY->val_i, myWin.glslTable->popCenterXY->val_i);
     rectCircPopupCenter.moveCenter(myWin.toQP(startP));
 
-    painter.setPen(Qt::black);
+    painter.setPen(myWin.toQC(glm::vec3(0.f)));
     painter.drawEllipse((rectCircPopupCenter));
 
     //draw rects
-    for (unsigned int i = 0; i < allPop.size(); ++i)
+    for (auto &i : allPop)
     {
-        QRect myRect(0, 0, allPop[i].sx, allPop[i].sy);
-        myRect.moveCenter(myWin.toQP(startP + allPop[i].move));
+        QRect myRect(0, 0, i.sx, i.sy);
+        myRect.moveCenter(myWin.toQP(startP + i.move));
 
         //colors
-        glm::vec3 Cadj = myWin.gammaCsel();
-        QColor Chigh = QColor::fromRgbF(Cadj.r, Cadj.g, Cadj.b);
-        QColor CrectBG;
+        glm::vec3 CrectBG;
 
-        if (myRect.contains(myWin.toQP(newP)) || allPop[i].hovered)
-            CrectBG = Chigh;
+        if (myRect.contains(myWin.toQP(newP)) || i.hovered)
+            CrectBG = myWin.gammaCsel();
 
         else
-            CrectBG = QColor(Qt::gray);
+            CrectBG = glm::vec3(.5f);
 
-        painter.setBrush(QBrush(CrectBG, Qt::SolidPattern));
-        painter.setPen(Qt::black); //
+        painter.setBrush(QBrush(myWin.toQC(CrectBG), Qt::SolidPattern));
+        painter.setPen(myWin.toQC(glm::vec3(0.f)));
         painter.drawRect(myRect);
 
         //set text color for camli items
-        if (selCamLiTextColor(allPop[i].name, "cam")) painter.setPen(Qt::blue);
-        else if (selCamLiTextColor(allPop[i].name, "light")) painter.setPen(Qt::yellow);
+        if (selCamLiTextColor(i.name, "cam")) painter.setPen(myWin.toQC(glm::vec3(0.f, 0.f, 1.f)));
+        else if (selCamLiTextColor(i.name, "light")) painter.setPen(myWin.toQC(glm::vec3(1.f, 1.f, 0.f)));
 
         //set text color for rotOrder items
-        if (allPop[i].name == "XZY" || allPop[i].name == "YZX")
-            painter.setPen(Qt::green);
+        if (i.name == "XZY" || i.name == "YZX")
+            painter.setPen(myWin.toQC(glm::vec3(0.f, 1.f, 0.f)));
 
         int usableTxtSize;
-        if (allPop[i].name.size() > 8) usableTxtSize = 8;
-        else if (allPop[i].name.size() > 15) usableTxtSize = 5;
+        if (i.name.size() > 8) usableTxtSize = 8;
+        else if (i.name.size() > 15) usableTxtSize = 5;
         else usableTxtSize = 11;
 
-//        qDebug() << "allPop[i].name / len = " << allPop[i].name << allPop[i].name.size() << usableTxtSize;
+        //cout << "i.name / len = " << i.name << i.name.size() << usableTxtSize << endl;
 
         painter.setFont(QFont("DejaVu Sans Mono", usableTxtSize, 75));
-        painter.drawText(myRect, Qt::AlignCenter, allPop[i].name);
+        painter.drawText(myRect, Qt::AlignCenter, QString::fromStdString(i.name));
 
-//        //draw tris debug
-//        painter.setPen(Qt::red); //
-//        painter.drawPolygon(allPop[i].hoverTri.translated(startP));
+        //        //draw tris debug
+//                painter.setPen(myWin.toQC(glm::vec3(1.f, 0.f, 0.f))); //
+        //        painter.drawPolygon(i.hoverTri.translated(startP));
     }
 
     //draw line to cursor
-    painter.setPen(QPen(Qt::black, 3));
+    painter.setPen(QPen(myWin.toQC(glm::vec3(0.f)), 3));
     painter.drawLine(myWin.toQP(startP), myWin.toQP(newP));
 
     if (quitTgl)
     {
         painter.setCompositionMode (QPainter::CompositionMode_Source);
-        painter.fillRect(rect(), Qt::transparent);
+
+        glm::vec4 transp(0.f);
+        auto myTransp = qRgba(transp.r, transp.g, transp.b, transp.a);
+        painter.fillRect(rect(), QColor::fromRgba(myTransp));
+
         painter.setCompositionMode (QPainter::CompositionMode_SourceOver);
 
         hide();
 
-        for (unsigned int i = 0; i < myWin.allGL.size(); ++i)
+        for (auto &i : myWin.allGL)
         {
-            myWin.allGL[i]->rmbTgl = 0;
-            myWin.allGL[i]->shiftTgl = 0;
+            i->rmbTgl = 0;
+            i->shiftTgl = 0;
         }
 
-        quitTgl = 0;
+        quitTgl = false;
     }
 
     painter.end();
 }
 
-bool RadPop::selCamLiTextColor(QString name, QString type)
+bool RadPop::selCamLiTextColor(string name, string type)
 {
-    QStringList lowerCase;
+    vector<string> lowerCase;
 
     if (type == "cam")
-        lowerCase << "back" << "bottom" << "front" << "left" << "right" << "top" << "back" << "persp" << "ortho" << "fps";
+        lowerCase = { "back", "bottom", "front", "left", "right", "top", "back", "persp", "ortho", "fps" };
 
     else if (type == "light")
-        lowerCase << "area" << "dir" << "point" << "spot";
+        lowerCase = { "area", "dir", "point", "spot" };
 
-    for (int i = 0; i < lowerCase.size(); ++i)
+    for (auto &i : lowerCase)
     {
-        if (name == lowerCase[i] || name == lowerCase[i].toUpper())
-            return 1;
+        if (name == i || name == myWin.stringToUpper(i))
+            return true;
     }
 
-    return 0;
+    return false;
 }
 
 void RadPop::buttonInit(vector<PopSetup> inPop)
 {
     vector<PopSetup> radPop, linPopN, linPopE, linPopS, linPopW;
 
-    for (unsigned int i = 0; i < inPop.size(); ++i)
+    for (auto &i : inPop)
     {
-        if (inPop[i].type == "RAD") radPop.push_back(inPop[i]);
-        if (inPop[i].type == "N") linPopN.push_back(inPop[i]);
-        if (inPop[i].type == "E") linPopE.push_back(inPop[i]);
-        if (inPop[i].type == "S") linPopS.push_back(inPop[i]);
-        if (inPop[i].type == "W") linPopW.push_back(inPop[i]);
+        if      (i.type == "RAD") radPop.push_back(i);
+        else if (i.type == "N") linPopN.push_back(i);
+        else if (i.type == "E") linPopE.push_back(i);
+        else if (i.type == "S") linPopS.push_back(i);
+        else if (i.type == "W") linPopW.push_back(i);
     }
 
     //RAD
@@ -185,28 +190,27 @@ void RadPop::buttonInit(vector<PopSetup> inPop)
 
     for (size_t i = 0; i < 360; ++i)
     {
-        for (unsigned int j = 0; j < radPop.size(); ++j)
+        for (auto &j : radPop)
         {
             float theta = 2.f * PI * float(i) / 360;
             glm::vec2 myPt(radius * cos(theta), radius * sin(theta));
 
-            radPop[j].move = myPt;
+            j.move = myPt;
 
-            size_t usableI = (i == 0) ? 360 : i; //first angle == 360 if 0
+            auto usableI = (i == 0) ? 360 : i; //first angle == 360 if 0
 
-            float thetaTri1 = 2.f * PI * float(usableI - triBetween) / 360;
+            auto thetaTri1 = 2.f * PI * float(usableI - triBetween) / 360;
             glm::vec2 triPt1(radiusBoost * cos(thetaTri1), radiusBoost * sin(thetaTri1));
 
-            float thetaTri2 = 2.f * PI * float(i + triBetween) / 360;
+            auto thetaTri2 = 2.f * PI * float(i + triBetween) / 360;
             glm::vec2 triPt2(radiusBoost * cos(thetaTri2), radiusBoost * sin(thetaTri2));
 
-            radPop[j].hoverTri << QPoint(0, 0) << myWin.toQP(triPt1) << myWin.toQP(triPt2);
+            j.hoverTri << myWin.toQP(glm::vec2(0.f)) << myWin.toQP(triPt1) << myWin.toQP(triPt2);
 
             //get "full" adj angles
-            //qDebug() << "name = " << radPop[j].name << "move = " <<  radPop[j].move << "angle = " << i;
-            //qDebug() << "triBetween = " << triBetween << "tri1Ang = " << usableI - triBetween << "tri2Ang = " << i + triBetween;
-            //qDebug() << "triPt1 = " << triPt1 << "triPt2 = " << triPt2;
-            //qDebug() << endl;
+            //cout << "name = " << j.name << "move = " <<  glm::to_string(j.move) << "angle = " << i << endl;
+            //cout << "triBetween = " << triBetween << "tri1Ang = " << usableI - triBetween << "tri2Ang = " << i + triBetween << endl;
+            //cout << "triPt1 = " << glm::to_string(triPt1) << "triPt2 = " << glm::to_string(triPt2) << endl;
 
             i += 360 / radPop.size();
         }
@@ -243,7 +247,7 @@ void RadPop::buttonInit(vector<PopSetup> inPop)
     }
 }
 
-bool RadPop::findCorrectAttrTable(QString hit)
+bool RadPop::findCorrectAttrTable(string hit)
 {
     for (unsigned int i = 0; i < myWin.cutTable->multiCut.size(); ++i)
     {
@@ -253,7 +257,7 @@ bool RadPop::findCorrectAttrTable(QString hit)
             myWin.cutTable->changeEnum(hit);
             myWin.cutTable->changeEnumName = "";
 
-            return 1;
+            return true;
         }
     }
 
@@ -265,7 +269,7 @@ bool RadPop::findCorrectAttrTable(QString hit)
             myWin.etcTable->changeEnum(hit);
             myWin.etcTable->changeEnumName = "";
 
-            return 1;
+            return true;
         }
     }
 
@@ -277,7 +281,7 @@ bool RadPop::findCorrectAttrTable(QString hit)
             myWin.glslTable->changeEnum(hit);
             myWin.glslTable->changeEnumName = "";
 
-            return 1;
+            return true;
         }
     }
 
@@ -285,11 +289,10 @@ bool RadPop::findCorrectAttrTable(QString hit)
     myWin.attrTable->changeEnum(hit);
     myWin.attrTable->changeEnumName = "";
 
-    return 1;
-
+    return true;
 }
 
-void RadPop::hitFind(QString hit)
+void RadPop::hitFind(string hit)
 {
     if (popName != "addObj" && popName != "viewChange") // enum
         findCorrectAttrTable(hit);
@@ -307,22 +310,21 @@ void RadPop::hitFind(QString hit)
     {
         if (hit == "left" || hit == "front" || hit == "top" || hit == "persp")
         {
-            for (unsigned int j = 0; j < myWin.allCamCombo.size(); ++j)
+            for (auto &i : myWin.allCamCombo)
             {
-                if (myWin.allCamCombo[j]->myGL.get() == myGL.get())
+                if (i->myGL == myGL)
                 {
-                    int camIdx = myWin.allCamCombo[j]->findText(hit);
-                    myWin.allCamCombo[j]->setCurrentIndex(camIdx);
-                    myWin.allCamCombo[j]->activated(camIdx);
+                    int camIdx = i->findText(QString::fromStdString(hit));
+                    i->setCurrentIndex(camIdx);
+                    i->activated(camIdx);
                 }
             }
         }
 
-        if (hit == "gizSpace") myGL.get()->gizSpaceTgl_();
-        else if (hit == "mpf") myGL.get()->mpfTgl_();
-        else if (hit == "rez") myGL.get()->rezGateTgl_();
-        else if (hit == "rtt") myGL.get()->rttVizTgl_();
-        else if (hit == "stats") myGL.get()->statsTgl_();
+        if (hit == "gizSpace") myGL->gizSpaceTgl_swap();
+        else if (hit == "mpf") myGL->mpfTgl_swap();
+        else if (hit == "rez") myGL->rezGateTgl_swap();
+        else if (hit == "stats") myGL->statsTgl_swap();
 
         else if (hit == "hLay") myWin.hLayTgl();
         else if (hit == "gridLay") myWin.gridLayTgl();
@@ -337,27 +339,27 @@ void RadPop::hoverHighlight()
 
     if (rectCircPopupCenter.contains(myWin.toQP(newP)))
     {
-        for (unsigned int i = 0; i < allPop.size(); ++i)
-            allPop[i].hovered = 0;
+        for (auto &i : allPop)
+            i.hovered = false;
     }
 
     else
     {
-        for (unsigned int i = 0; i < allPop.size(); ++i)
+        for (auto &i : allPop)
         {
-            if (allPop[i].type != "rad")
+            if (i.type != "rad")
             {
-                QRect rectLin(0, 0, allPop[i].sx, allPop[i].sy);
-                rectLin.moveCenter(myWin.toQP(startP + allPop[i].move));
+                QRect rectLin(0, 0, i.sx, i.sy);
+                rectLin.moveCenter(myWin.toQP(startP + i.move));
 
                 if (rectLin.contains(myWin.toQP(newP)))
                 {
-                    allPop[i].hovered = 1;
+                    i.hovered = true;
 
-                    for (unsigned int j = 0; j < allPop.size(); ++j)
+                    for (auto &j : allPop)
                     {
-                        if (j != i)
-                            allPop[j].hovered = 0;
+                        if (i.name != j.name)
+                            j.hovered = false;
                     }
 
                     continue;
@@ -366,14 +368,14 @@ void RadPop::hoverHighlight()
 
             else
             {
-                if (allPop[i].hoverTri.translated(myWin.toQP(startP)).containsPoint(myWin.toQP(newP), Qt::OddEvenFill))
+                if (i.hoverTri.translated(myWin.toQP(startP)).containsPoint(myWin.toQP(newP), Qt::OddEvenFill))
                 {
-                    allPop[i].hovered = 1;
+                    i.hovered = true;
 
-                    for (unsigned int j = 0; j < allPop.size(); ++j)
+                    for (auto &j : allPop)
                     {
-                        if (j != i)
-                            allPop[j].hovered = 0;
+                        if (i.name != j.name)
+                            j.hovered = false;
                     }
 
                     continue;

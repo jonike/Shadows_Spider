@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -27,17 +27,21 @@ in Vert
     vec2 uv;
 } v;
 
-layout(bindless_sampler, location = 0) uniform sampler2D fxaa_64;
-layout(bindless_sampler, location = 1) uniform sampler2D ssr_64;
-
-uniform bool dragDrop, rezGateTgl, vign;
-uniform vec2 rezGate_LD, rezGate_RU;
+layout(bindless_sampler, location = 0) uniform sampler2D fxaa;
+layout(bindless_sampler, location = 1) uniform sampler2D ssr;
+layout(bindless_sampler, location = 2) uniform sampler2D cursor;
+layout(bindless_sampler, location = 3) uniform sampler2D deferred;
+layout(bindless_sampler, location = 4) uniform sampler2D brush;
+layout(bindless_sampler, location = 5) uniform sampler2D ssao;
 
 out vec3 Ci;
 
-float rezGateAlpha(vec2 uv, vec2 pLD, vec2 pRU, bool dragDrop)
+uniform vec4 LDRU;
+uniform vec4 comboU0; //vec4(rezGateTgl, dragDrop, debug0, 0.f)
+
+float rezGateAlpha(vec2 uv, vec2 pLD, vec2 pRU, float dragDrop)
 {
-    if ((uv.x < pLD.x || uv.x > pRU.x || uv.y < pLD.y || uv.y > pRU.y) || (dragDrop == true))
+    if ((uv.x < pLD.x || uv.x > pRU.x || uv.y < pLD.y || uv.y > pRU.y) || (dragDrop == 1.f))
         return .2f;
 
     else
@@ -46,12 +50,39 @@ float rezGateAlpha(vec2 uv, vec2 pLD, vec2 pRU, bool dragDrop)
     return 0.f;
 }
 
-void main()
+void main() //3D
 {
-    Ci = texture(fxaa_64, v.uv).rgb + texture(ssr_64, v.uv).rgb;
+    vec4 brushT = texture(brush, v.uv);
+    vec4 cursorT = texture(cursor, v.uv);
 
-    if (rezGateTgl || dragDrop)
-        Ci *= rezGateAlpha(v.uv, rezGate_LD, rezGate_RU, dragDrop);
+    //    Ci = texture(deferred, v.uv).rgb;
+    //    Ci = texture(fxaa, v.uv).rgb;
+    Ci = texture(fxaa, v.uv).rgb + texture(ssr, v.uv).rgb;
 
-    Ci = pow(Ci.rgb, vec3(1.f / 2.2f));
+    Ci = mix(Ci, brushT.rgb, brushT.a); // paint
+    Ci = mix(Ci, cursorT.rgb, cursorT.a); //paint cursor
+
+//     if (comboU0.z == 1.f)
+//     {
+//     }
+
+    if (comboU0.x == 1.f || comboU0.y == 1.f)
+        Ci *= rezGateAlpha(v.uv, LDRU.xy, LDRU.zw, comboU0.y);
+
+    Ci = pow(Ci, vec3(1.f / 2.2f));
 }
+
+//void main() //2D
+//{
+//    vec4 brushT = texture(brush, v.uv);
+//    vec4 cursorT = texture(cursor, v.uv);
+
+//    Ci = brushT.rgb; //
+//    Ci = mix(Ci, cursorT.rgb, cursorT.a); //
+
+//    if (comboU0.z)
+//    {
+//    }
+
+//    Ci = pow(Ci, vec3(1.f / 2.2f));
+//}

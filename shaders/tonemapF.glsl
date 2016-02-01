@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -29,14 +29,13 @@ in Vert
     vec2 uv;
 } v;
 
-layout(bindless_sampler, location = 0) uniform sampler2D bloomC_64;
-layout(bindless_sampler, location = 1) uniform sampler2D luma_64;
-layout(bindless_sampler, location = 2) uniform sampler2D giz_64;
+layout(bindless_sampler, location = 0) uniform sampler2D bloomC;
+layout(bindless_sampler, location = 1) uniform sampler2D luma;
+layout(bindless_sampler, location = 2) uniform sampler2D giz;
 layout(location = 0) out vec3 Ci;
 layout(location = 1) out vec3 Ci_noGiz;
 
-uniform bool adaptAuto, vign;
-uniform float expo, vignDist;
+uniform vec4 comboU0; //vec4(expo, adaptAuto, debug0, vignDist)
 
 float log10(float x)
 {
@@ -64,30 +63,30 @@ float vignetteOverlay(vec2 pos, float inner, float outer)
 
 //void main()
 //{
-//    vec4 bloomC = texture(bloomC_64, v.uv);
-//    Ci = bloomC.rgb;
+//    vec4 bloomCT = texture(bloomC, v.uv);
+//    Ci = bloomCT.rgb;
 
-//    vec4 giz = texture(giz_64, v.uv);
-//    Ci = mix(Ci.rgb, giz.rgb, giz.a);
+//    vec4 gizT = texture(giz, v.uv);
+//    Ci = mix(Ci.rgb, gizT.rgb, gizT.a);
 //}
 
 void main()
 {
-    vec4 bloomC = texture(bloomC_64, v.uv);
-    float lum = max(exp(textureLod(luma_64, v.uv, 10.f).r), .0001f);
+    vec4 bloomCT = texture(bloomC, v.uv);
+    float lumaT = max(exp(textureLod(luma, v.uv, 10.f).r), .0001f);
 
-    if (vign)
-        bloomC.rgb *= vignetteOverlay(v.uv * 2.f - 1.f, .55f, vignDist);
+    if (comboU0.z == 1.f)
+        bloomCT.rgb *= vignetteOverlay(v.uv * 2.f - 1.f, .55f, comboU0.w);
 
-    float expoAdapt = expo;
+    float expoAdapt = comboU0.x;
 
-    if (adaptAuto)
-        expoAdapt = 1.03f - (2.f / (2.f + log10(lum + 1.f)));
+    if (comboU0.y == 1.f)
+        expoAdapt = 1.03f - (2.f / (2.f + log10(lumaT + 1.f)));
 
-    Ci = bloomC.rgb * expoAdapt / lum;
+    Ci = bloomCT.rgb * expoAdapt / lumaT;
     Ci = filmicHabel(Ci) / filmicHabel(vec3(11.2f));
     Ci_noGiz = Ci;
 
-    vec4 giz = texture(giz_64, v.uv);
-    Ci = mix(Ci.rgb, giz.rgb, giz.a);
+    vec4 gizT = texture(giz, v.uv);
+    Ci = mix(Ci.rgb, gizT.rgb, gizT.a);
 }

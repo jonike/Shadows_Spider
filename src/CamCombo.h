@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -32,7 +32,6 @@ public:
     shared_ptr<GLWidget> myGL;
     CamCombo(MainWin &, shared_ptr<GLWidget>, QWidget *parent = 0);
 
-
     void refresh();
 
 public slots:
@@ -43,7 +42,6 @@ protected:
     void enterEvent(QEvent *);
     void mouseReleaseEvent(QMouseEvent *);
     void wheelEvent(QWheelEvent *);
-
 };
 
 #endif // CAMCOMBO_H

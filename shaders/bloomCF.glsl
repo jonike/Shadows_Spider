@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -31,7 +31,7 @@ layout(bindless_sampler, location = 0) uniform sampler2D defT;
 layout(bindless_sampler, location = 1) uniform sampler2D rttBloom;
 layout(location = 0) out vec4 Ci;
 
-//void main()
+//void main() //disable bloom temp
 //{
 //    Ci = texture(defT, v.uv);
 //}
