@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -27,13 +27,13 @@ in Vert
     vec3 uv;
 } v;
 
-layout(binding = 0) uniform samplerCube cubeM_specular_32;
-layout(location = 0) out vec4 simp_sky_32;
-layout(location = 1) out vec4 simp_Giz_32;
+layout(binding = 0) uniform samplerCube cubeM_spec;
+layout(location = 0) out vec4 simp_sky;
+layout(location = 1) out vec4 simp_giz;
 
 void main()
 {
-    simp_sky_32 = texture(cubeM_specular_32, v.uv);
+    simp_sky = texture(cubeM_spec, v.uv);
 
-    simp_Giz_32 = vec4(0.f);
+    simp_giz = vec4(0.f);
 }

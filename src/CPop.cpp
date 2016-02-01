@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -23,8 +23,8 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 CPop::CPop(MainWin &myWinTemp, QWidget *parent) : QWidget(parent), myWin(myWinTemp)
 {
-    changedManip = ctrlTgl = mmbTgl = 0;
-    setInitPos = 1;
+    changedManip = ctrlTgl = mmbTgl = false;
+    setInitPos = true;
 
     hue = 1.f; // start at 1 to scroll down by default
     sat = val = 0.f;
@@ -41,17 +41,14 @@ void CPop::enterEvent(QEvent *)
 void CPop::mousePressEvent(QMouseEvent *e)
 {
     if (e->button() == Qt::MiddleButton)
-        mmbTgl = 1;
+        mmbTgl = true;
 }
 
 void CPop::mouseReleaseEvent(QMouseEvent *e)
 {
-    mmbTgl = 0;
+    mmbTgl = false;
 
-    if (e->button() == Qt::LeftButton)
-        myWin.TglCPopWin();
-
-    else if (e->button() == Qt::MiddleButton && targetAttr != 0)
+    if (e->button() == Qt::MiddleButton && targetAttr != 0)
     {
         myWin.attrTable->refreshTable();
         myWin.glslTable->refreshTable();
@@ -66,7 +63,6 @@ void CPop::mouseMoveEvent(QMouseEvent *e)
         val = glm::max(0.f, min((float)e->pos().y() / (float)width(), 1.f));
 
         update();
-        myWin.myGLWidgetSh->UBO_light_needsUp = 1; //
     }
 }
 
@@ -82,7 +78,6 @@ void CPop::wheelEvent(QWheelEvent *e)
 
     drawHueRect();
     update();
-    myWin.myGLWidgetSh->UBO_light_needsUp = 1; //
 
     if (targetAttr != 0)
     {
@@ -94,22 +89,22 @@ void CPop::wheelEvent(QWheelEvent *e)
 void CPop::keyPressEvent(QKeyEvent *e)
 {
     if (e->key() == Qt::Key_Control)
-        ctrlTgl = 1;
+        ctrlTgl = true;
 }
 
 void CPop::keyReleaseEvent(QKeyEvent *e)
 {
-    if (e->key() == Qt::Key_Escape)
-        myWin.TglCPopWin();
+    if (e->isAutoRepeat())
+        return;
 
     else if (e->key() == Qt::Key_Control)
-        ctrlTgl = 0;
+        ctrlTgl = false;
 
-    else if (e->key() == Qt::Key_C)
-        myWin.TglCPopWin();
-
-    else if (e->key() == Qt::Key_QuoteLeft)
-        myWin.PrefWinOpen();
+    else if (e->key() == Qt::Key_K)
+    {
+        if (myWin.stackedMain->currentIndex() == 1)
+            myWin.PaintWinTgl(0, 999);
+    }
 }
 
 void CPop::resizeEvent(QResizeEvent *)
@@ -125,10 +120,10 @@ void CPop::drawHueRect()
     {
         for (int j = 0; j < width(); ++j)
         {
-            QColor HSV_to_RGB = QColor::fromHsvF(hue, float(i) / width(), float(j) / width()).toHsv();
+            QColor HSV_to_RGB = QColor::fromHsvF(hue, float(i) / width(), float(j) / width());
 
-            QColor sRGB;
-            sRGB.setRgbF(pow(HSV_to_RGB.redF(), myWin.gamma), pow(HSV_to_RGB.greenF(), myWin.gamma), pow(HSV_to_RGB.blueF(), myWin.gamma));
+            QColor sRGB = QColor::fromRgbF(pow(HSV_to_RGB.redF(), 1.f), pow(HSV_to_RGB.greenF(), 1.f), pow(HSV_to_RGB.blueF(), 1.f));
+            //QColor sRGB = QColor::fromRgbF(pow(HSV_to_RGB.redF(), myWin.gamma), pow(HSV_to_RGB.greenF(), myWin.gamma), pow(HSV_to_RGB.blueF(), myWin.gamma));
 
             HSV_image.setPixel(i, j, sRGB.rgb());
         }
@@ -156,24 +151,23 @@ void CPop::paintEvent(QPaintEvent *)
         CPopManipTop = glm::vec2(p.x, p.y - triSize);
 
         if (setInitPos)
-            setInitPos = 0;
+            setInitPos = true;
 
         if (changedManip)
-            changedManip = 0;
+            changedManip = false;
     }
 
-    QPoint ChooseRectManipPts[3] =
-    {
-        myWin.toQP(CPopManipLeft), myWin.toQP(CPopManipRight), myWin.toQP(CPopManipTop),
-    };
+    glm::vec2 ChooseRectManipPts0[3] = { CPopManipLeft, CPopManipRight, CPopManipTop };
 
-    painter.setPen(QPen(Qt::black, 2, Qt::SolidLine));
+    QPoint ChooseRectManipPts[3];
+    for (int i = 0; i < 3; ++i)
+        ChooseRectManipPts[i] = myWin.toQP(ChooseRectManipPts0[i]);
+
+    painter.setPen(QPen(myWin.toQC(glm::vec3(0.f)), 2, Qt::SolidLine));
     painter.drawPolygon(ChooseRectManipPts, 3);
 
     if (targetAttr != 0)
     {
-        QColor toRGB = QColor::fromHsvF(hue, sat, val).toRgb();
-
-        myWin.myCPopWin->myCPop->targetAttr->val_3 = glm::vec3(toRGB.redF(), toRGB.greenF(), toRGB.blueF());
+        targetAttr->val_3 = glm::rgbColor(glm::hsvColor(glm::vec3(hue, sat, val)));
     }
 }

@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -34,14 +34,9 @@ public:
     QStackedLayout *stackedMain;
     Prefs *myPrefs;
 
-    glm::vec2 mpos;
-
 public slots:
-    void HideThis();
 
 protected:
-    void mouseMoveEvent(QMouseEvent *e);
-    void mousePressEvent(QMouseEvent *e);
 
 };
 

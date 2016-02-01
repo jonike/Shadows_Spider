@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
 
     srand(static_cast<int>(time(0)));
 
-    MainWin *w = new MainWin();
+    auto *w = new MainWin();
     w->setWindowTitle("Shadow's Spider - Untitled");
 
     return a.exec();

@@ -9,29 +9,17 @@ DEFINES += NOMINMAX _CRT_SECURE_NO_WARNINGS
 win32
 {
     INCLUDEPATH += C:/glew-1.11.0/include/
-    INCLUDEPATH += C:/glm_961/
+    INCLUDEPATH += C:/glm_972/
 }
 
 win32:CONFIG(release, debug|release): LIBS += -L"C:/glew-1.11.0/lib/Release/x64" -lglew32
 win32: LIBS += -L"C:/Program Files/Microsoft SDKs/Windows/v7.1/Lib/x64" -lglu32 -lOpenGL32
-
-unix
-{
-    INCLUDEPATH += /home/aleks/Desktop/glm/
-    INCLUDEPATH += /home/aleks/Desktop/glew-1.11.0/include/
-}
-
-unix: LIBS += -L"/home/aleks/Desktop/glew-1.11.0/lib/" -lGLEW -lGLU -lGL
-unix: QMAKE_CXX = ccache g++
-unix: QMAKE_CXXFLAGS += -Wno-missing-field-initializers
-unix: QMAKE_CXXFLAGS += -Wno-maybe-uninitialized
 
 SOURCES += \
     src/Anim.cpp \
     src/Attrs.cpp \
     src/CamCombo.cpp \
     src/CPop.cpp \
-    src/CPopWin.cpp \
     src/Gizmo.cpp \
     src/GLWidget.cpp \
     src/GLWidgetSh.cpp \
@@ -42,7 +30,9 @@ SOURCES += \
     src/PP.cpp \
     src/Prefs.cpp \
     src/PrefWin.cpp \
-    src/RadPop.cpp
+    src/RadPop.cpp \
+    src/PaintWin.cpp \
+    src/LayerSel.cpp
 
 HEADERS  += \
     include/stb_image.h \
@@ -50,7 +40,6 @@ HEADERS  += \
     src/Attrs.h \
     src/CamCombo.h \
     src/CPop.h \
-    src/CPopWin.h \
     src/Gizmo.h \
     src/GLWidget.h \
     src/GLWidgetSh.h \
@@ -60,7 +49,9 @@ HEADERS  += \
     src/PP.h \
     src/Prefs.h \
     src/PrefWin.h \
-    src/RadPop.h
+    src/RadPop.h \
+    src/PaintWin.h \
+    src/LayerSel.h
 
 OTHER_FILES += \
 
@@ -81,18 +72,12 @@ DISTFILES += \
     shaders/lumaAdapt_vizF.glsl \
     shaders/lumaAdaptF.glsl \
     shaders/lumaInitF.glsl \
-    shaders/nVizF.glsl \
-    shaders/nVizG.glsl \
-    shaders/nVizV.glsl \
-    shaders/rttF.glsl \
-    shaders/rttV.glsl \
     shaders/selRectF.glsl \
     shaders/selRectV.glsl \
     shaders/shadowF.glsl \
     shaders/shadowV.glsl \
     shaders/skyF.glsl \
     shaders/skyV.glsl \
-    shaders/ssaoF.glsl \
     shaders/stencilHiF.glsl \
     shaders/stencilHiV.glsl \
     shaders/tonemapF.glsl \
@@ -101,9 +86,6 @@ DISTFILES += \
     shaders/txtV.glsl \
     shaders/volumeLightF.glsl \
     shaders/volumeLightV.glsl \
-    shaders/baseDefF.glsl \
-    shaders/baseDefG.glsl \
-    shaders/baseDefV.glsl \
     shaders/defF.glsl \
     shaders/stencilGeoF.glsl \
     shaders/stencilGeoV.glsl \
@@ -112,6 +94,21 @@ DISTFILES += \
     shaders/bloomCF.glsl \
     shaders/ssrF.glsl \
     shaders/depthRevF.glsl \
-    shaders/depthRevV.glsl
+    shaders/depthRevV.glsl \
+    shaders/PaintStrokeCanvasF.glsl \
+    shaders/paintProjF.glsl \
+    shaders/paintProjV.glsl \
+    shaders/copyTexF.glsl \
+    shaders/blendModeF.glsl \
+    shaders/paintStrokeF.glsl \
+    shaders/wsQuadV.glsl \
+    shaders/alphaAsRGBAF.glsl \
+    shaders/eraseMixF.glsl \
+    shaders/edgeDetectF.glsl \
+    shaders/gBufferF.glsl \
+    shaders/gBufferG.glsl \
+    shaders/gBufferV.glsl \
+    shaders/ssao_32F.glsl \
+    shaders/ssao_64F.glsl
 
 

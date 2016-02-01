@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -31,8 +31,9 @@ public:
     MainWin &myWin;
     CPop(MainWin &, QWidget *parent = 0);
 
-    float hue, sat, val, usableSat, usableVal;
     QImage HSV_image;
+
+    float hue, sat, val, usableSat, usableVal;
     glm::vec2 CPopManipLeft, CPopManipRight, CPopManipTop; //
     bool changedManip, ctrlTgl, mmbTgl, setInitPos;
     shared_ptr<MultiAttr> targetAttr;

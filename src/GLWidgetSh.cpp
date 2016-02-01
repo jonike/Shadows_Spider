@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -27,12 +27,12 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 //////http://stackoverflow.com/questions/18176274/cubemap-shadow-mapping-not-working
 CubeShadowTable myCubeShadowTable[6] =
 {
-    { GL_TEXTURE_CUBE_MAP_POSITIVE_X, glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f) },
-    { GL_TEXTURE_CUBE_MAP_NEGATIVE_X, glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f) },
-    { GL_TEXTURE_CUBE_MAP_POSITIVE_Y, glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f) },
-    { GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f) },
-    { GL_TEXTURE_CUBE_MAP_POSITIVE_Z, glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f) },
-    { GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f) }
+    { GL_TEXTURE_CUBE_MAP_POSITIVE_X, glm::vec3(1.f, 0.f, 0.f), glm::vec3(0.f, -1.f, 0.f) },
+    { GL_TEXTURE_CUBE_MAP_NEGATIVE_X, glm::vec3(-1.f, 0.f, 0.f), glm::vec3(0.f, -1.f, 0.f) },
+    { GL_TEXTURE_CUBE_MAP_POSITIVE_Y, glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, 1.f) },
+    { GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, glm::vec3(0.f, -1.f, 0.f), glm::vec3(0.f, 0.f, -1.f) },
+    { GL_TEXTURE_CUBE_MAP_POSITIVE_Z, glm::vec3(0.f, 0.f, 1.f), glm::vec3(0.f, -1.f, 0.f) },
+    { GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, glm::vec3(0.f, 0.f, -1.f), glm::vec3(0.f, -1.f, 0.f) }
 };
 
 GLWidgetSh::GLWidgetSh(MainWin &myWinTemp, QWidget *parent) : QGLWidget(parent), myWin(myWinTemp)
@@ -45,45 +45,47 @@ GLWidgetSh::GLWidgetSh(MainWin &myWinTemp, QWidget *parent) : QGLWidget(parent),
 
     resize(200, 200);
 
-//    cubeFBO_node = cubeDynNode_create("cube", 1024, 1024);
+    typeList = { "ALBEDO", "ALPHA", "ANISO", "LENS", "METALLIC", "RUFF", "SSS" };
+
+//    cubeFBON = cubeDynNode_create("cube", 1024, 1024);
 }
 
 void GLWidgetSh::UBO_init()
 {
-    int MAX_LIGHTS = 50;
-    glCreateBuffers(1, &ubo_lights);
-    glNamedBufferData(ubo_lights, MAX_LIGHTS * sizeof(lightUBO), 0, GL_DYNAMIC_DRAW);
-    glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo_lights);
+    auto MAX_LIGHTS = 50;
+    glCreateBuffers(1, &UBO_lights);
+    glNamedBufferData(UBO_lights, MAX_LIGHTS * sizeof(lightUBO), 0, GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, UBO_lights);
 }
 
 void GLWidgetSh::UBO_update()
 {
-    int lightIter = 0;
+    auto lightIter = 0;
 
-    for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
+    for (auto &i : myWin.allObj)
     {
-        if (myWin.allObj[i]->v->val_b && myWin.allObj[i]->camLiTypeGet("light"))
+        if (i->v->val_b && i->camLiTypeGet("light"))
         {
             lightUBO newUBO;
 
             float type;
-            if (myWin.allObj[i]->camLiType->val_s == "AREA") type = 0.f;
-            else if (myWin.allObj[i]->camLiType->val_s == "DIR") type = 1.f;
-            else if (myWin.allObj[i]->camLiType->val_s == "POINT") type = 2.f;
-            else if (myWin.allObj[i]->camLiType->val_s == "SPOT") type = 3.f;
+            if (i->camLiType->val_s == "AREA") type = 0.f;
+            else if (i->camLiType->val_s == "DIR") type = 1.f;
+            else if (i->camLiType->val_s == "POINT") type = 2.f;
+            else if (i->camLiType->val_s == "SPOT") type = 3.f;
 
-            newUBO.Cl_type = glm::vec4(myWin.allObj[i]->Cl->val_3, type);
-            newUBO.falloff = glm::vec4(myWin.allObj[i]->lInten->val_f, cos(glm::radians(myWin.allObj[i]->lSpotI->val_f)), cos(glm::radians(myWin.allObj[i]->lSpotO->val_f)), 0.f);
-            newUBO.lDirRot = myWin.allObj[i]->MM * glm::vec4(0.f, 0.f, -1.f, 0.f);
-            newUBO.lP = glm::vec4(myWin.allObj[i]->t->val_3, 0.f);
+            newUBO.Cl_type = glm::vec4(i->Cl->val_3, type);
+            newUBO.falloff = glm::vec4(i->lInten->val_f, cos(glm::radians(i->lSpotI->val_f)), cos(glm::radians(i->lSpotO->val_f)), 0.f);
+            newUBO.lDirRot = i->MM * glm::vec4(0.f, 0.f, -1.f, 0.f);
+            newUBO.lP = glm::vec4(i->t->val_3, 0.f);
 
-            glNamedBufferSubData(ubo_lights, lightIter * sizeof(newUBO), sizeof(newUBO), &newUBO);
+            glNamedBufferSubData(UBO_lights, lightIter * sizeof(newUBO), sizeof(newUBO), &newUBO);
 
             ++lightIter;
         }
     }
 
-    UBO_light_needsUp = 0;
+    UBO_light_needsUp = false;
 }
 
 void GLWidgetSh::initializeGL()
@@ -91,72 +93,228 @@ void GLWidgetSh::initializeGL()
     glewExperimental = GL_TRUE;
 
     if (glewInit() != GLEW_OK)
-        qDebug("Error %s", glewGetErrorString(glewInit()));
+        cout << "error with glewInit : " << glewGetErrorString(glewInit()) << endl;
 }
 
-void GLWidgetSh::texInit()
+void GLWidgetSh::brushInit()
 {
-//    allTex.push_back( { "brush5", "ALBEDO", texUp("brush/green16.jpg") } );
-    allTex.push_back( { "brush5", "ALBEDO", texUp("brush/red64.jpg") } );
+    auto newBrush = make_shared<Brush>();
+    newBrush->name = "round";
+    newBrush->scale = glm::vec3(.5f);
+//    newBrush->opac = .1f;
+    newBrush->opac = .025f;
+
+    allBrushes.push_back(newBrush);
+
+    auto newEraser = make_shared<Brush>();
+    newEraser->name = "square";
+    newEraser->scale = glm::vec3(.5f);
+    newEraser->opac = 1.f;
+
+    allBrushes.push_back(newEraser);
+
+    for (auto &i : allBrushes)
+    {
+        if (i->name == "round")
+            selBrush = i;
+
+        if (i->name == "square")
+            selEraser = i;
+    }
+}
+
+void GLWidgetSh::mapInit()
+{
+    brushInit();
+
+    //DEBUG
+//    allMaps.push_back( { "debugBG", "DEBUG", "debug/nvidia-3d-vision.jpg" } );
+//    allMaps.push_back( { "debugBG", "DEBUG", "debug/oldPaper.jpg" } );
+    allMaps.push_back( { "debugBG", "DEBUG", "debug/oldPaper.png" } );
+    allMaps.push_back( { "freiChen", "DEBUG", "debug/freiChen.tga" } );
 
     //ALBEDO
-    allTex.push_back( { "BLANK", "ALBEDO", texUp("albedo/BLANK.png") } );
-    allTex.push_back( { "checker", "ALBEDO", texUp("albedo/checker.png") } );
-    allTex.push_back( { "uv", "ALBEDO", texUp("albedo/uv.jpg") } );
-    allTex.push_back( { "gold", "ALBEDO", texUp("single/gold_256.tga") } );
+    allMaps.push_back( { "BLANK", "ALBEDO", "single/BLANK_white_256.tga" } );
+    allMaps.push_back( { "checker", "ALBEDO", "albedo/checker.png" } );
+    allMaps.push_back( { "uv", "ALBEDO", "albedo/uv.jpg" } );
+    allMaps.push_back( { "gold", "ALBEDO", "single/gold_256.tga" } );
+    allMaps.push_back( { "abj", "ALBEDO", "albedo/ABJ.png" } );
 
     //ALPHA
-    allTex.push_back( { "BLANK", "ALPHA", texUp("single/BLANK_white_256.tga") } );
+    allMaps.push_back( { "BLANK", "ALPHA", "single/BLANK_white_1024.png" } );
+//    allMaps.push_back( { "BLANK", "ALPHA", "single/BLANK_white_1024.tga" } );
+//    allMaps.push_back( { "BLANK", "ALPHA", "albedo/checker.png" } );
 
     //ANISO
-    allTex.push_back( { "BLANK", "ANISO", texUp("single/BLANK_white_256.tga") } );
-    allTex.push_back( { "VIEW", "ANISO", texUp("single/BLANK_white_256.tga") } );
-    allTex.push_back( { "rot1", "ANISO", texUp("aniso/rot1.jpg") } );
-    allTex.push_back( { "rot2", "ANISO", texUp("aniso/rot2.jpg") } );
-    allTex.push_back( { "rot3", "ANISO", texUp("aniso/rot3.jpg") } );
+    allMaps.push_back( { "BLANK", "ANISO", "single/BLANK_white_256.tga" } );
+    allMaps.push_back( { "VIEW", "ANISO", "single/BLANK_white_256.tga" } );
+    allMaps.push_back( { "rot1", "ANISO", "aniso/rot1.jpg" } );
+    allMaps.push_back( { "rot2", "ANISO", "aniso/rot2.jpg" } );
+    allMaps.push_back( { "rot3", "ANISO", "aniso/rot3.jpg" } );
 
-    //CUBE IRRADIANCE / SPECULAR
-    allTex.push_back( { "ennis", "CUBE", dds16fUp("cube/ennis_cube_specular.dds") } );
-    allTex.push_back( { "glacier", "CUBE", dds16fUp("cube/glacier_cube_specular.dds") } );
-    allTex.push_back( { "grace", "CUBE", dds16fUp("cube/grace_cube_specular.dds") } );
-    allTex.push_back( { "pisa", "CUBE", dds16fUp("cube/pisa_cube_specular.dds") } );
-    allTex.push_back( { "uffizi", "CUBE", dds16fUp("cube/uffizi_cube_specular.dds") } );
+    //BRUSH
+//    allMaps.push_back( { "round", "BRUSH", "brush/superSoft.tga" } );
+    allMaps.push_back( { "round", "BRUSH", "brush/round_soft.tga" } );
+//    allMaps.push_back( { "round", "BRUSH", "brush/round_hard.tga" } );
+//    allMaps.push_back( { "round", "BRUSH", "brush/wavy.tga" } );
+    allMaps.push_back( { "square", "BRUSH", "brush/square.tga" } );
 
-    allTex.push_back( { "ennis", "CUBE_IRRAD", dds16fUp("cube/ennis_cube_irradiance.dds") } );
-    allTex.push_back( { "glacier", "CUBE_IRRAD", dds16fUp("cube/glacier_cube_irradiance.dds") } );
-    allTex.push_back( { "grace", "CUBE_IRRAD", dds16fUp("cube/grace_cube_irradiance.dds") } );
-    allTex.push_back( { "pisa", "CUBE_IRRAD", dds16fUp("cube/pisa_cube_irradiance.dds") } );
-    allTex.push_back( { "uffizi", "CUBE_IRRAD", dds16fUp("cube/uffizi_cube_irradiance.dds") } );
+    //CUBE_IRRAD
+    allMaps.push_back( { "ennis", "CUBE_IRRAD", "cube/ennis_cube_irradiance.dds" } );
+    allMaps.push_back( { "glacier", "CUBE_IRRAD", "cube/glacier_cube_irradiance.dds" } );
+    allMaps.push_back( { "grace", "CUBE_IRRAD", "cube/grace_cube_irradiance.dds" } );
+    allMaps.push_back( { "pisa", "CUBE_IRRAD", "cube/pisa_cube_irradiance.dds" } );
+    allMaps.push_back( { "uffizi", "CUBE_IRRAD", "cube/uffizi_cube_irradiance.dds" } );
 
-    //METALLIC
-    allTex.push_back( { "BLANK", "METALLIC", texUp("single/BLANK_black_256.tga") } );
-    allTex.push_back( { "WHITE", "METALLIC", texUp("single/BLANK_white_256.tga") } );
-
-    //NORMAL
-    allTex.push_back( { "BLANK", "NORMAL", texUp("normal/BLANK.png") } );
-    allTex.push_back( { "squares", "NORMAL", texUp("normal/squares.jpg") } );
-    allTex.push_back( { "voronoi", "NORMAL", texUp("normal/voronoi.jpg") } );
-    allTex.push_back( { "brushed_H", "NORMAL", texUp("normal/brushed_H.png") } );
-    allTex.push_back( { "brushed_V", "NORMAL", texUp("normal/brushed_V.png") } );
-    allTex.push_back( { "rand", "NORMAL", texUp("normal/rand.png") } ); // for ssao only
-
-    //RUFF
-    allTex.push_back( { "BLANK", "RUFF", texUp("single/BLANK_gray_256.tga") } );
-
-    //TXT
-    allTex.push_back( { "atlas", "TXT", texUp("txt/verasansmono.png") } );
+    //CUBE_SPEC
+    allMaps.push_back( { "ennis", "CUBE_SPEC", "cube/ennis_cube_specular.dds" } );
+    allMaps.push_back( { "glacier", "CUBE_SPEC", "cube/glacier_cube_specular.dds" } );
+    allMaps.push_back( { "grace", "CUBE_SPEC", "cube/grace_cube_specular.dds" } );
+    allMaps.push_back( { "pisa", "CUBE_SPEC", "cube/pisa_cube_specular.dds" } );
+    allMaps.push_back( { "uffizi", "CUBE_SPEC", "cube/uffizi_cube_specular.dds" } );
 
     //LENS
-    allTex.push_back( { "BLANK", "LENS", texUp("lens/BLANK_black_256.png") } );
-    allTex.push_back( { "abjLens1", "LENS", texUp("lens/abjLens1.png") } );
+    allMaps.push_back( { "BLANK", "LENS", "lens/BLANK_black_256.png" } );
+    allMaps.push_back( { "abjLens1", "LENS", "lens/abjLens1.png" } );
+
+    //METALLIC
+    allMaps.push_back( { "BLANK", "METALLIC", "single/BLANK_black_256.tga" } );
+    allMaps.push_back( { "WHITE", "METALLIC", "single/BLANK_white_256.tga" } );
+
+    //NORMAL
+    allMaps.push_back( { "BLANK", "NORMAL", "normal/BLANK.png" } );
+    allMaps.push_back( { "squares", "NORMAL", "normal/squares.jpg" } );
+    allMaps.push_back( { "voronoi", "NORMAL", "normal/voronoi.jpg" } );
+    allMaps.push_back( { "brushed_H", "NORMAL", "normal/brushed_H.png" } );
+    allMaps.push_back( { "brushed_V", "NORMAL", "normal/brushed_V.png" } );
+    allMaps.push_back( { "rand", "NORMAL", "normal/rand.png" } ); // for ssao only
+
+    //RUFF
+    allMaps.push_back( { "BLANK", "RUFF", "single/BLANK_black_256.tga" } );
+//    allMaps.push_back( { "BLANK", "RUFF", "single/BLANK_gray_256.tga" } );
+    allMaps.push_back( { "gray", "RUFF", "single/BLANK_gray_256.tga" } );
+//    allMaps.push_back( { "BLANK", "RUFF", "single/BLANK_white_256.tga" } );
+    allMaps.push_back( { "white", "RUFF", "single/BLANK_white_256.tga" } );
+    allMaps.push_back( { "squiggle0", "RUFF", "ruff/squiggle0.tga" } );
+    allMaps.push_back( { "squiggle1", "RUFF", "ruff/squiggle1.tga" } );
 
     //SSS
-    allTex.push_back( { "BLANK", "SSS", texUp("single/BLANK_black_256.tga") } );
-    allTex.push_back( { "WHITE", "SSS", texUp("single/BLANK_white_256.tga") } );
-    allTex.push_back( { "sssLookup", "SSS_ref", texUp("sss/lookUp.png") } );
+    allMaps.push_back( { "BLANK", "SSS", "single/BLANK_black_256.tga" } );
+    allMaps.push_back( { "WHITE", "SSS", "single/BLANK_white_256.tga" } );
+    allMaps.push_back( { "sssLookup", "SSS_ref", "sss/lookUp.png" } );
 
-    for (unsigned int i = 0; i < allTex.size(); ++i) //up64
-        up64T(allTex[i].tex_32, allTex[i].tex_64, 1);
+    //TXT
+    allMaps.push_back( { "atlas", "TXT", "txt/verasansmono.png" } );
+
+    unsigned int IDct = 0;
+
+    //push LAYERS back into maps
+    for (auto &i : allMaps)
+    {
+        i.layer.push_back( { texN_create("layer0", i.type, i.flat, 0) } );
+
+//        //drag u/d and change idx debug
+        if (i.name == "BLANK" && i.type == "ALBEDO")
+        {
+            i.layer.push_back( { texN_create("layer1", i.type, i.flat, 1) } );
+            i.layer.push_back( { texN_create("layer2", i.type, i.flat, 2) } );
+        }
+
+        i.ID = IDct;
+        ++IDct;
+    }
+
+    //upload 64 bit bindless handles for all LAYERS
+    for (auto &i : allMaps)
+    {
+        for (auto &j : i.layer)
+        {
+            up64N(j, 1);
+            j.ID = IDct;
+            ++IDct;
+        }
+    }
+
+    //GEN BRUSH OUTLINES FOR ALL BRUSHES AND PUSH BACK OUTLINE INTO MAP LAYER[1]
+    brushOutlineUpB = true;
+
+    //for brushes render the sobel outline into FBO2 / tex2
+    //use 128x128 size
+
+//    ssaoUp_dynamic();
+}
+
+void GLWidgetSh::ssaoUp_dynamic()
+{
+    //CREATE SSAO KERNEL / TEX
+    // SAMPLE KERNEL
+    uniform_real_distribution<float> randomFloats(0.f, 1.f); // generates random floats 0.f..1.f
+    default_random_engine generator;
+
+    for (unsigned int i = 0; i < 32; ++i)
+    {
+        glm::vec3 sample(randomFloats(generator) * 2.f - 1.f, randomFloats(generator) * 2.f - 1.f, randomFloats(generator));
+        sample = glm::normalize(sample);
+        sample *= randomFloats(generator);
+
+        // Scale samples s.t. they're more aligned to center of kernel
+        float scale = float(i) / 32.f;
+        scale = lerp(.1f, 1.f, scale * scale);
+        sample *= scale;
+        ssaoKernel32.push_back(sample);
+    }
+
+    for (unsigned int i = 0; i < 64; ++i)
+    {
+        glm::vec3 sample(randomFloats(generator) * 2.f - 1.f, randomFloats(generator) * 2.f - 1.f, randomFloats(generator));
+        sample = glm::normalize(sample);
+        sample *= randomFloats(generator);
+
+        // Scale samples s.t. they're more aligned to center of kernel
+        float scale = float(i) / 64.f;
+        scale = lerp(.1f, 1.f, scale * scale);
+        sample *= scale;
+        ssaoKernel64.push_back(sample);
+    }
+
+//    for (auto &i : ssaoKernel32)
+//        cout << "ssaoKernel32 = " << glm::to_string(i) << endl;
+
+    //NOISE TEX
+    for (unsigned int i = 0; i < 16; ++i)
+    {
+        glm::vec3 noise(randomFloats(generator) * 2.f - 1.f, randomFloats(generator) * 2.f - 1.f, 0.f); // rotate around z-axis (in tangent space)
+        noise = glm::normalize(noise);
+        ssaoNoise.push_back(noise);
+    }
+
+    glCreateTextures(GL_TEXTURE_2D, 1, &ssaoNoiseTex_32);
+    glTextureStorage2D(ssaoNoiseTex_32, 1, GL_RGB16F, 4, 4);
+    glTextureParameteri(ssaoNoiseTex_32, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTextureParameteri(ssaoNoiseTex_32, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTextureParameteri(ssaoNoiseTex_32, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTextureParameteri(ssaoNoiseTex_32, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    up64T(ssaoNoiseTex_32, ssaoNoiseTex_64, 1);
+}
+
+float GLWidgetSh::lerp(float a, float b, float c)
+{
+    return a + (b - a) * c;
+}
+
+
+AbjNode GLWidgetSh::topLayer(Map mapIn)
+{
+    for (auto &i : mapIn.layer)
+    {
+        if (i.idx == 0)
+            return i;
+    }
+
+    AbjNode myLayer;
+
+    return myLayer;
 }
 
 void GLWidgetSh::cubemapGen()
@@ -166,8 +324,8 @@ void GLWidgetSh::cubemapGen()
     //render
     //unhide
 
-    glBindFramebuffer(GL_FRAMEBUFFER, cubeFBO_node.fbo1);
-    glViewport(0, 0, cubeFBO_node.width, cubeFBO_node.height);
+    glBindFramebuffer(GL_FRAMEBUFFER, cubeFBON.fbo1);
+    glViewport(0, 0, cubeFBON.width, cubeFBON.height);
 
     glShadeModel(GL_SMOOTH);
     glEnable(GL_DEPTH_TEST);
@@ -179,43 +337,42 @@ void GLWidgetSh::cubemapGen()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
 
-    myWin.creatingDynCubeRGB = 1;
+    myWin.creatingDynCubeRGB = true;
 
-    bool storedV = myWin.selB->v->val_b;
-    myWin.selB->v->val_b = 0;
+    auto storedV = myWin.selB->v->val_b;
+    myWin.selB->v->val_b = false;
 
     for (int i = 0; i < 6; ++i)
     {
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, cubeFBO_node.tex1_32, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, cubeFBON.tex1_32, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glm::vec3 targ = myCubeShadowTable[i].targ;
-        glm::vec3 up = myCubeShadowTable[i].up;
+        auto targ = myCubeShadowTable[i].targ;
+        auto up = myCubeShadowTable[i].up;
         dynVM = glm::lookAt(glm::vec3(0.f), targ, up);
         negCubeCenter = glm::translate(glm::mat4(), -myWin.selB->t->val_3);
 
-        for (unsigned int j = 0; j < myWin.allObj.size(); ++j)
+        for (auto &j : myWin.allObj)
         {
-            if (myWin.allObj[j]->type == "OBJ" && myWin.searchUp(myWin.allObj[j]))
+            if (j->type == "OBJ" && myWin.searchUp(j))
             {
-                myWin.myGLWidgetSh->glUseProgram2("pBaseDef");
-//                myWin.allObj[j]->render(myWin.allGL[GLidx]);
-                myWin.allObj[j]->render(myWin.allGL[4]);
+                myWin.myGLWidgetSh->glUseProgram2("pGBuffer");
+                j->render(myWin.allGL[4]); // REPLACE WITH ACTIVEGL
             }
         }
     }
 
     myWin.selB->v->val_b = storedV;
 
-    myWin.creatingDynCubeRGB = 0;
+    myWin.creatingDynCubeRGB = false;
 }
 
-AbjNode GLWidgetSh::cubeDynNode_create(QString name, int widthIn, int heightIn)
+AbjNode GLWidgetSh::cubeDynNode_create(string name, int widthIn, int heightIn)
 {
-    //cubeFBO_node = cubeDynNode_create("cube", 1024, 1024);
-    //glMakeTextureHandleNonResidentARB(myGL->cubeFBO_node.tex1_64);
-    //glDeleteTextures(1, &cubeFBO_node.tex1_32);
-    //glDeleteFramebuffers(1, &cubeFBO_node.fbo1);
+    //cubeFBON = cubeDynNode_create("cube", 1024, 1024);
+    //glMakeTextureHandleNonResidentARB(myGL->cubeFBON.tex1_64);
+    //glDeleteTextures(1, &cubeFBON.tex1_32);
+    //glDeleteFramebuffers(1, &cubeFBON.fbo1);
 
     GLuint texNew;
     glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &texNew);
@@ -252,7 +409,7 @@ AbjNode GLWidgetSh::cubeDynNode_create(QString name, int widthIn, int heightIn)
     glNamedFramebufferDrawBuffers(fboNew, 1, DrawBuffers);
 
     if (glCheckNamedFramebufferStatus(fboNew, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        qDebug() << "error with FBO2_shadowCube_create";
+        cout << "error with FBO2_shadowCube_create" << endl;
 
     return { name, widthIn, heightIn, fboNew, texNew };
 }
@@ -262,12 +419,12 @@ void GLWidgetSh::addDeleteShadows(string type)
 {
     if (type == "add")
     {
-        for (unsigned int i = 0; i < myWin.allObj.size(); ++i)
+        for (auto &i : myWin.allObj)
         {
-            if (myWin.allObj[i]->v->val_b && myWin.allObj[i]->camLiTypeGet("light"))
+            if (i->v->val_b && i->camLiTypeGet("light"))
             {
                 int shadowSize = 1024;
-                AbjNode shadow_no = shadowNode_create(myWin.allObj[i]->name->val_s, shadowSize, shadowSize);
+                AbjNode shadow_no = shadowNode_create(i->name->val_s, shadowSize, shadowSize);
 
                 glMakeTextureHandleNonResidentARB(shadow_no.tex1_64);
                 shadow_no.tex1_64 = glGetTextureHandleARB(shadow_no.tex1_32);
@@ -285,15 +442,15 @@ void GLWidgetSh::addDeleteShadows(string type)
     else if (type == "delete")
     {
         //SHADOW FBO
-        for (unsigned int i = 0; i < allShadow.size(); ++i)
+        for (auto &i : allShadow)
         {
-            glMakeTextureHandleNonResidentARB(allShadow[i].tex1_64);
-            glDeleteTextures(1, &allShadow[i].tex1_32);
-            glDeleteFramebuffers(1, &allShadow[i].fbo1);
+            glMakeTextureHandleNonResidentARB(i.tex1_64);
+            glDeleteTextures(1, &i.tex1_32);
+            glDeleteFramebuffers(1, &i.fbo1);
 
-            glMakeTextureHandleNonResidentARB(allShadow[i].tex2_64);
-            glDeleteTextures(1, &allShadow[i].tex2_32);
-            glDeleteFramebuffers(1, &allShadow[i].fbo2);
+            glMakeTextureHandleNonResidentARB(i.tex2_64);
+            glDeleteTextures(1, &i.tex2_32);
+            glDeleteFramebuffers(1, &i.fbo2);
         }
 
         allShadow.clear();
@@ -306,48 +463,48 @@ void GLWidgetSh::addDeleteShadows(string type)
     }
 }
 
-void GLWidgetSh::writeShadow(int idx)
+void GLWidgetSh::writeShadow(shared_ptr<Object> obj)
 {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
 
-    //render multiple times, once for each light, into shadow FBO, for each GL
-    for (unsigned int i = 0; i < allShadow.size(); ++i)
+    //for each light in allShadow, render each object into the light's FBO1
+    for (auto &i : allShadow)
     {
-        if (myWin.allObj[idx]->name->val_s == allShadow[i].name) // if it's a light
+        if (i.name == obj->name->val_s) // if it's a light
         {
-            shadowIdx = idx; //found the light
-            int GLidx;
+            shadowObj = obj; //found the light
+            shared_ptr<GLWidget> activeGL;
 
-            for (unsigned int j = 0; j < myWin.allGL.size(); ++j)
+            for (auto &j : myWin.allGL)
             {
-                if (myWin.allGL[j].get()->isVisible())
+                if (j->isVisible())
                 {
-                    GLidx = j;
+                    activeGL = j;
                     break;
                 }
             }
 
             // dir / spot
-            glBindFramebuffer(GL_FRAMEBUFFER, allShadow[i].fbo1);
-            glViewport(0, 0, allShadow[i].width, allShadow[i].height);
+            glBindFramebuffer(GL_FRAMEBUFFER, i.fbo1);
+            glViewport(0, 0, i.width, i.height);
             glClear(GL_DEPTH_BUFFER_BIT);
             glClearColor(0.f, 0.f, 0.f, 0.f);
 
-            for (unsigned int j = 0; j < myWin.allObj.size(); ++j)
+            for (auto &j : myWin.allObj)
             {
-                if (myWin.allObj[j]->type == "OBJ" && myWin.allObj[j]->shadowCast->val_b && myWin.searchUp(myWin.allObj[j]))
-                    myWin.allObj[j]->render(myWin.allGL[GLidx]); //
+                if (j->type == "OBJ" && j->shadowCast->val_b && myWin.searchUp(j))
+                    j->render(activeGL); //
             }
 
-            myWin.allObj[idx]->dirtyShadow = 0;
+            obj->dirtyShadow = false;
         }
     }
 }
 
-AbjNode GLWidgetSh::shadowNode_create(QString name, int widthIn, int heightIn)
+AbjNode GLWidgetSh::shadowNode_create(string name, int widthIn, int heightIn)
 {
     GLuint fboNew;
     glCreateFramebuffers(1, &fboNew);
@@ -371,7 +528,7 @@ AbjNode GLWidgetSh::shadowNode_create(QString name, int widthIn, int heightIn)
     glNamedFramebufferReadBuffer(fboNew, GL_NONE);
 
     if (glCheckNamedFramebufferStatus(fboNew, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        qDebug() << "error with shadowNode_create FBO1";
+        cout << "error with shadowNode_create FBO1" << endl;
 
     GLuint fboNew2;
     glGenFramebuffers(1, &fboNew2);
@@ -395,186 +552,205 @@ AbjNode GLWidgetSh::shadowNode_create(QString name, int widthIn, int heightIn)
     glNamedFramebufferTexture(fboNew2, GL_DEPTH_ATTACHMENT, texNew2, 0);
 
     if (glCheckNamedFramebufferStatus(fboNew2, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        qDebug() << "error with shadowNode_create FBO2";
+        cout << "error with shadowNode_create FBO2" << endl;
 
     return { name, widthIn, heightIn, fboNew, texNew, 0, fboNew2, texNew2 };
 }
 
-void GLWidgetSh::paintSlow(shared_ptr<GLWidget> myGL)
+AbjNode GLWidgetSh::texN_create(string name, string type, string pathIn, int idx)
 {
-    string pathTex = myWin.pathTable->pathTex->val_s.toStdString();
-    string pathIn = "brush/green16.jpg";
-//    string pathIn = "brush/red64.jpg";
-    string pathTemp = pathTex + pathIn;
-    const char *path = pathTemp.c_str();
+    //this is basically myWin.myGLWidgetSH->singleN_create() /w a texture uploaded into slot 1
 
+    GLuint fboNew;
+    glCreateFramebuffers(1, &fboNew);
+
+    GLenum DrawBuffers[] =
+    {
+        GL_COLOR_ATTACHMENT0,
+    };
+
+    //upload tex into slot 0...consider additional slots (2 total) for brush's outline silhouette
+    auto pathTex = myWin.pathTable->pathTex->val_s;
+    auto pathTemp = pathTex + pathIn;
+    const auto *path = pathTemp.c_str();
+
+    GLuint fboNew2, tex, tex2;
     int imgW, imgH, chan;
-    GLubyte *img = stbi_load(path, &imgW, &imgH, &chan, 0);
+    imgW = 999;
+    imgH = 999;
 
-    float data[4];
-    glNamedFramebufferReadBuffer(myGL->simp_node.fbo1, GL_COLOR_ATTACHMENT2);
-    glReadPixels(myGL->pNew.x, myGL->height() - myGL->pNew.y, 1, 1, GL_RGBA, GL_FLOAT, data); //
-
-    float uu = data[0];
-    float vv = data[1];
-
-//    qDebug() << "imgW = " << imgW << " imgH = " << imgH;
-
-    for (unsigned int i = 0; i < allTex.size(); ++i) //paint
+    if (type == "CUBE_IRRAD" || type == "CUBE_SPEC")
     {
-        if (allTex[i].name == "BLANK" && allTex[i].type == "ALBEDO")
+        auto *myFile = fopen(path, "rb");
+
+        if (!myFile)
         {
-            glTextureSubImage2D(allTex[i].tex_32, 0, uu * 256, vv * 256, imgW, imgH, GL_RGB, GL_UNSIGNED_BYTE, img);
-//            glTextureSubImage2D(allTex[i].tex_32, 0, uu * 256, vv * 256, 8, 8, GL_RGB, GL_UNSIGNED_BYTE, img);
+            fprintf(stderr, "Error opening file '%s'\n", path);
 
-            glTextureParameteri(allTex[i].tex_32, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            glTextureParameteri(allTex[i].tex_32, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-//            //ANISOTROPIC FILTERING
-            GLfloat maxAniso = 0.f;
-            glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAniso);
-            glTextureParameteri(allTex[i].tex_32, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-            glTextureParameteri(allTex[i].tex_32, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTextureParameteri(allTex[i].tex_32, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAniso);
-            glGenerateTextureMipmap(allTex[i].tex_32);
-
-            stbi_image_free(img);
+            return { name, imgW, imgH, 0, 0, 0, 0, 0, 0, 0, 0, idx };
         }
-    }
-}
 
-GLuint GLWidgetSh::dds16fUp(string pathIn)
-{    
-    string pathTex;
-#if __unix__
-    pathTex = "/home/aleks/Desktop/tex/";
-#else
-    pathTex = "C:/users/aleks/desktop/tex/";
-#endif
+        char filecode[4];
+        fread(filecode, 1, 4, myFile);
 
-    string pathTemp = pathTex + pathIn;
-    const char *path = pathTemp.c_str();
+        ddsHeader myHeader;
+        fread(&myHeader, sizeof(ddsHeader), 1, myFile);
 
-    FILE *myFile = fopen(path, "rb");
+        vector<uint8_t*> _data;
 
-    if (!myFile)
-    {
-        fprintf(stderr, "Error opening file '%s'\n", path);
-        return 0;
-    }
-
-    char filecode[4];
-    fread(filecode, 1, 4, myFile);
-
-    ddsHeader myHeader;
-    fread(&myHeader, sizeof(ddsHeader), 1, myFile);
-
-    vector<uint8_t*> _data;
-
-    for (int i = 0; i < 6; ++i)
-    {
-        int w = myHeader.dwWidth;
-        int h = myHeader.dwHeight;
-
-        for (unsigned int j = 0; j < myHeader.dwMipMapCount; ++j)
+        for (int i = 0; i < 6; ++i)
         {
-            int size = w * h * 8;
-            uint8_t *pixels = new uint8_t[size];
+            int w = myHeader.dwWidth;
+            int h = myHeader.dwHeight;
 
-            fread(pixels, size, 1, myFile);
-            _data.push_back(pixels);
+            for (unsigned int j = 0; j < myHeader.dwMipMapCount; ++j)
+            {
+                int size = w * h * 8;
+                uint8_t *pixels = new uint8_t[size];
 
-            w = (w > 1) ? w >> 1 : 1;
-            h = (h > 1) ? h >> 1 : 1;
+                fread(pixels, size, 1, myFile);
+                _data.push_back(pixels);
+
+                w = (w > 1) ? w >> 1 : 1;
+                h = (h > 1) ? h >> 1 : 1;
+            }
         }
-    }
 
-    fclose(myFile);
+        fclose(myFile);
 
-    GLuint texNew;
-    glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &texNew);
+        glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &tex);
 
-    for (int i = 0; i < 6; ++i)
-    {
-        int w = myHeader.dwWidth;
-        int h = myHeader.dwHeight;
-
-        for (unsigned int j = 0; j < myHeader.dwMipMapCount; ++j)
+        for (int i = 0; i < 6; ++i)
         {
-            void* texData = _data[i * myHeader.dwMipMapCount + j];
+            auto w = myHeader.dwWidth;
+            auto h = myHeader.dwHeight;
 
-            glTextureImage2DEXT(texNew, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, j, GL_RGBA16F, w, h, 0, GL_RGBA, GL_HALF_FLOAT, texData);
+            for (unsigned int j = 0; j < myHeader.dwMipMapCount; ++j)
+            {
+                void* texData = _data[i * myHeader.dwMipMapCount + j];
 
-            w >>= 1;
-            h >>= 1;
-            w = w ? w : 1;
-            h = h ? h : 1;
+                glTextureImage2DEXT(tex, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, j, GL_RGBA16F, w, h, 0, GL_RGBA, GL_HALF_FLOAT, texData);
+
+                w >>= 1;
+                h >>= 1;
+                w = w ? w : 1;
+                h = h ? h : 1;
+            }
         }
+
+        glTextureParameteri(tex, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTextureParameteri(tex, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTextureParameteri(tex, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTextureParameteri(tex, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     }
 
-    glTextureParameteri(texNew, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTextureParameteri(texNew, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTextureParameteri(texNew, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTextureParameteri(texNew, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-
-    return texNew;
-}
-
-GLuint GLWidgetSh::texUp(string pathIn)
-{
-    string pathTex = myWin.pathTable->pathTex->val_s.toStdString();
-    string pathTemp = pathTex + pathIn;
-    const char *path = pathTemp.c_str();
-
-    int imgW, imgH, chan;
-    GLubyte *img = stbi_load(path, &imgW, &imgH, &chan, 0);
-
-    for (int h = 0; h < imgH / 2; ++h) //vFlip
+    else
     {
-        int top = h * imgW * chan;
-        int btm = (imgH - 1 - h) * imgW * chan;
+        auto *img = stbi_load(path, &imgW, &imgH, &chan, 0);
 
-        for (int w = 0; w < imgW * chan; ++w)
+        for (int h = 0; h < imgH / 2; ++h) //vFlip
         {
-            GLubyte temp = img[top];
-            img[top] = img[btm];
-            img[btm] = temp;
-            ++top;
-            ++btm;
+            auto top = h * imgW * chan;
+            auto btm = (imgH - 1 - h) * imgW * chan;
+
+            for (int w = 0; w < imgW * chan; ++w)
+            {
+                GLubyte temp = img[top];
+                img[top] = img[btm];
+                img[btm] = temp;
+                ++top;
+                ++btm;
+            }
         }
+
+        GLint formatI, formatP;
+        if (chan == 3) { formatI = GL_RGB8; formatP = GL_RGB; }
+        else if (chan == 4) { formatI = GL_RGBA16; formatP = GL_RGBA; }
+
+        int numMip;
+        if (pathIn == "txt/verasansmono.png") numMip = 1;
+        else numMip = 1 + floor(log2(glm::max(imgW, imgH)));
+
+        glCreateTextures(GL_TEXTURE_2D, 1, &tex);
+
+        glTextureStorage2D(tex, numMip, formatI, imgW, imgH);
+        glTextureSubImage2D(tex, 0, 0, 0, imgW, imgH, formatP, GL_UNSIGNED_BYTE, img);
+
+        glTextureParameteri(tex, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTextureParameteri(tex, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        //glTextureParameteri(tex, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        //glTextureParameteri(tex, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        //ANISOTROPIC FILTERING
+        GLfloat maxAniso = 0.f;
+        glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAniso);
+        glTextureParameteri(tex, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTextureParameteri(tex, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTextureParameteri(tex, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAniso);
+        glGenerateTextureMipmap(tex);
+
+        stbi_image_free(img);
     }
 
-    GLint formatI = 0;
-    GLint formatP = 0;
-    if (chan == 3) { formatI = GL_RGB8; formatP = GL_RGB; }
-    else if (chan == 4) { formatI = GL_RGBA16; formatP = GL_RGBA; }
+    glNamedFramebufferTexture(fboNew, DrawBuffers[0], tex, 0);
+    glNamedFramebufferDrawBuffers(fboNew, 1, DrawBuffers);
 
-    GLuint tex;
-    glCreateTextures(GL_TEXTURE_2D, 1, &tex);
+    if (glCheckNamedFramebufferStatus(fboNew, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        cout << "error with texN_create" << endl;
 
-    int numMip;
-    if (pathIn == "txt/verasansmono.png") numMip = 1;
-    else numMip = 1 + floor(log2(glm::max(imgW, imgH)));
+    if (type == "BRUSH")
+    {
+        glCreateFramebuffers(1, &fboNew2);
 
-    glTextureStorage2D(tex, numMip, formatI, imgW, imgH);
-    glTextureSubImage2D(tex, 0, 0, 0, imgW, imgH, formatP, GL_UNSIGNED_BYTE, img);
+        GLenum DrawBuffers[] =
+        {
+            GL_COLOR_ATTACHMENT0,
+        };
 
-    glTextureParameteri(tex, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTextureParameteri(tex, GL_TEXTURE_WRAP_T, GL_REPEAT);
-//    glTextureParameteri(tex, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//    glTextureParameteri(tex, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glCreateTextures(GL_TEXTURE_2D, 1, &tex2);
 
-    //ANISOTROPIC FILTERING
-    GLfloat maxAniso = 0.f;
-    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAniso);
-    glTextureParameteri(tex, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTextureParameteri(tex, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTextureParameteri(tex, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAniso);
-    glGenerateTextureMipmap(tex);
+        glTextureStorage2D(tex2, 1, GL_RGBA16F, imgW, imgH);
+        glTextureParameteri(tex2, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(tex2, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(tex2, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTextureParameteri(tex2, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    stbi_image_free(img);
+        glNamedFramebufferTexture(fboNew2, DrawBuffers[0], tex2, 0);
+        glNamedFramebufferDrawBuffers(fboNew2, 1, DrawBuffers);
 
-    return tex;
+        if (glCheckNamedFramebufferStatus(fboNew2, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            cout << "error with BRUSH fbo2 create" << endl;
+    }
+
+    else if (type != "CUBE_IRRAD" && type != "CUBE_SPEC")
+    {
+        //create the "copyTex" FBO
+        glCreateFramebuffers(1, &fboNew2);
+
+        GLenum DrawBuffers[] =
+        {
+            GL_COLOR_ATTACHMENT0,
+        };
+
+        glCreateTextures(GL_TEXTURE_2D, 1, &tex2);
+
+        glTextureStorage2D(tex2, 1, GL_RGBA16F, imgW, imgH);
+        glTextureParameteri(tex2, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTextureParameteri(tex2, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+//        glTextureParameteri(tex2, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//        glTextureParameteri(tex2, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTextureParameteri(tex2, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTextureParameteri(tex2, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        glNamedFramebufferTexture(fboNew2, DrawBuffers[0], tex2, 0);
+        glNamedFramebufferDrawBuffers(fboNew2, 1, DrawBuffers);
+
+        if (glCheckNamedFramebufferStatus(fboNew2, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            cout << "error with TEX AKA COPYTEX fbo2 create" << endl;
+    }
+
+    return { name, imgW, imgH, fboNew, tex, 0, fboNew2, tex2, 0, 0, 0, idx };
 }
 
 void GLWidgetSh::up64N(AbjNode &node, bool up)
@@ -621,46 +797,51 @@ void GLWidgetSh::up64T(GLuint &tex32, GLuint64 &tex64, bool up)
         glDeleteTextures(1, &tex32);
 }
 
-
-void GLWidgetSh::proUp()
+void GLWidgetSh::proInit()
 {
-    allPro.push_back( { "pBaseDef", createProg("baseDefV.glsl", "baseDefG.glsl", "baseDefF.glsl") } );
+    allPro.push_back( { "pAlphaAsRGBA", createProg("fboV.glsl", "", "alphaAsRGBAF.glsl") } );
+    allPro.push_back( { "pGBuffer", createProg("gBufferV.glsl", "gBufferG.glsl", "gBufferF.glsl") } );
+    allPro.push_back( { "pBB", createProg("bbV.glsl", "", "bbF.glsl") } );
+    allPro.push_back( { "pBlendMode", createProg("wsQuadV.glsl", "", "blendModeF.glsl") } );
+    allPro.push_back( { "pBloomC", createProg("fboV.glsl", "", "bloomCF.glsl") } );
+    allPro.push_back( { "pBloom", createProg("fboV.glsl", "", "bloomF.glsl") } );
+    allPro.push_back( { "pCopyTex", createProg("fboV.glsl", "", "copyTexF.glsl") } );
     allPro.push_back( { "pDef", createProg("fboV.glsl", "", "defF.glsl") } );
     allPro.push_back( { "pDepthRev", createProg("depthRevV.glsl", "", "depthRevF.glsl") } );
-    allPro.push_back( { "pBB", createProg("bbV.glsl", "", "bbF.glsl") } );
+    allPro.push_back( { "pDown", createProg("downV.glsl", "", "downF.glsl") } );
+    allPro.push_back( { "pFinal", createProg("fboV.glsl", "", "finalF.glsl") } );
+    allPro.push_back( { "pEdgeDetect", createProg("fboV.glsl", "", "edgeDetectF.glsl") } );
+    allPro.push_back( { "pFxaa", createProg("fboV.glsl", "", "fxaaF.glsl") } );
+    allPro.push_back( { "pGauss", createProg("fboV.glsl", "", "gaussF.glsl") } );
     allPro.push_back( { "pGiz", createProg("gizV.glsl", "", "gizF.glsl") } );
     allPro.push_back( { "pGiz_circ", createProg("giz_circV.glsl", "", "gizF.glsl") } );
     allPro.push_back( { "pGrid", createProg("gizV.glsl", "", "gridF.glsl") } );
-    allPro.push_back( { "pNViz", createProg("nVizV.glsl", "nVizG.glsl", "nVizF.glsl") } );
-    allPro.push_back( { "pTxt", createProg("txtV.glsl", "txtG.glsl", "txtF.glsl") } );
-    allPro.push_back( { "pVolumeLight", createProg("volumeLightV.glsl", "", "volumeLightF.glsl") } );
-    allPro.push_back( { "pSky", createProg("skyV.glsl", "", "skyF.glsl") } );
-    allPro.push_back( { "pShadow", createProg("shadowV.glsl", "", "shadowF.glsl") } );
-    allPro.push_back( { "pRtt", createProg("rttV.glsl", "", "rttF.glsl") } );
-    allPro.push_back( { "pSelRect", createProg("selRectV.glsl", "", "selRectF.glsl") } );
-    allPro.push_back( { "pBloomC", createProg("fboV.glsl", "", "bloomCF.glsl") } );
-    allPro.push_back( { "pBloom", createProg("fboV.glsl", "", "bloomF.glsl") } );
-    allPro.push_back( { "pDown", createProg("downV.glsl", "", "downF.glsl") } );
-    allPro.push_back( { "pFinal", createProg("fboV.glsl", "", "finalF.glsl") } );
-    allPro.push_back( { "pFxaa", createProg("fboV.glsl", "", "fxaaF.glsl") } );
-    allPro.push_back( { "pGauss", createProg("fboV.glsl", "", "gaussF.glsl") } );
     allPro.push_back( { "pLumaInit", createProg("fboV.glsl", "", "lumaInitF.glsl") } );
     allPro.push_back( { "pLumaAdapt", createProg("fboV.glsl", "", "lumaAdaptF.glsl") } );
     allPro.push_back( { "pLumaAdapt_viz", createProg("fboV.glsl", "", "lumaAdapt_vizF.glsl") } );
+    allPro.push_back( { "pEraseMix", createProg("fboV.glsl", "", "eraseMixF.glsl") } );
+    allPro.push_back( { "pPaintProj", createProg("paintProjV.glsl", "", "paintProjF.glsl") } );
+    allPro.push_back( { "pPaintStroke", createProg("wsQuadV.glsl", "", "paintStrokeF.glsl") } );
+    allPro.push_back( { "pSelRect", createProg("selRectV.glsl", "", "selRectF.glsl") } );
+    allPro.push_back( { "pShadow", createProg("shadowV.glsl", "", "shadowF.glsl") } );
+    allPro.push_back( { "pSky", createProg("skyV.glsl", "", "skyF.glsl") } );
+    allPro.push_back( { "pSSAO_32", createProg("fboV.glsl", "", "ssao_32F.glsl") } );
+    allPro.push_back( { "pSSAO_64", createProg("fboV.glsl", "", "ssao_64F.glsl") } );
+    allPro.push_back( { "pSSR", createProg("fboV.glsl", "", "ssrF.glsl") } );
     allPro.push_back( { "pStencilHi", createProg("stencilHiV.glsl", "", "stencilHiF.glsl") } );
     allPro.push_back( { "pStencilGeo", createProg("stencilGeoV.glsl", "", "stencilGeoF.glsl") } );
-    allPro.push_back( { "pSSAO", createProg("fboV.glsl", "", "ssaoF.glsl") } );
-    allPro.push_back( { "pSSR", createProg("fboV.glsl", "", "ssrF.glsl") } );
     allPro.push_back( { "pTonemap", createProg("fboV.glsl", "", "tonemapF.glsl") } );
+    allPro.push_back( { "pTxt", createProg("txtV.glsl", "txtG.glsl", "txtF.glsl") } );
+    allPro.push_back( { "pVolumeLight", createProg("volumeLightV.glsl", "", "volumeLightF.glsl") } );
     allPro.push_back( { "pWireframe", createProg("wireframeV.glsl", "", "wireframeF.glsl") } );
 }
 
-void GLWidgetSh::glUseProgram2(QString name)
+void GLWidgetSh::glUseProgram2(string name)
 {
-    for (unsigned int i = 0; i < allPro.size(); ++i)
+    for (auto &i : allPro)
     {
-        if (allPro[i].name == name)
-            pro = allPro[i].pro;
+        if (i.name == name)
+            pro = i.pro;
     }
 
     glUseProgram(pro);
@@ -672,23 +853,26 @@ void GLWidgetSh::VAOup(shared_ptr<Object> obj)
     if (!obj->dynVAO_perGL.empty())
         obj->dynVAO_perGL.clear();
 
-    for (unsigned int i = 0; i < myWin.allGL.size(); ++i)
+    for (auto &i : myWin.allGL)
     {
         GLuint VAO = 0;
-        obj->dynVAO_perGL.push_back( {myWin.allGL[i], 0, VAO} );
+        obj->dynVAO_perGL.push_back( { i, 0, VAO } );
     }
 
     obj->BBup();
 }
 
-vector<shared_ptr<Object>> GLWidgetSh::VBOup(QString path, QString type, QString name, shared_ptr<Object> dupe)
+vector<shared_ptr<Object>> GLWidgetSh::VBOup(string path, string type, string name, shared_ptr<Object> dupe)
 {
-    if (!myWin.loadO.empty()) myWin.loadO.clear();
-    if (!newO.empty()) newO.clear();
+    if (!myWin.newObj.empty())
+        myWin.newObj.clear();
 
-    if (path.isEmpty())
+    if (!newO.empty())
+        newO.clear();
+
+    if (path == "999")
     {
-        shared_ptr<Object> obj = (dupe == 0) ? make_shared<Object>(myWin) : dupe;
+        auto obj = (dupe == 0) ? make_shared<Object>(myWin) : dupe;
 
         if (!dontRename)
             obj->rename(name);
@@ -703,20 +887,18 @@ vector<shared_ptr<Object>> GLWidgetSh::VBOup(QString path, QString type, QString
         else
             obj->type = type;
 
-        QString name = obj->name->val_s;
-
         if (obj->type == "BB")
         {
             glm::vec3 bbV[] =
             {
-                {-.5f, -.5f, -.5f}, { .5f, -.5f, -.5f},
-                { .5f,  .5f, -.5f}, {-.5f,  .5f, -.5f},
-                {-.5f, -.5f,  .5f}, { .5f, -.5f,  .5f},
-                { .5f,  .5f,  .5f}, {-.5f,  .5f,  .5f},
+                { -.5f, -.5f, -.5f }, {  .5f, -.5f, -.5f },
+                {  .5f,  .5f, -.5f }, { -.5f,  .5f, -.5f },
+                { -.5f, -.5f,  .5f }, {  .5f, -.5f,  .5f },
+                {  .5f,  .5f,  .5f }, { -.5f,  .5f,  .5f },
             };
 
-            for (unsigned int i = 0; i < arraySize(bbV); ++i)
-                obj->pE.push_back(bbV[i]);
+            for (auto &i : bbV)
+                obj->pE.push_back(i);
 
             GLushort bbI[] =
             {
@@ -726,17 +908,17 @@ vector<shared_ptr<Object>> GLWidgetSh::VBOup(QString path, QString type, QString
                 2, 6, 3, 7
             };
 
-            for (unsigned int i = 0; i < arraySize(bbI); ++i)
-                obj->idxE.push_back(bbI[i]);
+            for (auto &i : bbI)
+                obj->idxE.push_back(i);
         }
 
         else if (obj->type == "CAMLI")
         {
             if (obj->camLiTypeGet("cam"))
             {
-                float sX = 1.f;
-                float sY = .5f;
-                float sZ = 1.f;
+                auto sX = 1.f;
+                auto sY = .5f;
+                auto sZ = 1.f;
 
                 //box
                 obj->pE.push_back(glm::vec3(-1.f * sX, 1.f * sY, 0.f));
@@ -830,14 +1012,14 @@ vector<shared_ptr<Object>> GLWidgetSh::VBOup(QString path, QString type, QString
             else if (obj->camLiType->val_s == "SPOT")
             {
                 glm::vec3 storedBegin;
-                float radius = .3f;
+                auto radius = .3f;
 
                 for (int i = 0; i < 32; ++i)
                 {
-                    float theta = 2.f * PI * i / 32.f;
+                    auto theta = 2.f * PI * i / 32.f;
 
-                    float x = radius * cos(theta);
-                    float y = radius * sin(theta);
+                    auto x = radius * cos(theta);
+                    auto y = radius * sin(theta);
                     obj->pE.push_back(glm::vec3(x, y, -1.f));
 
                     if (i == 0 || i == 8 || i == 16 || i == 24)
@@ -860,8 +1042,8 @@ vector<shared_ptr<Object>> GLWidgetSh::VBOup(QString path, QString type, QString
 
         else if (obj->type == "GRID")
         {
-            int gridLines = myWin.glslTable->gridLines->val_i + 1;
-            float gridMinus = myWin.glslTable->gridLines->val_i / 2;
+            auto gridLines = myWin.glslTable->gridLines->val_i + 1;
+            auto gridMinus = myWin.glslTable->gridLines->val_i / 2.f;
 
             vector<glm::vec3> gridVerts;
             gridVerts.resize(gridLines * gridLines);
@@ -875,13 +1057,13 @@ vector<shared_ptr<Object>> GLWidgetSh::VBOup(QString path, QString type, QString
                 }
             }
 
-            for (unsigned int i = 0; i < gridVerts.size(); ++i)
-                obj->pE.push_back(gridVerts[i]);
+            for (auto &i : gridVerts)
+                obj->pE.push_back(i);
 
             //THICK MIDDLE LINE
-//            for (int i = 0; i < gridVerts.size(); ++i)
+//            for (auto &i : gridVerts)
 //            {
-//                if (gridVerts[i].z == 0.f)
+//                if (i.z == 0.f)
 //                    obj->vboVC.push_back(glm::vec3(0.f));
 
 //                else
@@ -897,15 +1079,15 @@ vector<shared_ptr<Object>> GLWidgetSh::VBOup(QString path, QString type, QString
 
         else if (obj->type == "GIZ_CIRC_FILL" || obj->type == "GIZ_DUAL_HANDLE")
         {
-            float r = 1.f;
-            int seg = 30;
+            auto r = 1.f;
+            auto seg = 30;
 
             obj->pE.push_back(glm::vec3(0.f, 0.f, 0.f));
 
             for (int j = 0; j <= seg; ++j)
             {
-                float x = r * cos(j * 2.f * PI / seg);
-                float y = r * sin(j * 2.f * PI / seg);
+                auto x = r * cos(j * 2.f * PI / seg);
+                auto y = r * sin(j * 2.f * PI / seg);
 
                 obj->pE.push_back(glm::vec3(x, y, 0.f));
             }
@@ -918,8 +1100,8 @@ vector<shared_ptr<Object>> GLWidgetSh::VBOup(QString path, QString type, QString
             glm::vec3 axZ(0.f, 0.f, 1.f);
             glm::vec3 pt, ax, axMult1, axMult2;
 
-            float fct = .075f;
-            float fct2 = .83f;
+            auto fct = .075f;
+            auto fct2 = .83f;
 
             if (name == "gizConeX" || name == "gizConeXSide")
             {
@@ -956,10 +1138,10 @@ vector<shared_ptr<Object>> GLWidgetSh::VBOup(QString path, QString type, QString
         {
             const glm::vec3 verts[] =
             {
-                {-.5f, -.5f,  .5f}, {-.5f,  .5f,  .5f},
-                { .5f,  .5f,  .5f}, { .5f, -.5f,  .5f},
-                {-.5f, -.5f, -.5f}, {-.5f,  .5f, -.5f},
-                { .5f,  .5f, -.5f}, { .5f, -.5f, -.5f},
+                { -.5f, -.5f,  .5f }, { -.5f,  .5f,  .5f },
+                {  .5f,  .5f,  .5f }, {  .5f, -.5f,  .5f },
+                { -.5f, -.5f, -.5f }, { -.5f,  .5f, -.5f },
+                {  .5f,  .5f, -.5f }, {  .5f, -.5f, -.5f },
             };
 
             const GLuint indices[] =
@@ -972,11 +1154,11 @@ vector<shared_ptr<Object>> GLWidgetSh::VBOup(QString path, QString type, QString
                 7, 5, 6, 7, 4, 5
             };
 
-            for (unsigned int i = 0; i < arraySize(verts); ++i)
-                obj->pE.push_back(verts[i]);
+            for (auto &i : verts)
+                obj->pE.push_back(i);
 
-            for (unsigned int i = 0; i < arraySize(indices); ++i)
-                obj->idxE.push_back(indices[i]);
+            for (auto &i : indices)
+                obj->idxE.push_back(i);
         }
 
         else if (obj->type == "GIZ_LINE")
@@ -998,10 +1180,9 @@ vector<shared_ptr<Object>> GLWidgetSh::VBOup(QString path, QString type, QString
 
     else //load obj with opengl-tutorial.org loader
     {
-        QByteArray byteArray = path.toUtf8();
-        const char *pathC = byteArray.constData();
+        const auto *pathC = path.c_str();
 
-        shared_ptr<Object> obj = make_shared<Object>(myWin);
+        auto obj = make_shared<Object>(myWin);
         obj->type = type;
         obj->rename(name);
 
@@ -1010,7 +1191,7 @@ vector<shared_ptr<Object>> GLWidgetSh::VBOup(QString path, QString type, QString
         vector<glm::vec3> normals;
         vector<glm::vec3> bE;
 
-        if (loadOBJ(pathC, vertices, uvs, normals))
+        if (loadNewOBJ(pathC, vertices, uvs, normals))
         {
             vector<glm::vec3> tangents;
             vector<glm::vec3> bitangents;
@@ -1022,81 +1203,83 @@ vector<shared_ptr<Object>> GLWidgetSh::VBOup(QString path, QString type, QString
         }
     }
 
-    for (unsigned int i = 0; i < newO.size(); ++i)
+    for (auto &i : newO)
     {
         GLuint VBO_P, VBO_UV, VBO_T, VBO_N, VBO_IDX;
 
-        if (!newO[i]->pE.empty() || newO[i]->type == "TXT")
+        if (!i->pE.empty() || i->type == "TXT")
         {
             glCreateBuffers(1, &VBO_P);
 
-            if (newO[i]->type == "TXT")
+            if (i->type == "TXT")
             {
-                newO[i]->txt2D = "ABJ GL QT 2014";
-                glNamedBufferData(VBO_P, (GLsizei)strlen(newO[i]->txt2D), newO[i]->txt2D, GL_STATIC_DRAW);
+                i->txt2D = "ABJ GL QT 2015";
+                glNamedBufferData(VBO_P, (GLsizei)strlen(i->txt2D), i->txt2D, GL_STATIC_DRAW);
             }
 
             else
-                glNamedBufferData(VBO_P, newO[i]->pE.size() * 12, &newO[i]->pE[0], GL_STATIC_DRAW); //0
+                glNamedBufferData(VBO_P, i->pE.size() * 12, &i->pE[0], GL_STATIC_DRAW); //0
         }
 
-        if (!newO[i]->uvE.empty())
+        if (!i->uvE.empty())
         {
             glCreateBuffers(1, &VBO_UV);
-            glNamedBufferData(VBO_UV, newO[i]->uvE.size() * 8, &newO[i]->uvE[0], GL_STATIC_DRAW); // 1
+            glNamedBufferData(VBO_UV, i->uvE.size() * 8, &i->uvE[0], GL_STATIC_DRAW); // 1
         }
 
-        if (!newO[i]->tE.empty())
+        if (!i->tE.empty())
         {
             glCreateBuffers(1, &VBO_T);
-            glNamedBufferData(VBO_T, newO[i]->tE.size() * 12, &newO[i]->tE[0], GL_STATIC_DRAW); // 2
+            glNamedBufferData(VBO_T, i->tE.size() * 12, &i->tE[0], GL_STATIC_DRAW); // 2
         }
 
-        if (!newO[i]->nE.empty())
+        if (!i->nE.empty())
         {
             glCreateBuffers(1, &VBO_N);
-            glNamedBufferData(VBO_N, newO[i]->nE.size() * 12, &newO[i]->nE[0], GL_STATIC_DRAW); // 4
+            glNamedBufferData(VBO_N, i->nE.size() * 12, &i->nE[0], GL_STATIC_DRAW); // 4
         }
 
-        if (!newO[i]->idxE.empty())
+        if (!i->idxE.empty())
         {
             glCreateBuffers(1, &VBO_IDX);
-            glNamedBufferData(VBO_IDX, newO[i]->idxE.size() * 2, &newO[i]->idxE[0], GL_STATIC_DRAW);
+            glNamedBufferData(VBO_IDX, i->idxE.size() * 2, &i->idxE[0], GL_STATIC_DRAW);
         }
 
         /* delete any matching / pre-existing data */
-        for (vector<GLSharedData>::iterator it = GLDataSh.begin(); it != GLDataSh.end();)
+        for (auto it = GLDataSh.begin(); it != GLDataSh.end();)
         {
-            if ((*it).obj == newO[i])
+            if ((*it).obj == i)
                 it = GLDataSh.erase(it);
 
             else
                 ++it;
         }
 
-        GLDataSh.push_back( { newO[i], VBO_P, VBO_UV, VBO_T, VBO_N, VBO_IDX } );
+        GLDataSh.push_back( { i, VBO_P, VBO_UV, VBO_T, VBO_N, VBO_IDX } );
 
-        VAOup(newO[i]);
+        VAOup(i);
     }
 
     return newO;
 }
 
 /* OPENGL-TUTORIAL.ORG */
-bool GLWidgetSh::loadOBJ(const char *path, vector<glm::vec3> &out_vertices, vector<glm::vec2> &out_uvs, vector<glm::vec3> &out_normals)
+bool GLWidgetSh::loadNewOBJ(const char *path, vector<glm::vec3> &out_vertices, vector<glm::vec2> &out_uvs, vector<glm::vec3> &out_normals)
 {
     vector<unsigned int> vertexIndices, uvIndices, normalIndices;
     vector<glm::vec3> temp_vertices;
     vector<glm::vec2> temp_uvs;
     vector<glm::vec3> temp_normals;
 
-    FILE *file = fopen(path, "r");
-    if (!file) return 0;
+    auto *file = fopen(path, "r");
+
+    if (!file)
+        return 0;
 
     while(1) // read the first word of the line
     {
         char lineHeader[128];
-        int res = fscanf(file, "%s", lineHeader);
+        auto res = fscanf(file, "%s", lineHeader);
 
         if (res == EOF)
             break; // EOF = End Of File. Quit the loop.
@@ -1107,7 +1290,8 @@ bool GLWidgetSh::loadOBJ(const char *path, vector<glm::vec3> &out_vertices, vect
 
             if (fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z) != 3)
             {
-                qDebug() << "fscanf v is incorrect";
+                cout << "fscanf v is incorrect" << endl;
+
                 return 0;
             }
 
@@ -1120,7 +1304,8 @@ bool GLWidgetSh::loadOBJ(const char *path, vector<glm::vec3> &out_vertices, vect
 
             if (fscanf(file, "%f %f\n", &uv.x, &uv.y) != 2)
             {
-                qDebug() << "fscanf vt is incorrect";
+                cout << "fscanf vt is incorrect" << endl;
+
                 return 0;
             }
 
@@ -1133,7 +1318,8 @@ bool GLWidgetSh::loadOBJ(const char *path, vector<glm::vec3> &out_vertices, vect
 
             if (fscanf(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z) != 3)
             {
-                qDebug() << "fscanf vn is incorrect";
+                cout << "fscanf vn is incorrect" << endl;
+
                 return 0;
             }
 
@@ -1144,7 +1330,7 @@ bool GLWidgetSh::loadOBJ(const char *path, vector<glm::vec3> &out_vertices, vect
         {
             string vertex1, vertex2, vertex3;
             unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
-            int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
+            auto matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
 
             if (matches != 9)
             {
@@ -1181,9 +1367,9 @@ bool GLWidgetSh::loadOBJ(const char *path, vector<glm::vec3> &out_vertices, vect
     for (unsigned int i = 0; i < vertexIndices.size(); ++i)
     {
         // Get the attributes thanks to the index
-        glm::vec3 vertex = temp_vertices[vertexIndices[i] - 1];
-        glm::vec2 uv = temp_uvs[uvIndices[i] - 1];
-        glm::vec3 normal = temp_normals[normalIndices[i] - 1];
+        auto vertex = temp_vertices[vertexIndices[i] - 1];
+        auto uv = temp_uvs[uvIndices[i] - 1];
+        auto normal = temp_normals[normalIndices[i] - 1];
 
         // Put the attributes in buffers
         out_vertices.push_back(vertex);
@@ -1199,26 +1385,26 @@ void GLWidgetSh::computeTangentBasis(vector<glm::vec3> &vertices, vector<glm::ve
     for (unsigned int i = 0; i < vertices.size(); i += 3)
     {
         // Shortcuts for vertices
-        glm::vec3 &v0 = vertices[i + 0];
-        glm::vec3 &v1 = vertices[i + 1];
-        glm::vec3 &v2 = vertices[i + 2];
+        auto &v0 = vertices[i + 0];
+        auto &v1 = vertices[i + 1];
+        auto &v2 = vertices[i + 2];
 
         // Shortcuts for UVs
-        glm::vec2 &uv0 = uvs[i + 0];
-        glm::vec2 &uv1 = uvs[i + 1];
-        glm::vec2 &uv2 = uvs[i + 2];
+        auto &uv0 = uvs[i + 0];
+        auto &uv1 = uvs[i + 1];
+        auto &uv2 = uvs[i + 2];
 
         // Edges of the triangle : postion delta
-        glm::vec3 deltaPos1 = v1 - v0;
-        glm::vec3 deltaPos2 = v2 - v0;
+        auto deltaPos1 = v1 - v0;
+        auto deltaPos2 = v2 - v0;
 
         // UV delta
-        glm::vec2 deltaUV1 = uv1 - uv0;
-        glm::vec2 deltaUV2 = uv2 - uv0;
+        auto deltaUV1 = uv1 - uv0;
+        auto deltaUV2 = uv2 - uv0;
 
-        float r = 1.f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
-        glm::vec3 tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
-        glm::vec3 bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r;
+        auto r = 1.f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
+        auto tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
+        auto bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r;
 
         // Set the same tangent for all three vertices of the triangle.
         // They will be merged later, in vboindexer.cpp
@@ -1235,9 +1421,9 @@ void GLWidgetSh::computeTangentBasis(vector<glm::vec3> &vertices, vector<glm::ve
     // See "Going Further"
     for (unsigned int i = 0; i < vertices.size(); ++i)
     {
-        glm::vec3 &n = normals[i];
-        glm::vec3 &t = tangents[i];
-        glm::vec3 &b = bitangents[i];
+        auto &n = normals[i];
+        auto &t = tangents[i];
+        auto &b = bitangents[i];
 
         // Gram-Schmidt orthogonalize
         t = glm::normalize(t - n * glm::dot(n, t));
@@ -1254,24 +1440,16 @@ bool GLWidgetSh::is_near(float v1, float v2)
     return fabs(v1 - v2) < .01f;
 }
 
-// Searches through all already-exported vertices for a similar one.
-// Similar = same position + same UVs + same normal
+// Searches through all already-exported vertices for a similar one. Similar = same position + same UVs + same normal
 bool GLWidgetSh::getSimilarVertexIndex(glm::vec3 &in_vertex, glm::vec2 &in_uv, glm::vec3 &in_normal, vector<glm::vec3> &out_vertices, vector<glm::vec2> &out_uvs, vector<glm::vec3> &out_normals, unsigned short &result
 )
 {
     // Lame linear search
     for (unsigned int i = 0; i < out_vertices.size(); ++i)
     {
-        if (
-            is_near(in_vertex.x, out_vertices[i].x) &&
-            is_near(in_vertex.y, out_vertices[i].y) &&
-            is_near(in_vertex.z, out_vertices[i].z) &&
-            is_near(in_uv.x, out_uvs[i].x) &&
-            is_near(in_uv.y, out_uvs[i].y) &&
-            is_near(in_normal.x, out_normals [i].x) &&
-            is_near(in_normal.y, out_normals [i].y) &&
-            is_near(in_normal.z, out_normals [i].z)
-        )
+        if( is_near(in_vertex.x, out_vertices[i].x) && is_near(in_vertex.y, out_vertices[i].y) && is_near(in_vertex.z, out_vertices[i].z) &&
+            is_near(in_uv.x, out_uvs[i].x) && is_near(in_uv.y, out_uvs[i].y) &&
+            is_near(in_normal.x, out_normals[i].x) && is_near(in_normal.y, out_normals[i].y) && is_near(in_normal.z, out_normals[i].z))
         {
             result = i;
 
@@ -1291,7 +1469,7 @@ void GLWidgetSh::indexVBO_TBN(vector<glm::vec3> &in_vertices, vector<glm::vec2> 
     {
         // Try to find a similar vertex in out_XXXX
         unsigned short index;
-        bool found = getSimilarVertexIndex(in_vertices[i], in_uvs[i], in_normals[i], out_vertices, out_uvs, out_normals, index);
+        auto found = getSimilarVertexIndex(in_vertices[i], in_uvs[i], in_normals[i], out_vertices, out_uvs, out_normals, index);
 
         if (found)
         {
@@ -1343,19 +1521,19 @@ void GLWidgetSh::lightArrowAdd(shared_ptr<Object> obj, float arrX, float arrY, f
 
 GLuint GLWidgetSh::createProg(string vIn, string gIn, string fIn)
 {
-    string pathGLSL = myWin.pathTable->pathGLSL->val_s.toStdString();
+    auto pathGLSL = myWin.pathTable->pathGLSL->val_s;
 
-    string vTemp = pathGLSL + vIn;
-    const char *vFile = vTemp.c_str();
+    auto vTemp = pathGLSL + vIn;
+    const auto *vFile = vTemp.c_str();
 
-    string gTemp = pathGLSL + gIn;
-    const char *gFile = gTemp.c_str();
+    auto gTemp = pathGLSL + gIn;
+    const auto *gFile = gTemp.c_str();
 
-    string fTemp = pathGLSL + fIn;
-    const char *fFile = fTemp.c_str();
+    auto fTemp = pathGLSL + fIn;
+    const auto *fFile = fTemp.c_str();
 
     //
-    GLuint pro = glCreateProgram();
+    auto pro = glCreateProgram();
     GLuint shaderV, shaderF, shaderG;
 
     if (vFile)
@@ -1389,7 +1567,7 @@ GLuint GLWidgetSh::createProg(string vIn, string gIn, string fIn)
     }
 
     glLinkProgram(pro);
-    GLint link_ok = GL_FALSE;
+    auto link_ok = GL_FALSE;
     glGetProgramiv(pro, GL_LINK_STATUS, &link_ok);
 
     if (!link_ok)
@@ -1413,7 +1591,7 @@ GLuint GLWidgetSh::createProg(string vIn, string gIn, string fIn)
 
 GLuint GLWidgetSh::createIndy(const char *file, GLenum type)
 {
-    const GLchar* source = shader_read(file);
+    const auto *source = shader_read(file);
 
     if (source == 0)
     {
@@ -1423,13 +1601,13 @@ GLuint GLWidgetSh::createIndy(const char *file, GLenum type)
         return 0;
     }
 
-    GLuint shader = glCreateShader(type);
+    auto shader = glCreateShader(type);
     glShaderSource(shader, 1, &source, 0);
 
     free((void*)source);
 
     glCompileShader(shader);
-    GLint compile_ok = GL_FALSE;
+    auto compile_ok = GL_FALSE;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &compile_ok);
 
     if (compile_ok == GL_FALSE) // error here
@@ -1446,22 +1624,30 @@ GLuint GLWidgetSh::createIndy(const char *file, GLenum type)
 
 char* GLWidgetSh::shader_read(const char *file)
 {
-    FILE *input = fopen(file, "rb");
+    auto *input = fopen(file, "rb");
 
-    if (!input) return 0;
-    if (fseek(input, 0, SEEK_END) == -1) return 0;
+    if (!input)
+        return 0;
 
-    long size = ftell(input);
+    if (fseek(input, 0, SEEK_END) == -1)
+        return 0;
 
-    if (size == -1) return 0;
-    if (fseek(input, 0, SEEK_SET) == -1) return 0;
+    auto size = ftell(input);
 
-    char *content = (char*) malloc((size_t) size + 1);
-    if (content == 0) return 0;
+    if (size == -1)
+        return 0;
+
+    if (fseek(input, 0, SEEK_SET) == -1)
+        return 0;
+
+    auto *content = (char*)malloc((size_t) size + 1);
+
+    if (content == 0)
+        return 0;
 
     if (!(fread(content, 1, (size_t)size, input)) || ferror(input))
     {
-        qDebug() << "error reading shader";
+        cout << "error reading shader" << endl;
         free(content);
 
         return 0;
@@ -1475,7 +1661,7 @@ char* GLWidgetSh::shader_read(const char *file)
 
 void GLWidgetSh::shader_error(GLuint object)
 {
-    GLint log_length = 0;
+    auto log_length = 0;
 
     if (glIsShader(object))
         glGetShaderiv(object, GL_INFO_LOG_LENGTH, &log_length);
@@ -1490,7 +1676,7 @@ void GLWidgetSh::shader_error(GLuint object)
         return;
     }
 
-    char *log = (char*)malloc(log_length);
+    auto *log = (char*)malloc(log_length);
 
     if (glIsShader(object))
         glGetShaderInfoLog(object, log_length, 0, log);

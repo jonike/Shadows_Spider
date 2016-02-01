@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -41,7 +41,6 @@ public:
     void transform(shared_ptr<GLWidget>); //ep
 
     glm::vec3 rayCast(glm::vec2);
-    glm::vec3 rayCast2(glm::vec2);
     glm::vec3 rayInter(glm::vec3, bool, string);
     bool rotatePlane(glm::vec3, glm::vec3);
 

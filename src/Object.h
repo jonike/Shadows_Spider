@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -40,12 +40,13 @@ public:
     shared_ptr<Object> parentTo;
 
     vector<shared_ptr<MultiAttr>> multiObj;
+    vector<MouseToUV> mouseToUV;
 
     shared_ptr<MultiAttr> name, transformSep, t, r, s, v, bb;
     shared_ptr<MultiAttr> shaderSep, albedoM, alphaM, anisoM, cubeM, lensM, metallicM, normalM, ruffM, sssM;
-    shared_ptr<MultiAttr> Kr, Ksss, Ko, ior, ruffA, ruffD, sssSpread;
-    shared_ptr<MultiAttr> shadowCast, backface, Cwire, normVLen, normWeight, piv, rotOrder;
-    shared_ptr<MultiAttr> tileSep, albTile, anisoTile, normTile, ruffTile, sssTile;
+    shared_ptr<MultiAttr> Ko, ior, ruffA, ruffOren, sssSpread;
+    shared_ptr<MultiAttr> shadowCast, twoSided, Cwire, normWt, piv, rotOrder;
+    shared_ptr<MultiAttr> tileSep;
 
     shared_ptr<MultiAttr> camLiType;
     shared_ptr<MultiAttr> camSep, fov, nearClip, farClip, nearShadow, farShadow, orthoFree, orthoType, orthoZoom;
@@ -55,42 +56,33 @@ public:
 
     shared_ptr<MultiAttr> bloomSep, bloomInten, bloomLensInten;
     shared_ptr<MultiAttr> hdrSep, adaptTime, adaptAuto, expo, Kgi, vign, vignDist;
-        shared_ptr<MultiAttr> fxaaSep, fxaaBlur, fxaaSubPix, fxaaEdgeThr, fxaaEdgeThrMin;
-    shared_ptr<MultiAttr> ssaoSep, ssaoBias, ssaoBlur, ssaoInten, ssaoRad, ssaoRand;
+    shared_ptr<MultiAttr> fxaaSep, fxaaBlur, fxaaSubPix, fxaaEdgeThr, fxaaEdgeThrMin;
+    shared_ptr<MultiAttr> ssaoSep, ssaoBias, ssaoInten, ssaoKernel, ssaoRad;
+    shared_ptr<MultiAttr> paintSep, clearBehav, displMode, edgeThr;
     shared_ptr<MultiAttr> ssrSep, ssrIter, ssrRefine, ssrPixStride, ssrPixZSize, ssrPixStrideZ, ssrMaxRayDist, ssrEdgeFade, ssrEyeFade0, ssrEyeFade1;
 
-    //CAM
     float distO;
     glm::vec3 lookO, rightO, upO, targO, lookFPS, rightFPS, upFPS;
 
-    //UPDATE
-    bool dirtyShadow, dirtyVM;
-    QString savedShader;
-
-    //ETC
-    bool expand, ignoreOutliner, ref, selected;
-    bool deletable, gridV, selectable;
+    bool dirtyShadow, dirtyVM, expand, ignoreOutliner, ref, selected, deletable, gridV, selectable;
 
     int vertsOnObj;
-    QString dupeStenFix = "";
-    QString manipTypeO, type;
+    string dupeStenFix = "999";
+    string type;
 
-    //GLSL
-    glm::mat4 biasM;
-    glm::vec4 Crand;
-    bool showN;
-    int gaussStage, nType;
+    glm::mat4 biasM, PM2D;
+    glm::vec3 Crand;
+    bool showN = false;
+    int gaussStage;
+    TexSel texSel;
 
-    //GIZ
     glm::vec3 Cgiz, Cgiz_stored;
     string gizType;
-    bool gizSideObj = 0;
+    bool gizSideObj = false;
 
-    //TXT
     const char *txt2D;
     glm::vec2 txtOrigin;
 
-    //TRANSFORM
     glm::mat3 NM;
     glm::mat4 MVP, MV, MM, PM, VM, TM, RM, SM;
     glm::mat4 bbScaleM, bbrotM, bbtransM, obbMVP;
@@ -98,30 +90,29 @@ public:
     glm::vec3 bbMin, bbMax, bbCenter, bbSize, bbSizeFull;
     glm::vec3 pivRt;
 
-
     void loadVAO(shared_ptr<GLWidget>);
     void render(shared_ptr<GLWidget>);
-    void shadowPass(GLuint);
+    void shadowPass();
 
     void BBup();
-    void delete_();
+    void deleteVAO_VBO();
     void glErrorPrint(const char *);
-    void rename(QString);
-    void parentObj(QString);
+    void rename(string);
+    void parentObj(string);
     void setTarg(glm::vec3, float);
-    bool camLiTypeGet(QString);
+    bool camLiTypeGet(string);
     void setDirty();
-    glm::mat4 rotOrderUse(QString);
-    void tileMaps(GLuint, QString);
+    glm::mat4 rotOrderUse(string);
+    void tileMaps(GLuint, string);
     void mvpGet(shared_ptr<GLWidget>);
     void populateTexCombos();
+    void setTexSel_init();
 
 protected:
     void proUse(shared_ptr<GLWidget>);
 
-    glm::vec4 genColorID();
+    glm::vec3 genColorID();
     string getIncName(string);
-
 };
 
 #endif // OBJECT_H

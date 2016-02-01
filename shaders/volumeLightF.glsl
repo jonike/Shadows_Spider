@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -19,13 +19,13 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-#version 450 core
-#extension GL_ARB_bindless_texture : require
-
 /*
 reference:
     http://john-chapman-graphics.blogspot.com/2013/01/good-enough-volumetrics-for-spotlights.html
 */
+
+#version 450 core
+#extension GL_ARB_bindless_texture : require
 
 in Vert
 {
@@ -36,8 +36,7 @@ in Vert
 layout(location = 0) out vec4 rttC;
 out vec4 Ci;
 
-uniform float volDist;
-uniform vec3 volTip, volTipView;
+uniform vec4 comboU0; //vec4(volTipView, volDist)
 
 void main()
 {
@@ -47,8 +46,8 @@ void main()
     float softEdge = abs(dot(Nn, V));
     softEdge = pow(softEdge, 4);
 
-    float dist = distance(v.p, volTipView);
-    float atten = 1.f - (dist / volDist);
+    float dist = distance(v.p, comboU0.xyz);
+    float atten = 1.f - (dist / comboU0.w);
     atten = clamp(atten, 0.f, 1.f);
 
     rttC = vec4(v.parentCl * atten * softEdge, 1.f);

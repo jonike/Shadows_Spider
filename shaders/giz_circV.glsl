@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -23,8 +23,8 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(location = 0) in vec3 pE;
 
-uniform bool fullCirc;
-uniform vec3 circRight, circUpOrFront;
+uniform vec3 circRight;
+uniform vec4 comboU0; //vec4(circUpOrFront, fullCirc)
 
 const float PI = 3.14159;
 uniform mat4 MVP;
@@ -32,12 +32,12 @@ uniform mat4 MVP;
 void main()
 {
     int seg = 30;
-    float mult = (fullCirc) ? 2.f : 1.f;
+    float mult = (comboU0.w == 1.f) ? 2.f : 1.f;
 
     float theta = mult * PI * gl_VertexID / seg;
 
     vec3 rotPt = circRight * cos(theta);
-    rotPt += circUpOrFront * sin(theta);
+    rotPt += comboU0.xyz * sin(theta);
 
     gl_Position = MVP * vec4(rotPt, 1.f);
 }

@@ -1,6 +1,6 @@
 /*
 
-Copyright 2015 Aleksander Berg-Jones
+Copyright 2015 Aleks Berg-Jones
 
 This file is part of Shadow's Spider.
 
@@ -19,24 +19,22 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-#ifndef CPOPWIN_H
-#define CPOPWIN_H
+#version 450 core
+#extension GL_ARB_bindless_texture : require
 
-#include "MainWin.h"
-
-class CPopWin : public QMainWindow
+in Vert
 {
-    Q_OBJECT
-public:
-    MainWin &myWin;
-    CPopWin(MainWin &, QWidget *parent = 0);
+    vec2 uv;
+} v;
 
-    QStackedLayout *stackedMain;
-    CPop *myCPop;
+layout(bindless_sampler, location = 0) uniform sampler2D brush;
+layout(location = 0) out vec4 Ci;
 
-protected:
-    void resizeEvent(QResizeEvent *);
+uniform vec4 brushRGBA;
 
-};
+void main()
+{
+    vec4 brushT = texture(brush, v.uv);
 
-#endif // CPOPWIN_H
+    Ci = brushT * brushRGBA;
+}
