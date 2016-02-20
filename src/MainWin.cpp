@@ -89,28 +89,6 @@ MainWin::MainWin(QWidget *parent) : QMainWindow(parent)
 //    rgb2HSV_d();
 }
 
-void MainWin::rgb2HSV_d()
-{
-    glm::vec3 rgb2HSV0(0.25f, 0.45f, 0.65f);
-    cout << "starting RGB color : " << glm::to_string(rgb2HSV0) << endl << endl;
-
-
-    auto rgb2HSV1 = QColor::fromRgbF(rgb2HSV0.r, rgb2HSV0.g, rgb2HSV0.b).toHsv();
-    glm::vec3 rgb2HSV1_toHSV_qc(rgb2HSV1.hue(), rgb2HSV1.saturationF(), rgb2HSV1.valueF());
-    cout << "rgb2HSV1_toHSV_qc = " << glm::to_string(rgb2HSV1_toHSV_qc) << endl;
-    cout << "hueF = " << rgb2HSV1.hueF() << " " << rgb2HSV1.hue() << " " << rgb2HSV1.hue() / 360.f << endl;
-
-
-    auto rgb2HSV0_glmConv = glm::hsvColor(rgb2HSV0);
-    cout << "rgb2HSV0_glmConv = " << glm::to_string(rgb2HSV0_glmConv) << endl;
-    cout << "0/1/2 = " << rgb2HSV0_glmConv[0] << " " << rgb2HSV0_glmConv[1] << " " << rgb2HSV0_glmConv[2] << endl;
-    cout << "R/G/B = " << rgb2HSV0_glmConv.r << " " << rgb2HSV0_glmConv.g << " " << rgb2HSV0_glmConv.b << endl;
-
-
-    auto myRGB = glm::rgbColor(rgb2HSV0_glmConv);
-    cout << "myRGB = " << glm::to_string(myRGB) << endl;
-}
-
 void MainWin::loadSS()
 {
     QFile loadStyleSheet;
@@ -166,10 +144,10 @@ void MainWin::progressAdd_init()
             i->RM = i->rotOrderUse(i->rotOrder->val_s);
     }
 
+    glClearColor(0.f, 0.f, 0.f, 0.f);
+
     myGLWidgetSh->addDeleteShadows("add");
     myGLWidgetSh->UBO_init();
-//    myGLWidgetSh->cubeFBON = myGLWidgetSh->cubeDynNode_create("cube", 1024, 1024);
-
     lightCt = countLights();
 
     //SINGLE VIEW AT START
@@ -408,63 +386,9 @@ void MainWin::objInit()
         myPivot = i;
     }
 
-//    startupScene("cubemapDebug");
-//    startupScene("lotsOfSpheres");
-//    startupScene("lotsOfSpheres2");
     startupScene("teapotPlane");
-//    startupScene("SSR");
-
-    /* DEFAULT LIGHTS */
-//    newObj = myGLWidgetSh->VBOup("999", "SPOT", "light", 0);
-//    //newObj = myGLWidgetSh->VBOup("999", "POINT", "light", 0);
-//    for (auto &i : newObj)
-//    {
-//        i->t->val_3 = glm::vec3(0.f, 10.f, .1f);
-//        i->piv->val_3 = i->t->val_3;
-//        i->Cgiz = glm::vec3(1.f, 0.f, 0.f);
-//        i->setTarg(i->targO, 0.f);
-//        //i->lSpotO->val_f = 40.f;
-//        i->lInten->val_f = 5.f;
-
-//        allObj.push_back(i);
-//    }
-
-    newObj = myGLWidgetSh->VBOup("999", "SPOT", "light", 0);
-    for (auto &i : newObj)
-    {
-        //i->t->val_3 = glm::vec3(10.f);
-        i->t->val_3 = glm::vec3(8.f);
-        i->piv->val_3 = i->t->val_3;
-        i->Cgiz = glm::vec3(1.f, 0.f, 0.f);
-        i->setTarg(i->targO, 0.f);
-        //i->lSpotO->val_f = 40.f;
-        i->lInten->val_f = 5.f;
-
-        allObj.push_back(i);
-    }
-
-    newObj = myGLWidgetSh->VBOup("999", "SPOT", "light", 0);
-    for (auto &i : newObj)
-    {
-        i->t->val_3 = glm::vec3(-8.f, 8.f, 8.f);
-        i->piv->val_3 = i->t->val_3;
-        i->Cgiz = glm::vec3(1.f, 0.f, 0.f);
-        i->setTarg(i->targO, 0.f);
-        i->lSpotO->val_f = 60.f;
-
-        allObj.push_back(i);
-    }
-
-//    newObj = myGLWidgetSh->VBOup("999", "SPOT", "light", 0); // #2
-//    for (auto &i : newObj)
-//    {
-//        i->t->val_3 = glm::vec3(0.f, 8.f, 0.f);
-//        i->piv->val_3 = i->t->val_3;
-//        i->Cgiz = glm::vec3(1.f, 0.f, 0.f);
-//        i->setTarg(i->targO, 0.f);
-
-//        allObj.push_back(i);
-//    }
+//    startupScene("pointShadows");
+//    startupScene("lotsOfSpheres");
 
     LightSetup myLightSetup[] =
     {
@@ -509,27 +433,244 @@ void MainWin::objInit()
 
 void MainWin::startupScene(string name)
 {
-    if (name == "lotsOfSpheres")
+    if (name == "teapotPlane")
     {
-        auto conc = pathTable->pathObj->val_s;
-        conc.append("sphere.obj");
+        //myFSQ->Kgi->val_f = 0.f;
 
-        for (int n = 0; n < 20; ++n)
+        newObj = myGLWidgetSh->VBOup("999", "POINT", "light", 0);
+        for (auto &i : newObj)
         {
-            newObj = myGLWidgetSh->VBOup(conc, "OBJ", "sphere", 0);
+            i->t->val_3 = glm::vec3(5.f);
+            i->piv->val_3 = i->t->val_3;
+            i->Cgiz = glm::vec3(1.f, 0.f, 0.f);
+            i->setTarg(i->targO, 0.f);
+            i->lInten->val_f = 5.f;
+            i->nearShadow->val_f = 1.f;
 
-            for (auto &i : newObj)
-            {
-                i->t->val_3 = glm::vec3(n + (n - .75f) - 15.f, 0.f, 0.f);
-                i->piv->val_3 = i->t->val_3;
-                i->s->val_3 = glm::vec3(1.f);
-                allObj.push_back(i);
-            }
+            allObj.push_back(i);
+        }
+
+//        newObj = myGLWidgetSh->VBOup("999", "SPOT", "light", 0);
+//        for (auto &i : newObj)
+//        {
+//            i->t->val_3 = glm::vec3(0.f, 8.f, 8.f);
+//            i->piv->val_3 = i->t->val_3;
+//            i->Cgiz = glm::vec3(1.f, 0.f, 0.f);
+//            i->setTarg(i->targO, 0.f);
+//            //i->lSpotO->val_f = 40.f;
+//            i->lInten->val_f = 5.f;
+//            i->nearShadow->val_f = 2.f;
+
+//            allObj.push_back(i);
+//        }
+
+//        newObj = myGLWidgetSh->VBOup("999", "SPOT", "light", 0);
+//        for (auto &i : newObj)
+//        {
+//            i->t->val_3 = glm::vec3(8.f);
+//            i->piv->val_3 = i->t->val_3;
+//            i->Cgiz = glm::vec3(1.f, 0.f, 0.f);
+//            i->setTarg(i->targO, 0.f);
+//            //i->lSpotO->val_f = 40.f;
+//            i->lInten->val_f = 5.f;
+//            i->nearShadow->val_f = 2.f;
+
+//            allObj.push_back(i);
+//        }
+
+//        newObj = myGLWidgetSh->VBOup("999", "SPOT", "light", 0);
+//        for (auto &i : newObj)
+//        {
+//            i->t->val_3 = glm::vec3(-8.f, 8.f, 8.f);
+//            i->piv->val_3 = i->t->val_3;
+//            i->Cgiz = glm::vec3(1.f, 0.f, 0.f);
+//            i->setTarg(i->targO, 0.f);
+//            i->lSpotO->val_f = 60.f;
+//            i->nearShadow->val_f = 2.f;
+
+//            allObj.push_back(i);
+//        }
+
+        auto conc = pathTable->pathObj->val_s;
+        conc.append("teapot.obj");
+
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "teapot", 0);
+        for (auto &i : newObj)
+        {
+            //i->metallicM->val_s = "WHITE";
+            //i->ruffM->val_s = "white";
+            //i->shadowCast->val_b = false;
+            i->r->val_3 = glm::vec3(0.f, 90.f, 0.f);
+            i->s->val_3 = glm::vec3(1.5f);
+            allObj.push_back(i);
+        }
+
+        conc = pathTable->pathObj->val_s;
+        conc.append("plane.obj");
+
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "planeD", 0);
+        for (auto &i : newObj)
+        {
+            //i->ruffM->val_s = "white";
+            //i->shadowCast->val_b = false;
+            i->s->val_3 = glm::vec3(20.f);
+            allObj.push_back(i);
         }
     }
 
-    else if (name == "lotsOfSpheres2")
+    else if (name == "pointShadows")
     {
+        float yShift = 10.f;
+
+        newObj = myGLWidgetSh->VBOup("999", "POINT", "light", 0);
+        for (auto &i : newObj)
+        {
+            i->nearShadow->val_f = .5f;
+            i->t->val_3 = glm::vec3(0.f, yShift, .001f);
+            i->piv->val_3 = i->t->val_3;
+            i->Cgiz = glm::vec3(1.f, 0.f, 0.f);
+            i->setTarg(i->targO, 0.f);
+            i->lInten->val_f = 5.f;
+
+            allObj.push_back(i);
+        }
+
+        auto conc = pathTable->pathObj->val_s;
+        conc.append("sphere.obj");
+
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "sphereF", 0);
+        for (auto &i : newObj)
+        {
+            i->ruffM->val_s = "white";
+            i->t->val_3 = glm::vec3(0.f, yShift, 5.f);
+            i->piv->val_3 = i->t->val_3;
+            i->s->val_3 = glm::vec3(1.f);
+            allObj.push_back(i);
+        }
+
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "sphereB", 0);
+        for (auto &i : newObj)
+        {
+            i->ruffM->val_s = "white";
+            i->t->val_3 = glm::vec3(0.f, yShift, -5.f);
+            i->piv->val_3 = i->t->val_3;
+            i->s->val_3 = glm::vec3(1.f);
+            allObj.push_back(i);
+        }
+
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "sphereL", 0);
+        for (auto &i : newObj)
+        {
+            i->ruffM->val_s = "white";
+            i->t->val_3 = glm::vec3(-5.f, yShift, 0.f);
+            i->piv->val_3 = i->t->val_3;
+            i->s->val_3 = glm::vec3(1.f);
+            allObj.push_back(i);
+        }
+
+        //        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "sphereR", 0);
+        //        for (auto &i : newObj)
+        //        {
+        //            i->ruffM->val_s = "white";
+        //            i->t->val_3 = glm::vec3(5.f, yShift, 0.f);
+        //            i->piv->val_3 = i->t->val_3;
+        //            i->s->val_3 = glm::vec3(1.f);
+        //            allObj.push_back(i);
+        //        }
+
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "sphereU", 0);
+        for (auto &i : newObj)
+        {
+            i->ruffM->val_s = "white";
+            i->t->val_3 = glm::vec3(0.f, yShift + 5.f, 0.f);
+            i->piv->val_3 = i->t->val_3;
+            i->s->val_3 = glm::vec3(1.f);
+            allObj.push_back(i);
+        }
+
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "sphereD", 0);
+        for (auto &i : newObj)
+        {
+            i->ruffM->val_s = "white";
+            i->t->val_3 = glm::vec3(0.f, yShift + -5.f, 0.f);
+            i->piv->val_3 = i->t->val_3;
+            i->s->val_3 = glm::vec3(1.f);
+            allObj.push_back(i);
+        }
+
+        //BOX
+        conc = pathTable->pathObj->val_s;
+        conc.append("plane.obj");
+
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "planeU", 0);
+        for (auto &i : newObj)
+        {
+            i->ruffM->val_s = "white";
+            i->r->val_3 = glm::vec3(0.f, 0.f, 180.f);
+            i->t->val_3 = glm::vec3(0.f, yShift + 15.f, 0.f);
+            i->s->val_3 = glm::vec3(20.f);
+            allObj.push_back(i);
+        }
+
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "planeD", 0);
+        for (auto &i : newObj)
+        {
+            i->ruffM->val_s = "white";
+            i->t->val_3 = glm::vec3(0.f, yShift + -15.f, 0.f);
+            i->s->val_3 = glm::vec3(20.f);
+            allObj.push_back(i);
+        }
+
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "planeL", 0);
+        for (auto &i : newObj)
+        {
+            i->ruffM->val_s = "white";
+            i->r->val_3 = glm::vec3(0.f, 0.f, -90.f);
+            i->t->val_3 = glm::vec3(-10.f, yShift + 0.f, 0.f);
+            i->s->val_3 = glm::vec3(20.f);
+            allObj.push_back(i);
+        }
+
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "planeB", 0);
+        for (auto &i : newObj)
+        {
+            i->ruffM->val_s = "white";
+            i->r->val_3 = glm::vec3(90.f, 0.f, 0.f);
+//            i->t->val_3 = glm::vec3(0.f, yShift + 0.f, -10.f);
+            i->t->val_3 = glm::vec3(0.f, yShift + 0.f, -15.f);
+            i->s->val_3 = glm::vec3(20.f);
+            allObj.push_back(i);
+        }
+    }
+
+    else if (name == "lotsOfSpheres")
+    {
+        newObj = myGLWidgetSh->VBOup("999", "SPOT", "light", 0);
+        for (auto &i : newObj)
+        {
+            //i->t->val_3 = glm::vec3(10.f);
+            i->t->val_3 = glm::vec3(8.f);
+            i->piv->val_3 = i->t->val_3;
+            i->Cgiz = glm::vec3(1.f, 0.f, 0.f);
+            i->setTarg(i->targO, 0.f);
+            //i->lSpotO->val_f = 40.f;
+            i->lInten->val_f = 5.f;
+
+            allObj.push_back(i);
+        }
+
+        newObj = myGLWidgetSh->VBOup("999", "SPOT", "light", 0);
+        for (auto &i : newObj)
+        {
+            i->t->val_3 = glm::vec3(-8.f, 8.f, 8.f);
+            i->piv->val_3 = i->t->val_3;
+            i->Cgiz = glm::vec3(1.f, 0.f, 0.f);
+            i->setTarg(i->targO, 0.f);
+            i->lSpotO->val_f = 60.f;
+
+            allObj.push_back(i);
+        }
+
         auto conc = pathTable->pathObj->val_s;
         conc.append("sphere.obj");
 
@@ -547,160 +688,6 @@ void MainWin::startupScene(string name)
                     allObj.push_back(i);
                 }
             }
-        }
-    }
-
-    else if (name == "cubemapDebug")
-    {
-        auto conc = pathTable->pathObj->val_s;
-        conc.append("sphere.obj");
-
-        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "sphereF", 0);
-        for (auto &i : newObj)
-        {
-            i->t->val_3 = glm::vec3(0.f, 10.f, 5.f);
-            i->piv->val_3 = i->t->val_3;
-            i->s->val_3 = glm::vec3(1.f);
-            allObj.push_back(i);
-        }
-
-        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "sphereB", 0);
-        for (auto &i : newObj)
-        {
-            i->t->val_3 = glm::vec3(0.f, 10.f, -5.f);
-            i->piv->val_3 = i->t->val_3;
-            i->s->val_3 = glm::vec3(1.f);
-            allObj.push_back(i);
-        }
-
-        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "sphereL", 0);
-        for (auto &i : newObj)
-        {
-            i->t->val_3 = glm::vec3(-5.f, 10.f, 0.f);
-            i->piv->val_3 = i->t->val_3;
-            i->s->val_3 = glm::vec3(1.f);
-            allObj.push_back(i);
-        }
-
-        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "sphereR", 0);
-        for (auto &i : newObj)
-        {
-            i->t->val_3 = glm::vec3(5.f, 10.f, 0.f);
-            i->piv->val_3 = i->t->val_3;
-            i->s->val_3 = glm::vec3(1.f);
-            allObj.push_back(i);
-        }
-
-        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "sphereU", 0);
-        for (auto &i : newObj)
-        {
-            i->t->val_3 = glm::vec3(0.f, 15.f, 0.f);
-            i->piv->val_3 = i->t->val_3;
-            i->s->val_3 = glm::vec3(1.f);
-            allObj.push_back(i);
-        }
-
-        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "sphereD", 0);
-        for (auto &i : newObj)
-        {
-            i->t->val_3 = glm::vec3(0.f, 5.f, 0.f);
-            i->piv->val_3 = i->t->val_3;
-            i->s->val_3 = glm::vec3(1.f);
-            allObj.push_back(i);
-        }
-
-        //CORNELL
-        conc = pathTable->pathObj->val_s;
-        conc.append("plane.obj");
-
-        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "planeU", 0);
-        for (auto &i : newObj)
-        {
-            i->r->val_3 = glm::vec3(0.f, 0.f, 180.f);
-            i->t->val_3 = glm::vec3(0.f, 20.f, 0.f);
-            i->s->val_3 = glm::vec3(20.f);
-            allObj.push_back(i);
-        }
-
-        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "planeD", 0);
-        for (auto &i : newObj)
-        {
-            i->s->val_3 = glm::vec3(20.f);
-            allObj.push_back(i);
-        }
-
-        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "planeB", 0);
-        for (auto &i : newObj)
-        {
-            i->r->val_3 = glm::vec3(90.f, 0.f, 0.f);
-            i->t->val_3 = glm::vec3(0.f, 10.f, -10.f);
-            i->s->val_3 = glm::vec3(20.f);
-            allObj.push_back(i);
-        }
-    }
-
-    else if (name == "teapotPlane")
-    {
-        auto conc = pathTable->pathObj->val_s;
-        conc.append("teapot.obj");
-
-        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "teapot", 0);
-        for (auto &i : newObj)
-        {
-//            i->ruffM->val_s = "white";
-            i->r->val_3 = glm::vec3(0.f, 90.f, 0.f);
-            i->s->val_3 = glm::vec3(1.5f);
-            allObj.push_back(i);
-        }
-
-        conc = pathTable->pathObj->val_s;
-        conc.append("plane.obj");
-
-        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "planeD", 0);
-        for (auto &i : newObj)
-        {
-            i->s->val_3 = glm::vec3(20.f);
-//            i->ruffM->val_s = "white";
-            allObj.push_back(i);
-        }
-    }
-
-    else if (name == "SSR")
-    {
-        auto conc = pathTable->pathObj->val_s;
-        conc.append("torus.obj");
-
-        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "torus", 0);
-        for (auto &i : newObj)
-        {
-//            i->normalM->val_s = "voronoi";
-            i->albedoM->val_s = "checker";
-
-            i->t->val_3.y = 3.5f;
-            i->piv->val_3 = i->t->val_3;
-            i->s->val_3 = glm::vec3(1.5f);
-            allObj.push_back(i);
-        }
-
-        conc = pathTable->pathObj->val_s;
-        conc.append("plane.obj");
-
-        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "plane", 0);
-        for (auto &i : newObj)
-        {
-            i->albedoM->val_s = "uv";
-            i->s->val_3 = glm::vec3(20.f);
-            allObj.push_back(i);
-        }
-
-        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "plane", 0);
-        for (auto &i : newObj)
-        {
-            i->albedoM->val_s = "uv";
-            i->r->val_3 = glm::vec3(90.f, 0.f, 0.f);
-            i->t->val_3 = glm::vec3(0.f, 10.f, -5.f);
-            i->s->val_3 = glm::vec3(20.f);
-            allObj.push_back(i);
         }
     }
 }
@@ -1911,4 +1898,25 @@ vector<string> MainWin::stringSplit(string data, string token)
     } while (string::npos != pos);
 
     return output;
+}
+
+void MainWin::rgb2HSV_d()
+{
+    glm::vec3 rgb2HSV0(0.25f, 0.45f, 0.65f);
+    cout << "starting RGB color : " << glm::to_string(rgb2HSV0) << endl << endl;
+
+    auto rgb2HSV1 = QColor::fromRgbF(rgb2HSV0.r, rgb2HSV0.g, rgb2HSV0.b).toHsv();
+    glm::vec3 rgb2HSV1_toHSV_qc(rgb2HSV1.hue(), rgb2HSV1.saturationF(), rgb2HSV1.valueF());
+    cout << "rgb2HSV1_toHSV_qc = " << glm::to_string(rgb2HSV1_toHSV_qc) << endl;
+    cout << "hueF = " << rgb2HSV1.hueF() << " " << rgb2HSV1.hue() << " " << rgb2HSV1.hue() / 360.f << endl;
+
+
+    auto rgb2HSV0_glmConv = glm::hsvColor(rgb2HSV0);
+    cout << "rgb2HSV0_glmConv = " << glm::to_string(rgb2HSV0_glmConv) << endl;
+    cout << "0/1/2 = " << rgb2HSV0_glmConv[0] << " " << rgb2HSV0_glmConv[1] << " " << rgb2HSV0_glmConv[2] << endl;
+    cout << "R/G/B = " << rgb2HSV0_glmConv.r << " " << rgb2HSV0_glmConv.g << " " << rgb2HSV0_glmConv.b << endl;
+
+
+    auto myRGB = glm::rgbColor(rgb2HSV0_glmConv);
+    cout << "myRGB = " << glm::to_string(myRGB) << endl;
 }

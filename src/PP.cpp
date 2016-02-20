@@ -71,7 +71,7 @@ bool PP::fboPrep(shared_ptr<GLWidget> myGLin)
     myGL->ssaoN = singleN_create("ssao", GL_R16F, myGL->width(), myGL->height());
     myWin.myGLWidgetSh->up64N(myGL->ssaoN, 1);
 
-    myGL->ssaoGaussN = dualN_create("ssao", GL_RGBA16F, myGL->width(), myGL->height());
+    myGL->ssaoGaussN = dualN_create("ssaoGauss", GL_RGBA16F, myGL->width(), myGL->height());
     myWin.myGLWidgetSh->up64N(myGL->ssaoGaussN, 1);
 
     myGL->ssrN = singleN_create("ssr", GL_RGBA16F, myGL->width(), myGL->height());
@@ -184,8 +184,8 @@ AbjNode PP::depthRevN_create()
     glTextureParameteri(myDS, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTextureParameteri(myDS, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    glNamedFramebufferTexture(fboNew, GL_DEPTH_STENCIL_ATTACHMENT, myDS, 0);
-    glNamedFramebufferDrawBuffers(fboNew, 0, 0);
+    glNamedFramebufferTexture(fboNew, GL_DEPTH_ATTACHMENT, myDS, 0);
+    glNamedFramebufferDrawBuffer(fboNew, GL_NONE);
 
     if (glCheckNamedFramebufferStatus(fboNew, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         cout << "error with depthRevN_create" << endl;
@@ -341,6 +341,8 @@ AbjNode PP::gBufN_create()
         GL_COLOR_ATTACHMENT3,
         GL_COLOR_ATTACHMENT4,
         GL_COLOR_ATTACHMENT5,
+        GL_COLOR_ATTACHMENT6,
+        GL_COLOR_ATTACHMENT7,
     };
 
     const auto cAttachNum = arraySize(DrawBuffers);
@@ -350,7 +352,7 @@ AbjNode PP::gBufN_create()
 
     for (int i = 0; i < cAttachNum; ++i)
     {
-        if (i == 0 || i == 1)
+        if (i == 0)
             glTextureStorage2D(setupRTT[i], 1, GL_RGBA32F, myGL->width(), myGL->height());
 
         else
@@ -382,6 +384,12 @@ AbjNode PP::gBufN_create()
     myGL->gBuf5_32 = setupRTT[5];
     myWin.myGLWidgetSh->up64T(myGL->gBuf5_32, myGL->gBuf5_64, 1);
 
+    myGL->gBuf6_32 = setupRTT[6];
+    myWin.myGLWidgetSh->up64T(myGL->gBuf6_32, myGL->gBuf6_64, 1);
+
+    myGL->gBuf7_32 = setupRTT[7];
+    myWin.myGLWidgetSh->up64T(myGL->gBuf7_32, myGL->gBuf7_64, 1);
+
     //DEPTH STEN
     glCreateTextures(GL_TEXTURE_2D, 1, &myGL->gBuf_DS_32);
     glTextureStorage2D(myGL->gBuf_DS_32, 1, GL_DEPTH32F_STENCIL8, myGL->width(), myGL->height());
@@ -397,18 +405,6 @@ AbjNode PP::gBufN_create()
         cout << "error with gBufN_create" << endl;
 
     return { "def", myGL->width(), myGL->height(), fboNew };
-}
-
-void PP::printFilterTypeD(int filterIn)
-{
-    if (filterIn == GL_LINEAR)
-        cout << "match for GL_LINEAR" << endl;
-
-    else if (filterIn == GL_NEAREST)
-        cout << "match for GL_NEAREST" << endl;
-
-    else
-        cout << "match for NEITHER" << endl;
 }
 
 GLuint PP::gaussianLinear(GLuint src, AbjNode dest)
@@ -508,7 +504,6 @@ void PP::postFX(shared_ptr<GLWidget> myGLin)
     glBindFramebuffer(GL_FRAMEBUFFER, myGL->ssaoN.fbo1);
     glViewport(0, 0, myGL->ssaoN.width, myGL->ssaoN.height);
     glClear(GL_COLOR_BUFFER_BIT);
-    glClearColor(0.f, 0.f, 0.f, 0.f);
     myWin.myGLWidgetSh->glUseProgram2("pSSAO_" + myWin.myFSQ->ssaoKernel->val_s);
     myWin.myFSQ->render(myGL);
 
@@ -521,15 +516,16 @@ void PP::postFX(shared_ptr<GLWidget> myGLin)
     glBindFramebuffer(GL_FRAMEBUFFER, myGL->deferredN.fbo1);
     glViewport(0, 0, myGL->deferredN.width, myGL->deferredN.height);
     glClear(GL_COLOR_BUFFER_BIT);
-    glClearColor(0.f, 0.f, 0.f, 0.f);
-    myWin.myGLWidgetSh->glUseProgram2("pDef");
+
+    pDefDyn = "pDef";
+    pDefDyn.append(to_string(myWin.lightCt));
+    myWin.myGLWidgetSh->glUseProgram2(pDefDyn);
     myWin.myFSQ->render(myGL);
 
     //LUMA INIT
     glBindFramebuffer(GL_FRAMEBUFFER, myGL->lumaInitN.fbo1);
     glViewport(0, 0, myGL->lumaInitN.width, myGL->lumaInitN.height);
     glClear(GL_COLOR_BUFFER_BIT);
-    glClearColor(0.f, 0.f, 0.f, 0.f);
     myWin.myGLWidgetSh->glUseProgram2("pLumaInit");
     myWin.myFSQ->render(myGL);
     myWin.myGLWidgetSh->up64T(myGL->lumaInitN.tex1_32, myGL->lumaInitN.tex1_64, 1);
@@ -538,7 +534,6 @@ void PP::postFX(shared_ptr<GLWidget> myGLin)
     glBindFramebuffer(GL_FRAMEBUFFER, myGL->lumaAdaptN[myGL->currLum].fbo1);
     glViewport(0, 0, myGL->lumaAdaptN[myGL->currLum].width, myGL->lumaAdaptN[myGL->currLum].height);
     glClear(GL_COLOR_BUFFER_BIT);
-    glClearColor(0.f, 0.f, 0.f, 0.f);
     myWin.myGLWidgetSh->glUseProgram2("pLumaAdapt");
     myWin.myFSQ->render(myGL);
     glGenerateTextureMipmap(myGL->lumaAdaptN[myGL->currLum].tex1_32);
@@ -606,6 +601,8 @@ void PP::resizeTexClearMem(shared_ptr<GLWidget> myGLin)
     myWin.myGLWidgetSh->up64T(myGL->gBuf3_32, myGL->gBuf3_64, 0);
     myWin.myGLWidgetSh->up64T(myGL->gBuf4_32, myGL->gBuf4_64, 0);
     myWin.myGLWidgetSh->up64T(myGL->gBuf5_32, myGL->gBuf5_64, 0);
+    myWin.myGLWidgetSh->up64T(myGL->gBuf6_32, myGL->gBuf6_64, 0);
+    myWin.myGLWidgetSh->up64T(myGL->gBuf7_32, myGL->gBuf7_64, 0);
     myWin.myGLWidgetSh->up64T(myGL->gBuf_DS_32, myGL->gBuf_DS_64, 0);
     glDeleteFramebuffers(1, &myGL->gBufN.fbo1);
 

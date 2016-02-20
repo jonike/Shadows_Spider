@@ -35,7 +35,7 @@ layout(bindless_sampler, location = 2) uniform sampler2D giz;
 layout(location = 0) out vec3 Ci;
 layout(location = 1) out vec3 Ci_noGiz;
 
-uniform vec4 comboU0; //vec4(expo, adaptAuto, debug0, vignDist)
+uniform vec4 comboU0; //vec4(expo, adaptAuto, vign, vignDist)
 
 float log10(float x)
 {

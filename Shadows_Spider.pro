@@ -86,7 +86,6 @@ DISTFILES += \
     shaders/txtV.glsl \
     shaders/volumeLightF.glsl \
     shaders/volumeLightV.glsl \
-    shaders/defF.glsl \
     shaders/stencilGeoF.glsl \
     shaders/stencilGeoV.glsl \
     shaders/wireframeF.glsl \
@@ -105,10 +104,19 @@ DISTFILES += \
     shaders/alphaAsRGBAF.glsl \
     shaders/eraseMixF.glsl \
     shaders/edgeDetectF.glsl \
-    shaders/gBufferF.glsl \
-    shaders/gBufferG.glsl \
-    shaders/gBufferV.glsl \
     shaders/ssao_32F.glsl \
-    shaders/ssao_64F.glsl
+    shaders/ssao_64F.glsl \
+    shaders/def/def0F.glsl \
+    shaders/def/def1F.glsl \
+    shaders/def/def2F.glsl \
+    shaders/def/def3F.glsl \
+    shaders/gBuf/gBuffer0F.glsl \
+    shaders/gBuf/gBuffer0V.glsl \
+    shaders/gBuf/gBuffer1F.glsl \
+    shaders/gBuf/gBuffer1V.glsl \
+    shaders/gBuf/gBuffer2F.glsl \
+    shaders/gBuf/gBuffer2V.glsl \
+    shaders/gBuf/gBuffer3F.glsl \
+    shaders/gBuf/gBuffer3V.glsl
 
 

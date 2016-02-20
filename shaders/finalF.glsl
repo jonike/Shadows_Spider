@@ -55,9 +55,10 @@ void main() //3D
     vec4 brushT = texture(brush, v.uv);
     vec4 cursorT = texture(cursor, v.uv);
 
-    //    Ci = texture(deferred, v.uv).rgb;
-    //    Ci = texture(fxaa, v.uv).rgb;
-    Ci = texture(fxaa, v.uv).rgb + texture(ssr, v.uv).rgb;
+//    Ci = texture(deferred, v.uv).rgb;
+    Ci = texture(fxaa, v.uv).rgb;
+//    Ci = texture(fxaa, v.uv).rgb + texture(ssr, v.uv).rgb;
+//    Ci = texture(ssr, v.uv).rgb;
 
     Ci = mix(Ci, brushT.rgb, brushT.a); // paint
     Ci = mix(Ci, cursorT.rgb, cursorT.a); //paint cursor

@@ -39,20 +39,15 @@ public:
     vector<shared_ptr<Brush>> allBrushes;
 
     GLuint pro, UBO_lights;
-//    GLuint pro, UBO_lights, UBO_SSAO;
     string proN;
     vector<string> typeList;
 
     bool dontRename = false;
-    bool UBO_light_needsUp = true;
+    bool UBO_light_needsUp = true; //update first by default
     bool brushOutlineUpB = false;
-
-    AbjNode cubeFBON;
-    glm::mat4 dynVM;
 
     shared_ptr<Brush> selBrush, selEraser;
     shared_ptr<Object> shadowObj;
-    glm::mat4 negCubeCenter, negCubeCenter2, VMcubeShadow;
 
     void UBO_update();
     void UBO_init();
@@ -61,9 +56,8 @@ public:
 
     void writeShadow(shared_ptr<Object>);
     void addDeleteShadows(string);
-    AbjNode shadowNode_create(string, int, int);
-    AbjNode cubeDynNode_create(string, int, int);
-    void cubemapGen();
+    AbjNode shadowN_create(string, int, int);
+    glm::mat4 PM_cube, VM_cube, MM_cube;
 
     void up64N(AbjNode &, bool);
     void up64T(GLuint &, GLuint64 &, bool);

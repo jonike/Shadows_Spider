@@ -32,6 +32,8 @@ public:
 
     shared_ptr<GLWidget> myGL;
 
+    string pDefDyn;
+
     bool fboPrep(shared_ptr<GLWidget>); //ep
     void bloomBufferCreate();
     AbjNode depthRevN_create();
@@ -51,8 +53,6 @@ public:
 
     void postFX(shared_ptr<GLWidget>); //ep
     void resizeTexClearMem(shared_ptr<GLWidget>); //ep
-
-    void printFilterTypeD(int filterIn);
 };
 
 #endif // PP_H

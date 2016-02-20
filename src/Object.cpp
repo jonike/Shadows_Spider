@@ -287,7 +287,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     nearShadow->type = "float";
     nearShadow->typeX = "CAMLI";
     nearShadow->tab = 1;
-    nearShadow->val_f = 2.f;
+    nearShadow->val_f = 1.f;
     nearShadow->min = 0.f;
     multiObj.push_back(nearShadow);
 
@@ -597,8 +597,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     ssaoInten->grp = "ssao";
     ssaoInten->type = "float";
     ssaoInten->typeX = "FBO";
-//    ssaoInten->val_f = 4.f;
-    ssaoInten->val_f = 8.f;
+    ssaoInten->val_f = 4.f;
     ssaoInten->min = 0.f;
     multiObj.push_back(ssaoInten);
 
@@ -1284,14 +1283,6 @@ void Object::mvpGet(shared_ptr<GLWidget> myGL)
     else if (this == myWin.paintStroke.get()) MVP = PM2D * MM;
     else MVP = PM * MV;
 
-    if (myWin.creatingDynCubeRGB)
-    {
-        PM = glm::perspective(glm::radians(90.f), 1.f, 1.f, 100.f);
-        VM = myWin.myGLWidgetSh->dynVM;
-
-        MVP = PM * VM * myWin.myGLWidgetSh->negCubeCenter * MM;
-    }
-
     NM = glm::mat3(glm::transpose(glm::inverse(MV)));
 
     if (type == "CAMLI")
@@ -1310,7 +1301,7 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
             auto &proH = myWin.myGLWidgetSh->pro;
             auto proN = myWin.myGLWidgetSh->proN;
 
-            if ((proN == "pGBuffer") && myWin.lightCt > 0)
+            if ((proN == myGL->pGBufferDyn) && myWin.lightCt > 0) //
                 shadowPass();
 
             //OBJ MATRIX
@@ -1341,7 +1332,7 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
             else if (proN == "pGrid")
                 glUniform3fv(glGetUniformLocation(proH, "Cgrid"), 1, &myWin.glslTable->Cgrid->val_3.r);
 
-            else if (proN == "pShadow") //WRITING TO A SINGLE LIGHT
+            else if (proN == "pShadow") //WRITE TO A SINGLE LIGHT
             {
                 glm::mat4 PM_shadow, VM_shadow, depthMVP;
 
@@ -1354,9 +1345,7 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
 
                 else if (myWin.myGLWidgetSh->shadowObj->camLiType->val_s == "POINT")
                 {
-                    PM_shadow = glm::perspective(glm::radians(90.f), 1.f, 1.f, 100.f);
-                    VM_shadow = myWin.myGLWidgetSh->VMcubeShadow;
-                    depthMVP = PM_shadow * VM_shadow * myWin.myGLWidgetSh->negCubeCenter2 * MM;
+                    depthMVP = myWin.myGLWidgetSh->PM_cube * myWin.myGLWidgetSh->VM_cube * myWin.myGLWidgetSh->MM_cube * MM;
                 }
 
                 else if (myWin.myGLWidgetSh->shadowObj->camLiType->val_s == "SPOT")
@@ -1369,8 +1358,12 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                 glUniformMatrix4fv(glGetUniformLocation(proH, "depthMVP"), 1, GL_FALSE, &depthMVP[0][0]);
             }
 
-            else if (proN == "pGBuffer")
+            else if (proN == myGL->pGBufferDyn)
             {
+                //cout << "in pGBufferDyn for : " << myGL->pGBufferDyn << endl;
+
+                glUniformMatrix4fv(glGetUniformLocation(proH, "MM"), 1, GL_FALSE, &MM[0][0]);
+
                 comboU = glm::vec4(ior->val_f, ruffOren->val_f, Ko->val_f, myGL->debug0);
                 glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
 
@@ -1390,18 +1383,18 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
 
                     else if (j.name == anisoM->val_s && j.type == "ANISO")
                     {
-                        int anisoType;
+                        float anisoType;
 
                         if (anisoM->val_s == "BLANK")
-                            anisoType = 0;
+                            anisoType = 0.f;
 
                         else if (anisoM->val_s == "VIEW")
-                            anisoType = 1;
+                            anisoType = 1.f;
 
-                        else
-                            anisoType = 2;
+                        else //CUSTOM MAP
+                            anisoType = 2.f;
 
-                        glUniform1i(glGetUniformLocation(proH, "anisoType"), anisoType);
+                        glUniform1f(glGetUniformLocation(proH, "anisoType"), anisoType);
                         glProgramUniformHandleui64ARB(proH, 2, myWin.myGLWidgetSh->topLayer(j).tex1_64);
                     }
 
@@ -1420,8 +1413,89 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
 
                 glUniform1i(glGetUniformLocation(proH, "NUM_LIGHTS"), myWin.lightCt);
 
+                //pt shadows at 7/8
+                //reg shadows at 9/10/11
+                //note : shadows only need to be generated up at a certain distance say 50 :
+
+                //in pShadow only render objs at dist < 50
+                //in gBuffer only calc lights for objs at dist < 50 (actually this wont matter b/c it'll do it anyway)
+
+                int start = 7;
+                int realIdx = 0;
+
+                //PT SHADOWS SHOULD BE 7/8
                 for (unsigned int j = 0; j < myWin.myGLWidgetSh->allShadow.size(); ++j)
-                    glProgramUniformHandleui64ARB(proH, 7 + j, myWin.myGLWidgetSh->allShadow[j].tex1_64);
+                {
+                    for (unsigned int k = 0; k < myWin.allObj.size(); ++k)
+                    {
+                        if (myWin.myGLWidgetSh->allShadow[j].name == myWin.allObj[k]->name->val_s)
+                        {
+                            if (myWin.allObj[k]->camLiType->val_s == "POINT")
+                            {
+                                //cout << "POINT SHADOWS for : " << myWin.myGLWidgetSh->allShadow[j].name << " " << start + realIdx << " " << start << " " << realIdx << endl;
+                                glBindTextureUnit(start + realIdx, myWin.myGLWidgetSh->allShadow[j].tex2_32);
+                                ++realIdx;
+                            }
+                        }
+                    }
+                }
+
+                start = 9;
+                realIdx = 0;
+                
+                //SPOT SHADOWS SHOULD BE 9/10
+                for (unsigned int j = 0; j < myWin.myGLWidgetSh->allShadow.size(); ++j)
+                {
+                    for (unsigned int k = 0; k < myWin.allObj.size(); ++k)
+                    {
+                        if (myWin.myGLWidgetSh->allShadow[j].name == myWin.allObj[k]->name->val_s)
+                        {
+                            if (myWin.allObj[k]->camLiType->val_s == "DIR" || myWin.allObj[k]->camLiType->val_s == "SPOT")
+                            {
+                                //cout << "SPOT SHADOWS for : " << myWin.myGLWidgetSh->allShadow[j].name << " " << start + realIdx << " " << start << " " << realIdx << endl;
+                                glProgramUniformHandleui64ARB(proH, start + realIdx, myWin.myGLWidgetSh->allShadow[j].tex1_64);
+                                ++realIdx;
+
+                            }
+                        }
+                    }
+                }
+            }
+
+            else if (proN == myWin.myPP->pDefDyn)
+            {
+//                cout << "in pDefDyn for : " << myWin.myPP->pDefDyn << endl;
+
+                auto PMinv = glm::inverse(myGL->selCamLi->PM);
+                glUniformMatrix4fv(glGetUniformLocation(proH, "PMinv"), 1, GL_FALSE, &PMinv[0][0]);
+
+                glUniformMatrix4fv(glGetUniformLocation(proH, "VM"), 1, GL_FALSE, &VM[0][0]);
+
+                auto VMinv = glm::inverse(VM);
+                glUniformMatrix4fv(glGetUniformLocation(proH, "VMinv"), 1, GL_FALSE, &VMinv[0][0]);
+
+                glProgramUniformHandleui64ARB(proH, 0, myGL->gBuf0_64);
+                glProgramUniformHandleui64ARB(proH, 1, myGL->gBuf1_64);
+                glProgramUniformHandleui64ARB(proH, 2, myGL->gBuf2_64);
+                glProgramUniformHandleui64ARB(proH, 3, myGL->gBuf3_64);
+                glProgramUniformHandleui64ARB(proH, 4, myGL->gBuf4_64);
+                glProgramUniformHandleui64ARB(proH, 5, myGL->gBuf5_64);
+//                glProgramUniformHandleui64ARB(proH, 6, myGL->gBuf6_64);
+//                glProgramUniformHandleui64ARB(proH, 7, myGL->gBuf7_64);
+                glProgramUniformHandleui64ARB(proH, 8, myGL->ssaoGaussN.tex2_64);
+                glProgramUniformHandleui64ARB(proH, 9, myGL->bgN.tex1_64); // sky
+                glBindTextureUnit(10, myWin.cubeM_specular_32);
+                glBindTextureUnit(11, myWin.cubeM_irradiance_32);
+                glBindTextureUnit(12, myGL->gBuf_DS_32);
+
+                for (auto &j : myWin.myGLWidgetSh->allMaps)
+                {
+                    if (j.name == "sssLookup")
+                        glProgramUniformHandleui64ARB(proH, 12, myWin.myGLWidgetSh->topLayer(j).tex1_64);
+                }
+
+                comboU = glm::vec4(myWin.myFSQ->Kgi->val_f, myWin.lightCt, myGL->debug0, 0.f);
+                glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
             }
 
             else if (proN == "pLumaInit")
@@ -1483,7 +1557,7 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                 auto PMinv = glm::inverse(myGL->selCamLi->PM);
                 glUniformMatrix4fv(glGetUniformLocation(proH, "PMinv"), 1, GL_FALSE, &PMinv[0][0]);
 
-                glProgramUniformHandleui64ARB(proH, 0, myGL->gBuf2_64);
+                glProgramUniformHandleui64ARB(proH, 0, myGL->gBuf1_64);
                 glBindTextureUnit(1, myGL->gBuf_DS_32);
 
                 for (auto &j : myWin.myGLWidgetSh->allMaps)
@@ -1521,8 +1595,8 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                 glUniformMatrix4fv(glGetUniformLocation(proH, "PM_SS_d3d"), 1, GL_FALSE, &PM_SS_d3d[0][0]);
                 glUniformMatrix4fv(glGetUniformLocation(proH, "VM"), 1, GL_FALSE, &VM[0][0]);
 
-                glProgramUniformHandleui64ARB(proH, 0, myGL->gBuf2_64);
-                glProgramUniformHandleui64ARB(proH, 1, myGL->gBuf3_64);
+                glProgramUniformHandleui64ARB(proH, 0, myGL->gBuf1_64);
+                glProgramUniformHandleui64ARB(proH, 1, myGL->gBuf2_64);
                 glBindTextureUnit(2, myGL->gBuf_DS_32);
                 glProgramUniformHandleui64ARB(proH, 3, myGL->depthRevN.DS_64);
                 glProgramUniformHandleui64ARB(proH, 4, myGL->tonemapN.tex2_64);
@@ -1537,45 +1611,13 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                 glUniform4fv(glGetUniformLocation(proH, "comboU2"), 1, &comboU.x);
             }
 
-            else if (proN == "pDef")
-            {
-                auto PMinv = glm::inverse(myGL->selCamLi->PM);
-                glUniformMatrix4fv(glGetUniformLocation(proH, "PMinv"), 1, GL_FALSE, &PMinv[0][0]);
-
-                glUniformMatrix4fv(glGetUniformLocation(proH, "VM"), 1, GL_FALSE, &VM[0][0]);
-
-                auto VMinv = glm::inverse(glm::mat3(myGL->selCamLi->VM));
-                glUniformMatrix3fv(glGetUniformLocation(proH, "VMinv"), 1, GL_FALSE, &VMinv[0][0]);
-
-                glProgramUniformHandleui64ARB(proH, 0, myGL->gBuf0_64);
-                glProgramUniformHandleui64ARB(proH, 1, myGL->gBuf1_64);
-                glProgramUniformHandleui64ARB(proH, 2, myGL->gBuf2_64);
-                glProgramUniformHandleui64ARB(proH, 3, myGL->gBuf3_64);
-                glProgramUniformHandleui64ARB(proH, 4, myGL->gBuf4_64);
-                glProgramUniformHandleui64ARB(proH, 5, myGL->gBuf5_64);
-                glProgramUniformHandleui64ARB(proH, 7, myGL->ssaoGaussN.tex2_64);
-                glProgramUniformHandleui64ARB(proH, 8, myGL->bgN.tex1_64); // sky
-                glBindTextureUnit(9, myWin.cubeM_specular_32);
-                glBindTextureUnit(10, myWin.cubeM_irradiance_32);
-                glBindTextureUnit(11, myGL->gBuf_DS_32);
-
-                for (auto &j : myWin.myGLWidgetSh->allMaps)
-                {
-                    if (j.name == "sssLookup")
-                        glProgramUniformHandleui64ARB(proH, 12, myWin.myGLWidgetSh->topLayer(j).tex1_64);
-                }
-
-                comboU = glm::vec4(myWin.myFSQ->Kgi->val_f, myWin.lightCt, myGL->debug0, 0.f);
-                glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
-            }
-
             else if (proN == "pTonemap")
             {
                 glProgramUniformHandleui64ARB(proH, 0, myGL->bloomCN.tex1_64);
                 glProgramUniformHandleui64ARB(proH, 1, myGL->lumaAdaptN[myGL->currLum].tex1_64);
                 glProgramUniformHandleui64ARB(proH, 2, myGL->bgN.tex2_64);
 
-                comboU = glm::vec4(log(myWin.myFSQ->expo->val_f), myWin.myFSQ->adaptAuto->val_b, myGL->debug0, myWin.myFSQ->vignDist->val_f);
+                comboU = glm::vec4(log(myWin.myFSQ->expo->val_f), myWin.myFSQ->adaptAuto->val_b, myWin.myFSQ->vign->val_b, myWin.myFSQ->vignDist->val_f);
                 glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
             }
 
@@ -1844,22 +1886,23 @@ void Object::shadowPass()
             {
                 PM_shadow = glm::ortho(-10.f, 10.f, -10.f, 10.f, -10.f, 20.f);
                 VM_shadow = glm::inverse(i->RM);
+
+                glm::mat4 depthBiasMVP = biasM * PM_shadow * VM_shadow * MM;
+                glNamedBufferSubData(myWin.myGLWidgetSh->UBO_lights, lightIter * sizeof(lightUBO) - sizeof(glm::mat4), sizeof(depthBiasMVP), &depthBiasMVP);
             }
 
             else if (i->camLiType->val_s == "POINT")
             {
-                PM_shadow = glm::perspective(glm::radians(90.f), 1.f, i->nearShadow->val_f, i->farShadow->val_f);
-                VM_shadow = i->VM;
             }
 
             else if (i->camLiType->val_s == "SPOT")
             {
                 PM_shadow = glm::perspective(glm::radians(50.f), 1.f, i->nearShadow->val_f, i->farShadow->val_f);
                 VM_shadow = i->VM;
-            }
 
-            glm::mat4 depthBiasMVP = biasM * PM_shadow * VM_shadow * MM;
-            glNamedBufferSubData(myWin.myGLWidgetSh->UBO_lights, lightIter * sizeof(lightUBO) - sizeof(glm::mat4), sizeof(depthBiasMVP), &depthBiasMVP);
+                glm::mat4 depthBiasMVP = biasM * PM_shadow * VM_shadow * MM;
+                glNamedBufferSubData(myWin.myGLWidgetSh->UBO_lights, lightIter * sizeof(lightUBO) - sizeof(glm::mat4), sizeof(depthBiasMVP), &depthBiasMVP);
+            }
 
             ++lightIter;
         }

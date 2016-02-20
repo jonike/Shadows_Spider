@@ -286,7 +286,6 @@ void GLWidget::keyReleaseEvent(QKeyEvent *e)
 
     else if (e->key() == Qt::Key_F6)
     {
-        myWin.doCubeMap = true;
     }
 
     else if (e->key() == Qt::Key_QuoteLeft)
@@ -652,14 +651,12 @@ void GLWidget::mouseReleaseEvent(QMouseEvent *e)
             glBindFramebuffer(GL_FRAMEBUFFER, brushBGN.fbo1);
             glViewport(0, 0, brushBGN.width, brushBGN.height);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glClearColor(0.f, 0.f, 0.f, 0.f);
 
             //COPY PAINT DRAG TO BG2
             glDisable(GL_BLEND);
             glBindFramebuffer(GL_FRAMEBUFFER, brushBGN.fbo2);
             glViewport(0, 0, brushBGN.width, brushBGN.height);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glClearColor(0.f, 0.f, 0.f, 0.f);
 
             myWin.myGLWidgetSh->glUseProgram2("pCopyTex");
 
@@ -913,7 +910,9 @@ void GLWidget::VMup(shared_ptr<Object> obj)
     }
 
     obj->dirtyVM = false;
-    myWin.myGLWidgetSh->UBO_light_needsUp = true;
+
+    if (obj->camLiTypeGet("light"))
+        myWin.myGLWidgetSh->UBO_light_needsUp = true;
 
     if (myWin.myFSQ->clearBehav->val_s == "OnVMup")
     {
@@ -1014,12 +1013,6 @@ void GLWidget::paintGL()
     if (!fboReady)
         fboReady = myWin.myPP->fboPrep(activeGL);
 
-    if (myWin.doCubeMap && myWin.selB) //CUBEMAPGEN
-    {
-        myWin.myGLWidgetSh->cubemapGen();
-        myWin.doCubeMap = false;
-    }
-
     for (auto &i : myWin.allObj)
     {
         auto type = i->type;
@@ -1060,8 +1053,16 @@ void GLWidget::paintGL()
             if (i->dirtyVM)
                 VMup(i);
 
+            glEnable(GL_DEPTH_TEST);
+            glDepthFunc(GL_LESS);
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_FRONT);
+
             if (i->dirtyShadow && i->camLiTypeGet("light"))
+            {
+//                cout << "dirtyShadow for " << i->name->val_s << endl;
                 myWin.myGLWidgetSh->writeShadow(i);
+            }
         }
     }
 
@@ -1070,7 +1071,6 @@ void GLWidget::paintGL()
 
     glBindFramebuffer(GL_FRAMEBUFFER, bgN.fbo1);
     glViewport(0, 0, width(), height());
-    glClearColor(0.f, 0.f, 0.f, 0.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glShadeModel(GL_SMOOTH);
@@ -1228,7 +1228,6 @@ void GLWidget::paintGL()
     glBindFramebuffer(GL_FRAMEBUFFER, depthRevN.fbo1);
     glViewport(0, 0, depthRevN.width, depthRevN.height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glClearColor(0.f, 0.f, 0.f, 0.f);
 
     glShadeModel(GL_SMOOTH);
     glEnable(GL_DEPTH_TEST);
@@ -1257,7 +1256,6 @@ void GLWidget::paintGL()
     glBindFramebuffer(GL_FRAMEBUFFER, gBufN.fbo1);
     glViewport(0, 0, gBufN.width, gBufN.height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glClearColor(0.f, 0.f, 0.f, 0.f);
 
     glShadeModel(GL_SMOOTH);
     glEnable(GL_DEPTH_TEST);
@@ -1268,7 +1266,9 @@ void GLWidget::paintGL()
     glCullFace(GL_BACK);
     glDisable(GL_BLEND);
 
-    myWin.myGLWidgetSh->glUseProgram2("pGBuffer");
+    pGBufferDyn = "pGBuffer";
+    pGBufferDyn.append(to_string(myWin.lightCt));
+    myWin.myGLWidgetSh->glUseProgram2(pGBufferDyn);
 
     for (auto &i : myWin.allObj)
     {
@@ -1448,7 +1448,6 @@ void GLWidget::blendModeDebug(string type)
     glBindFramebuffer(GL_FRAMEBUFFER, brushN.fbo1);
     glViewport(0, 0, brushN.width, brushN.height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glClearColor(0.f, 0.f, 0.f, 0.f);
 
     myWin.myGLWidgetSh->glUseProgram2("pBlendMode");
 
@@ -1561,7 +1560,6 @@ void GLWidget::paintSomething1(string type)
         glBindFramebuffer(GL_FRAMEBUFFER, brushTempN.fbo1);
         glViewport(0, 0, brushTempN.width, brushTempN.height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.f, 0.f, 0.f, 0.f);
 
         myWin.myGLWidgetSh->glUseProgram2("pPaintStroke");
 
@@ -1581,7 +1579,6 @@ void GLWidget::paintSomething1(string type)
         glBindFramebuffer(GL_FRAMEBUFFER, brushN.fbo1);
         glViewport(0, 0, brushN.width, brushN.height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.f, 0.f, 0.f, 0.f);
 
         myWin.myGLWidgetSh->glUseProgram2("pCopyTex");
 
@@ -1596,7 +1593,6 @@ void GLWidget::paintSomething1(string type)
         glBindFramebuffer(GL_FRAMEBUFFER, brushBGN.fbo1);
         glViewport(0, 0, brushBGN.width, brushBGN.height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.f, 0.f, 0.f, 0.f);
 
         myWin.myGLWidgetSh->glUseProgram2("pCopyTex");
         copyTgt = 4; //brushN.tex1
@@ -1610,7 +1606,6 @@ void GLWidget::paintSomething1(string type)
         glBindFramebuffer(GL_FRAMEBUFFER, brushN.fbo2);
         glViewport(0, 0, brushN.width, brushN.height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.f, 0.f, 0.f, 0.f);
 
         myWin.myGLWidgetSh->glUseProgram2("pCopyTex");
 
@@ -1633,7 +1628,6 @@ void GLWidget::paintSomething1(string type)
         glBindFramebuffer(GL_FRAMEBUFFER, eraserN.fbo1);
         glViewport(0, 0, eraserN.width, eraserN.height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.f, 0.f, 0.f, 0.f);
 
         myWin.myGLWidgetSh->glUseProgram2("pPaintStroke");
 
@@ -1658,7 +1652,6 @@ void GLWidget::paintSomething1(string type)
         glBindFramebuffer(GL_FRAMEBUFFER, brushBGN.fbo2);
         glViewport(0, 0, brushBGN.width, brushBGN.height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.f, 0.f, 0.f, 0.f);
 
         myWin.myGLWidgetSh->glUseProgram2("pCopyTex");
 
@@ -1669,7 +1662,6 @@ void GLWidget::paintSomething1(string type)
         glBindFramebuffer(GL_FRAMEBUFFER, brushN.fbo2);
         glViewport(0, 0, brushN.width, brushN.height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.f, 0.f, 0.f, 0.f);
 
         myWin.myGLWidgetSh->glUseProgram2("pCopyTex");
 
@@ -1686,7 +1678,6 @@ void GLWidget::paintSomething1(string type)
         glBindFramebuffer(GL_FRAMEBUFFER, cursorN.fbo1);
         glViewport(0, 0, cursorN.width, cursorN.height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.f, 0.f, 0.f, 0.f);
 
         myWin.myGLWidgetSh->glUseProgram2("pPaintStroke");
 
@@ -1730,7 +1721,6 @@ void GLWidget::brushOutlineUp()
             glBindFramebuffer(GL_FRAMEBUFFER, brushTempN.fbo1);
             glViewport(0, 0, brushTempN.width, brushTempN.height);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glClearColor(0.f, 0.f, 0.f, 0.f);
 
             myWin.myGLWidgetSh->glUseProgram2("pAlphaAsRGBA");
             myWin.myFSQ->render(activeGL);
@@ -1746,7 +1736,6 @@ void GLWidget::brushOutlineUp()
             glBindFramebuffer(GL_FRAMEBUFFER, i.layer[0].fbo2);
             glViewport(0, 0, i.layer[0].width, i.layer[0].height);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glClearColor(0.f, 0.f, 0.f, 0.f);
 
             myWin.myGLWidgetSh->glUseProgram2("pEdgeDetect");
 //            edgeDetect_mode = 0; // sobel
@@ -1765,7 +1754,6 @@ void GLWidget::clearCursor(bool inPaintMode)
         glBindFramebuffer(GL_FRAMEBUFFER, cursorN.fbo1);
         glViewport(0, 0, cursorN.width, cursorN.height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.f, 0.f, 0.f, 0.f);
     }
 }
 
@@ -1822,7 +1810,6 @@ void GLWidget::bakeSomething()
     glBindFramebuffer(GL_FRAMEBUFFER, myLayerIdx.layer[0].fbo2);
     glViewport(0, 0, myLayerIdx.layer[0].width, myLayerIdx.layer[0].height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glClearColor(0.f, 0.f, 0.f, 0.f);
 
     myWin.myGLWidgetSh->glUseProgram2("pCopyTex");
     copyTgt = 10;
@@ -1832,7 +1819,6 @@ void GLWidget::bakeSomething()
     glBindFramebuffer(GL_FRAMEBUFFER, myLayerIdx.layer[0].fbo1);
     glViewport(0, 0, myLayerIdx.layer[0].width, myLayerIdx.layer[0].height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glClearColor(0.f, 0.f, 0.f, 0.f);
 
     myWin.myGLWidgetSh->glUseProgram2("pPaintProj");
 
@@ -2211,7 +2197,6 @@ void GLWidget::getPtsBetweenRect()
 bool GLWidget::checkForHits() //READPIXELS
 {
     colorPickTgl = true;
-    glClearColor(1.f, 1.f, 1.f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
 

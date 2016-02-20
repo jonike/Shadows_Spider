@@ -46,6 +46,8 @@ public:
     glm::vec3 upWorld, from_OBB, to_OBB, aspectXYZ;
     vector<Stroke> strokes_brush, strokes_eraser, strokes_brush_cursor, strokes_eraser_cursor, strokes_cursor;
 
+    string pGBufferDyn;
+
     //giz
     string gizHoverType = "NONE";
     string gizTransType = "NONE";
@@ -89,8 +91,8 @@ public:
     bool fboReady;
     int currLum = 0;
 
-    GLuint gBuf0_32, gBuf1_32, gBuf2_32, gBuf3_32, gBuf4_32, gBuf5_32, gBuf_DS_32;
-    GLuint64 gBuf0_64, gBuf1_64, gBuf2_64, gBuf3_64, gBuf4_64, gBuf5_64, gBuf_DS_64;
+    GLuint gBuf0_32, gBuf1_32, gBuf2_32, gBuf3_32, gBuf4_32, gBuf5_32, gBuf6_32, gBuf7_32, gBuf_DS_32;
+    GLuint64 gBuf0_64, gBuf1_64, gBuf2_64, gBuf3_64, gBuf4_64, gBuf5_64, gBuf6_64, gBuf7_64, gBuf_DS_64;
 
     GLuint rttGaussIn32, tempGauss;
     GLuint64 rttGaussIn64, downSamp_64, extractHLfromSrc_64;

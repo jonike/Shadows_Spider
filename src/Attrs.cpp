@@ -1489,6 +1489,9 @@ void Attrs::writeActions(string type, string name, shared_ptr<Object> obj, share
                 i->resizeGL(i->width(), i->height());
         }
 
+        else if (name == "nearShadow" || name == "farShadow")
+            obj->dirtyShadow = true;
+
         else if (name == "lInten" || name == "lSpotI" || name == "lSpotO")
             myWin.myGLWidgetSh->UBO_light_needsUp = true;
 

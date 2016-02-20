@@ -24,17 +24,6 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 #define STB_IMAGE_IMPLEMENTATION
 #include "../include/stb_image.h"
 
-//////http://stackoverflow.com/questions/18176274/cubemap-shadow-mapping-not-working
-CubeShadowTable myCubeShadowTable[6] =
-{
-    { GL_TEXTURE_CUBE_MAP_POSITIVE_X, glm::vec3(1.f, 0.f, 0.f), glm::vec3(0.f, -1.f, 0.f) },
-    { GL_TEXTURE_CUBE_MAP_NEGATIVE_X, glm::vec3(-1.f, 0.f, 0.f), glm::vec3(0.f, -1.f, 0.f) },
-    { GL_TEXTURE_CUBE_MAP_POSITIVE_Y, glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, 1.f) },
-    { GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, glm::vec3(0.f, -1.f, 0.f), glm::vec3(0.f, 0.f, -1.f) },
-    { GL_TEXTURE_CUBE_MAP_POSITIVE_Z, glm::vec3(0.f, 0.f, 1.f), glm::vec3(0.f, -1.f, 0.f) },
-    { GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, glm::vec3(0.f, 0.f, -1.f), glm::vec3(0.f, -1.f, 0.f) }
-};
-
 GLWidgetSh::GLWidgetSh(MainWin &myWinTemp, QWidget *parent) : QGLWidget(parent), myWin(myWinTemp)
 {
     QGLFormat format;
@@ -46,8 +35,6 @@ GLWidgetSh::GLWidgetSh(MainWin &myWinTemp, QWidget *parent) : QGLWidget(parent),
     resize(200, 200);
 
     typeList = { "ALBEDO", "ALPHA", "ANISO", "LENS", "METALLIC", "RUFF", "SSS" };
-
-//    cubeFBON = cubeDynNode_create("cube", 1024, 1024);
 }
 
 void GLWidgetSh::UBO_init()
@@ -66,6 +53,8 @@ void GLWidgetSh::UBO_update()
     {
         if (i->v->val_b && i->camLiTypeGet("light"))
         {
+            //cout << "in UBO_update for : " << i->name->val_s << endl;
+
             lightUBO newUBO;
 
             float type;
@@ -76,8 +65,8 @@ void GLWidgetSh::UBO_update()
 
             newUBO.Cl_type = glm::vec4(i->Cl->val_3, type);
             newUBO.falloff = glm::vec4(i->lInten->val_f, cos(glm::radians(i->lSpotI->val_f)), cos(glm::radians(i->lSpotO->val_f)), 0.f);
-            newUBO.lDirRot = i->MM * glm::vec4(0.f, 0.f, -1.f, 0.f);
-            newUBO.lP = glm::vec4(i->t->val_3, 0.f);
+            newUBO.DirRot = i->MM * glm::vec4(0.f, 0.f, -1.f, 0.f);
+            newUBO.P_WS = glm::vec4(i->t->val_3, 0.f);
 
             glNamedBufferSubData(UBO_lights, lightIter * sizeof(newUBO), sizeof(newUBO), &newUBO);
 
@@ -303,7 +292,6 @@ float GLWidgetSh::lerp(float a, float b, float c)
     return a + (b - a) * c;
 }
 
-
 AbjNode GLWidgetSh::topLayer(Map mapIn)
 {
     for (auto &i : mapIn.layer)
@@ -317,103 +305,6 @@ AbjNode GLWidgetSh::topLayer(Map mapIn)
     return myLayer;
 }
 
-void GLWidgetSh::cubemapGen()
-{
-    //get selB and its (piv) pos
-    //hide selB if viz
-    //render
-    //unhide
-
-    glBindFramebuffer(GL_FRAMEBUFFER, cubeFBON.fbo1);
-    glViewport(0, 0, cubeFBON.width, cubeFBON.height);
-
-    glShadeModel(GL_SMOOTH);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    glFrontFace(GL_CCW);
-    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_BLEND);
-
-    myWin.creatingDynCubeRGB = true;
-
-    auto storedV = myWin.selB->v->val_b;
-    myWin.selB->v->val_b = false;
-
-    for (int i = 0; i < 6; ++i)
-    {
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, cubeFBON.tex1_32, 0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        auto targ = myCubeShadowTable[i].targ;
-        auto up = myCubeShadowTable[i].up;
-        dynVM = glm::lookAt(glm::vec3(0.f), targ, up);
-        negCubeCenter = glm::translate(glm::mat4(), -myWin.selB->t->val_3);
-
-        for (auto &j : myWin.allObj)
-        {
-            if (j->type == "OBJ" && myWin.searchUp(j))
-            {
-                myWin.myGLWidgetSh->glUseProgram2("pGBuffer");
-                j->render(myWin.allGL[4]); // REPLACE WITH ACTIVEGL
-            }
-        }
-    }
-
-    myWin.selB->v->val_b = storedV;
-
-    myWin.creatingDynCubeRGB = false;
-}
-
-AbjNode GLWidgetSh::cubeDynNode_create(string name, int widthIn, int heightIn)
-{
-    //cubeFBON = cubeDynNode_create("cube", 1024, 1024);
-    //glMakeTextureHandleNonResidentARB(myGL->cubeFBON.tex1_64);
-    //glDeleteTextures(1, &cubeFBON.tex1_32);
-    //glDeleteFramebuffers(1, &cubeFBON.fbo1);
-
-    GLuint texNew;
-    glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &texNew);
-
-    glTextureParameteri(texNew, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTextureParameteri(texNew, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTextureParameteri(texNew, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glTextureParameteri(texNew, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTextureParameteri(texNew, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    for (int i = 0; i < 6; ++i)
-        glTextureImage2DEXT(texNew, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, widthIn, heightIn, 0, GL_RGBA, GL_FLOAT, 0);
-
-    GLuint fboNew;
-    glCreateFramebuffers(1, &fboNew);
-
-    //DEPTH STEN
-    GLenum DrawBuffers[] =
-    {
-        GL_COLOR_ATTACHMENT0,
-    };
-
-    GLuint DStex;
-    glCreateTextures(GL_TEXTURE_2D, 1, &DStex);
-
-    glTextureStorage2D(DStex, 1, GL_DEPTH32F_STENCIL8, widthIn, heightIn);
-    glTextureParameteri(DStex, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTextureParameteri(DStex, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTextureParameteri(DStex, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTextureParameteri(DStex, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    glNamedFramebufferTexture(fboNew, GL_DEPTH_STENCIL_ATTACHMENT, DStex, 0);
-//    glNamedFramebufferTexture(fboNew, GL_COLOR_ATTACHMENT0, texNew, 0); attach cube faces
-    glNamedFramebufferDrawBuffers(fboNew, 1, DrawBuffers);
-
-    if (glCheckNamedFramebufferStatus(fboNew, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        cout << "error with FBO2_shadowCube_create" << endl;
-
-    return { name, widthIn, heightIn, fboNew, texNew };
-}
-
 /* SHADOWS */
 void GLWidgetSh::addDeleteShadows(string type)
 {
@@ -424,17 +315,17 @@ void GLWidgetSh::addDeleteShadows(string type)
             if (i->v->val_b && i->camLiTypeGet("light"))
             {
                 int shadowSize = 1024;
-                AbjNode shadow_no = shadowNode_create(i->name->val_s, shadowSize, shadowSize);
+                AbjNode shadowN = shadowN_create(i->name->val_s, shadowSize, shadowSize);
 
-                glMakeTextureHandleNonResidentARB(shadow_no.tex1_64);
-                shadow_no.tex1_64 = glGetTextureHandleARB(shadow_no.tex1_32);
-                glMakeTextureHandleResidentARB(shadow_no.tex1_64);
+                glMakeTextureHandleNonResidentARB(shadowN.tex1_64);
+                shadowN.tex1_64 = glGetTextureHandleARB(shadowN.tex1_32);
+                glMakeTextureHandleResidentARB(shadowN.tex1_64);
 
-                glMakeTextureHandleNonResidentARB(shadow_no.tex2_64);
-                shadow_no.tex2_64 = glGetTextureHandleARB(shadow_no.tex2_32);
-                glMakeTextureHandleResidentARB(shadow_no.tex2_64);
+                glMakeTextureHandleNonResidentARB(shadowN.tex2_64);
+                shadowN.tex2_64 = glGetTextureHandleARB(shadowN.tex2_32);
+                glMakeTextureHandleResidentARB(shadowN.tex2_64);
 
-                allShadow.push_back(shadow_no);
+                allShadow.push_back(shadowN);
             }
         }
     }
@@ -463,14 +354,19 @@ void GLWidgetSh::addDeleteShadows(string type)
     }
 }
 
+CubemapDirections cubeDirs[6] =
+{
+    { glm::vec3( 1.f,  0.f,  0.f), glm::vec3(0.f, -1.f,  0.f) },
+    { glm::vec3(-1.f,  0.f,  0.f), glm::vec3(0.f, -1.f,  0.f) },
+    { glm::vec3( 0.f,  1.f,  0.f), glm::vec3(0.f,  0.f,  1.f) },
+    { glm::vec3( 0.f, -1.f,  0.f), glm::vec3(0.f,  0.f, -1.f) },
+    { glm::vec3( 0.f,  0.f,  1.f), glm::vec3(0.f, -1.f,  0.f) },
+    { glm::vec3( 0.f,  0.f, -1.f), glm::vec3(0.f, -1.f,  0.f) }
+};
+
 void GLWidgetSh::writeShadow(shared_ptr<Object> obj)
 {
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_FRONT);
-
-    //for each light in allShadow, render each object into the light's FBO1
+    //for each light in allShadow, render each object into the light's FBO1...except for point lights which render into fbo2 ?
     for (auto &i : allShadow)
     {
         if (i.name == obj->name->val_s) // if it's a light
@@ -487,16 +383,40 @@ void GLWidgetSh::writeShadow(shared_ptr<Object> obj)
                 }
             }
 
-            // dir / spot
-            glBindFramebuffer(GL_FRAMEBUFFER, i.fbo1);
-            glViewport(0, 0, i.width, i.height);
-            glClear(GL_DEPTH_BUFFER_BIT);
-            glClearColor(0.f, 0.f, 0.f, 0.f);
-
-            for (auto &j : myWin.allObj)
+            if (obj->camLiType->val_s == "DIR" || obj->camLiType->val_s == "SPOT")
             {
-                if (j->type == "OBJ" && j->shadowCast->val_b && myWin.searchUp(j))
-                    j->render(activeGL); //
+                glBindFramebuffer(GL_FRAMEBUFFER, i.fbo1);
+                glViewport(0, 0, i.width, i.height);
+                glClear(GL_DEPTH_BUFFER_BIT);
+
+                for (auto &j : myWin.allObj)
+                {
+                    if (j->type == "OBJ" && j->shadowCast->val_b && myWin.searchUp(j))
+                        j->render(activeGL); //
+                }
+            }
+
+            else if (obj->camLiType->val_s == "POINT")
+            {
+                glBindFramebuffer(GL_FRAMEBUFFER, i.fbo2);
+                glViewport(0, 0, i.width, i.height);
+
+                for (int j = 0; j < 6; ++j)
+                {
+                    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_CUBE_MAP_POSITIVE_X + j, i.tex2_32, 0);
+                    glDrawBuffer(GL_DEPTH_ATTACHMENT);
+                    glClear(GL_DEPTH_BUFFER_BIT);
+
+                    MM_cube = glm::translate(glm::mat4(), -obj->t->val_3);
+                    VM_cube = glm::lookAt(glm::vec3(0.f), cubeDirs[j].targ, cubeDirs[j].up);
+                    PM_cube = glm::perspective(glm::radians(90.f), 1.f, obj->nearShadow->val_f, obj->farShadow->val_f);
+
+                    for (auto &k : myWin.allObj)
+                    {
+                        if (k->type == "OBJ" && k->shadowCast->val_b && myWin.searchUp(k))
+                            k->render(activeGL); //
+                    }
+                }
             }
 
             obj->dirtyShadow = false;
@@ -504,57 +424,59 @@ void GLWidgetSh::writeShadow(shared_ptr<Object> obj)
     }
 }
 
-AbjNode GLWidgetSh::shadowNode_create(string name, int widthIn, int heightIn)
+AbjNode GLWidgetSh::shadowN_create(string name, int widthIn, int heightIn)
 {
-    GLuint fboNew;
-    glCreateFramebuffers(1, &fboNew);
+    GLuint fboNew1;
+    glCreateFramebuffers(1, &fboNew1);
 
     GLfloat border[] = { 1.f, 1.f, 1.f, 1.f };
 
-    GLuint texNew;
-    glCreateTextures(GL_TEXTURE_2D, 1, &texNew);
-    glTextureStorage2D(texNew, 1, GL_DEPTH_COMPONENT32F, widthIn, heightIn);
-    glTextureParameteri(texNew, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTextureParameteri(texNew, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glTextureParameteri(texNew, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTextureParameteri(texNew, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    GLuint texNew1;
+    glCreateTextures(GL_TEXTURE_2D, 1, &texNew1);
+    glTextureStorage2D(texNew1, 1, GL_DEPTH_COMPONENT32F, widthIn, heightIn);
+    glTextureParameteri(texNew1, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTextureParameteri(texNew1, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTextureParameteri(texNew1, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTextureParameteri(texNew1, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    glTextureParameteri(texNew, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-    glTextureParameteri(texNew, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-    glTextureParameterfv(texNew, GL_TEXTURE_BORDER_COLOR, border);
+    glTextureParameteri(texNew1, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+    glTextureParameteri(texNew1, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+    glTextureParameterfv(texNew1, GL_TEXTURE_BORDER_COLOR, border);
 
-    glNamedFramebufferTexture(fboNew, GL_DEPTH_ATTACHMENT, texNew, 0);
-    glNamedFramebufferDrawBuffer(fboNew, GL_NONE);
-    glNamedFramebufferReadBuffer(fboNew, GL_NONE);
+    glNamedFramebufferTexture(fboNew1, GL_DEPTH_ATTACHMENT, texNew1, 0);
+    glNamedFramebufferDrawBuffer(fboNew1, GL_NONE);
+    glNamedFramebufferReadBuffer(fboNew1, GL_NONE);
 
-    if (glCheckNamedFramebufferStatus(fboNew, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        cout << "error with shadowNode_create FBO1" << endl;
+    if (glCheckNamedFramebufferStatus(fboNew1, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        cout << "error with shadowN_create FBO1" << endl;
+
+
 
     GLuint fboNew2;
-    glGenFramebuffers(1, &fboNew2);
-    glBindFramebuffer(GL_FRAMEBUFFER, fboNew2);
+    glCreateFramebuffers(1, &fboNew2);
 
     GLuint texNew2;
-    glGenTextures(1, &texNew2);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, texNew2);
+    glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &texNew2);
     glTextureParameteri(texNew2, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTextureParameteri(texNew2, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTextureParameteri(texNew2, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glTextureParameteri(texNew2, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTextureParameteri(texNew2, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTextureParameteri(texNew2, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTextureParameteri(texNew2, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     glTextureParameteri(texNew2, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
     glTextureParameteri(texNew2, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
 
     for (int i = 0; i < 6; ++i)
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT32F, widthIn, heightIn, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+        glTextureImage2DEXT(texNew2, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT32F, widthIn, heightIn, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
 
     glNamedFramebufferTexture(fboNew2, GL_DEPTH_ATTACHMENT, texNew2, 0);
+    glNamedFramebufferDrawBuffer(fboNew2, GL_NONE);
+    glNamedFramebufferReadBuffer(fboNew2, GL_NONE);
 
     if (glCheckNamedFramebufferStatus(fboNew2, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        cout << "error with shadowNode_create FBO2" << endl;
+        cout << "error with shadowN_create FBO2" << endl;
 
-    return { name, widthIn, heightIn, fboNew, texNew, 0, fboNew2, texNew2 };
+    return { name, widthIn, heightIn, fboNew1, texNew1, 0, fboNew2, texNew2 };
 }
 
 AbjNode GLWidgetSh::texN_create(string name, string type, string pathIn, int idx)
@@ -800,19 +722,25 @@ void GLWidgetSh::up64T(GLuint &tex32, GLuint64 &tex64, bool up)
 void GLWidgetSh::proInit()
 {
     allPro.push_back( { "pAlphaAsRGBA", createProg("fboV.glsl", "", "alphaAsRGBAF.glsl") } );
-    allPro.push_back( { "pGBuffer", createProg("gBufferV.glsl", "gBufferG.glsl", "gBufferF.glsl") } );
     allPro.push_back( { "pBB", createProg("bbV.glsl", "", "bbF.glsl") } );
     allPro.push_back( { "pBlendMode", createProg("wsQuadV.glsl", "", "blendModeF.glsl") } );
     allPro.push_back( { "pBloomC", createProg("fboV.glsl", "", "bloomCF.glsl") } );
     allPro.push_back( { "pBloom", createProg("fboV.glsl", "", "bloomF.glsl") } );
     allPro.push_back( { "pCopyTex", createProg("fboV.glsl", "", "copyTexF.glsl") } );
-    allPro.push_back( { "pDef", createProg("fboV.glsl", "", "defF.glsl") } );
+    allPro.push_back( { "pDef0", createProg("fboV.glsl", "", "def/def0F.glsl") } );
+    allPro.push_back( { "pDef1", createProg("fboV.glsl", "", "def/def1F.glsl") } );
+    allPro.push_back( { "pDef2", createProg("fboV.glsl", "", "def/def2F.glsl") } );
+    allPro.push_back( { "pDef3", createProg("fboV.glsl", "", "def/def3F.glsl") } );
     allPro.push_back( { "pDepthRev", createProg("depthRevV.glsl", "", "depthRevF.glsl") } );
     allPro.push_back( { "pDown", createProg("downV.glsl", "", "downF.glsl") } );
     allPro.push_back( { "pFinal", createProg("fboV.glsl", "", "finalF.glsl") } );
     allPro.push_back( { "pEdgeDetect", createProg("fboV.glsl", "", "edgeDetectF.glsl") } );
     allPro.push_back( { "pFxaa", createProg("fboV.glsl", "", "fxaaF.glsl") } );
     allPro.push_back( { "pGauss", createProg("fboV.glsl", "", "gaussF.glsl") } );
+    allPro.push_back( { "pGBuffer0", createProg("gBuf/gBuffer0V.glsl", "", "gBuf/gBuffer0F.glsl") } );
+    allPro.push_back( { "pGBuffer1", createProg("gBuf/gBuffer1V.glsl", "", "gBuf/gBuffer1F.glsl") } );
+    allPro.push_back( { "pGBuffer2", createProg("gBuf/gBuffer2V.glsl", "", "gBuf/gBuffer2F.glsl") } );
+    allPro.push_back( { "pGBuffer3", createProg("gBuf/gBuffer3V.glsl", "", "gBuf/gBuffer3F.glsl") } );
     allPro.push_back( { "pGiz", createProg("gizV.glsl", "", "gizF.glsl") } );
     allPro.push_back( { "pGiz_circ", createProg("giz_circV.glsl", "", "gizF.glsl") } );
     allPro.push_back( { "pGrid", createProg("gizV.glsl", "", "gridF.glsl") } );

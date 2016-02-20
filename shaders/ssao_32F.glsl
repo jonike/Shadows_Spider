@@ -35,7 +35,7 @@ in Vert
     vec2 uv;
 } v;
 
-layout(bindless_sampler, location = 0) uniform usampler2D gBuf_N_VS;
+layout(bindless_sampler, location = 0) uniform usampler2D gBuf_1; //N_VS
 layout(binding = 1) uniform sampler2D gBuf_DS;
 layout(bindless_sampler, location = 2) uniform sampler2D noise;
 
@@ -93,10 +93,10 @@ void main()
 {
     vec3 P_VS = reconstructP(v.uv);
 
-    uvec4 data2 = texelFetch(gBuf_N_VS, ivec2(gl_FragCoord.xy), 0);
+    uvec4 data2 = texelFetch(gBuf_1, ivec2(gl_FragCoord.xy), 0);
     vec3 N_VS = vec3(unpackHalf2x16(data2.y).y, unpackHalf2x16(data2.z));
 
-    vec2 screenSize = textureSize(gBuf_N_VS, 0);
+    vec2 screenSize = textureSize(gBuf_1, 0);
     vec3 randomVec = normalize(texture(noise, v.uv * screenSize / 4).rgb * 2.f - 1.f);
 
     // Create TBN change-of-basis matrix: from tangent-space to view-space

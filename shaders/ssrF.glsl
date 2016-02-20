@@ -74,8 +74,8 @@ in Vert
     vec2 uv;
 } v;
 
-layout(bindless_sampler, location = 0) uniform usampler2D gBuf2; //N_VS;
-layout(bindless_sampler, location = 1) uniform usampler2D gBuf3; //ruffM
+layout(bindless_sampler, location = 0) uniform usampler2D gBuf1; //N_VS;
+layout(bindless_sampler, location = 1) uniform usampler2D gBuf2; //ruffM
 layout(binding = 2) uniform sampler2D gBuf_DS;
 layout(bindless_sampler, location = 3) uniform sampler2D depthRev_DS;
 layout(bindless_sampler, location = 4) uniform sampler2D tonemap_noGiz;
@@ -83,13 +83,14 @@ layout(bindless_sampler, location = 4) uniform sampler2D tonemap_noGiz;
 layout(location = 0) out vec4 Ci;
 
 uniform mat4 PM, PMinv, PM_SS_d3d, VM;
-vec2 screenSize = textureSize(gBuf2, 0);
+//vec2 screenSize = textureSize(gBuf1, 0);
+vec2 screenSize = textureSize(gBuf_DS, 0);
 
 uniform vec4 comboU0; //vec4(farClip, nearClip, ssrIter, ssrRefine)
 uniform vec4 comboU1; //vec4(ssrPixStride, ssrPixStrideZ, ssrPixZSize, ssrMaxRayDist)
 uniform vec4 comboU2; //vec4(ssrEdgeFade, ssrEyeFade0, ssrEyeFade1, debug0)
 
-uvec4 data3 = texelFetch(gBuf3, ivec2(gl_FragCoord.xy), 0);
+uvec4 data3 = texelFetch(gBuf2, ivec2(gl_FragCoord.xy), 0);
 float ruffM = unpackHalf2x16(data3.z).x;
 
 vec3 reconstructP(vec2 UV)

@@ -146,9 +146,6 @@ public:
     string lastScene, oldSelB, layoutType, myStyle;
     string selMode = "OBJ";
 
-    bool creatingDynCubeRGB = false;
-    bool doCubeMap = false;
-
     int brushSize = 10;
     int brushHard = 100;
 
@@ -232,12 +229,6 @@ protected:
 
 typedef struct
 {
-    GLenum face;
-    glm::vec3 targ, up;
-} CubeShadowTable;
-
-typedef struct
-{
     string name;
     int width, height;
     GLuint fbo1, tex1_32;
@@ -304,6 +295,11 @@ typedef struct
     shared_ptr<Object> obj;
     GLuint VBO_P, VBO_UV, VBO_T, VBO_N, VBO_IDX;
 } GLSharedData;
+
+typedef struct
+{
+    glm::vec3 targ, up;
+} CubemapDirections;
 
 typedef struct
 {
@@ -414,7 +410,7 @@ typedef struct
 
 struct lightUBO
 {
-    glm::vec4 Cl_type, falloff, lDirRot, lP;
+    glm::vec4 Cl_type, falloff, DirRot, P_WS;
 	glm::mat4 ShadowCoord;
 };
 

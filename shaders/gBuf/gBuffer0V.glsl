@@ -20,37 +20,31 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #version 450 core
+#extension GL_ARB_bindless_texture : require
 
-layout(triangles) in;
-layout(triangle_strip, max_vertices = 3) out;
-
-in Vert
+out Vert
 {
     vec2 UV;
     vec3 T_VS, N_VS;
-    vec4 shadowCoord0, shadowCoord1;
-} v[];
+} v;
 
-out Geo
-{
-    vec2 UV;
-    vec3 T_VS, N_VS;
-    vec4 shadowCoord0, shadowCoord1;
-} g;
+layout(location = 0) in vec3 pE;
+layout(location = 1) in vec2 uvE;
+layout(location = 2) in vec3 tE;
+layout(location = 3) in vec3 nE;
+
+uniform mat3 NM;
+uniform mat4 MVP, MM;
+uniform int NUM_LIGHTS;
+
+vec4 P_WS = MM * vec4(pE, 1.f);
 
 void main()
 {
-    for (int i = 0; i < 3; ++i)
-    {
-        g.UV = v[i].UV;
-        g.T_VS = v[i].T_VS;
-        g.N_VS = v[i].N_VS;
-        g.shadowCoord0 = v[i].shadowCoord0;
-        g.shadowCoord1 = v[i].shadowCoord1;
+    gl_Position = MVP * vec4(pE, 1.f);
 
-        gl_Position = gl_in[i].gl_Position;
-        EmitVertex();
-    }
-
-    EndPrimitive();
+    v.UV = uvE;
+    v.T_VS = normalize(NM * tE);
+    v.N_VS = normalize(NM * nE);
 }
+

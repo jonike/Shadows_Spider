@@ -26,12 +26,12 @@ out Vert
 {
     vec2 UV;
     vec3 T_VS, N_VS;
-    vec4 shadowCoord0, shadowCoord1;
+    vec4 shadowCoord0, shadowCoord1, shadowCoord2;
 } v;
 
 struct light_t
 {
-    vec4 Cl_type, falloff, lDirRot, lP;
+    vec4 Cl_type, falloff, DirRot, P_WS;
     mat4 ShadowCoord;
 };
 
@@ -46,8 +46,40 @@ layout(location = 2) in vec3 tE;
 layout(location = 3) in vec3 nE;
 
 uniform mat3 NM;
-uniform mat4 MVP;
+uniform mat4 MVP, MM;
 uniform int NUM_LIGHTS;
+
+vec4 P_WS = MM * vec4(pE, 1.f);
+
+float VectorToDepth (vec3 Vec)
+{
+    vec3 AbsVec = abs(Vec);
+    float LocalZcomp = max(AbsVec.x, max(AbsVec.y, AbsVec.z));
+
+    const float f = 100.f;
+    const float n = 1.f;
+
+    float NormZComp = (f + n) / (f - n) - (2 * f * n) / (f - n) / LocalZcomp;
+
+    return (NormZComp + 1.f) * .5f;
+}
+
+vec4 getShadowCoords(int idx)
+{
+    vec4 myShadowCoords;
+
+    if (light[idx].Cl_type.w == 2.f) //POINT
+    {
+        vec3 lightDir = P_WS.xyz - light[idx].P_WS.xyz;
+
+        myShadowCoords = vec4(lightDir, VectorToDepth(lightDir));
+    }
+
+    else //DIR / SPOT
+        myShadowCoords = light[idx].ShadowCoord * vec4(pE, 1.f);
+
+    return myShadowCoords;
+}
 
 void main()
 {
@@ -60,9 +92,12 @@ void main()
     for (int i = 0; i < NUM_LIGHTS; ++i)
     {
         if (i == 0)
-            v.shadowCoord0 = light[i].ShadowCoord * vec4(pE, 1.f);
+            v.shadowCoord0 = getShadowCoords(i);
 
-        if (i == 1)
-            v.shadowCoord1 = light[i].ShadowCoord * vec4(pE, 1.f);
+        else if (i == 1)
+            v.shadowCoord1 = getShadowCoords(i);
+
+        else if (i == 2)
+            v.shadowCoord2 = getShadowCoords(i);
     }
 }
