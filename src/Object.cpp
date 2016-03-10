@@ -323,7 +323,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     orthoZoom->min = .001f;
     multiObj.push_back(orthoZoom);
 
-    // LIGHT
+    //LIGHT
     lightSep = make_shared<MultiAttr>();
     lightSep->name = "light";
     lightSep->grp = "light";
@@ -427,7 +427,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     bloomLensInten->max = 1.f;
     multiObj.push_back(bloomLensInten);
 
-    // HDR
+    //HDR
     hdrSep = make_shared<MultiAttr>();
     hdrSep->name = "hdr";
     hdrSep->grp = "hdr";
@@ -489,7 +489,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     vignDist->min = 1.3f;
     multiObj.push_back(vignDist);
 
-        // FXAA
+        //FXAA
         fxaaSep = make_shared<MultiAttr>();
         fxaaSep->name = "fxaa";
         fxaaSep->grp = "fxaa";
@@ -574,7 +574,7 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     edgeThr->min = .001f;
     multiObj.push_back(edgeThr);
 
-    // SSAO
+    //SSAO
     ssaoSep = make_shared<MultiAttr>();
     ssaoSep->name = "ssao";
     ssaoSep->grp = "ssao";
@@ -619,6 +619,24 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     ssaoRad->val_f = 1.f;
     ssaoRad->min = .001f;
     multiObj.push_back(ssaoRad);
+
+    //TRANSP
+    transpSep = make_shared<MultiAttr>();
+    transpSep->name = "transp";
+    transpSep->grp = "transp";
+    transpSep->type = "sep";
+    transpSep->typeX = "FBO";
+    multiObj.push_back(transpSep);
+
+    transpW = make_shared<MultiAttr>();
+    transpW->name = "transpW";
+    transpW->grp = "transp"; //TEMP
+    transpW->type = "float";
+    transpW->typeX = "FBO";
+    transpW->val_f = .005f;
+    transpW->min = .001f;
+    transpW->max = 1.f;
+    multiObj.push_back(transpW);
 
     //SSR
     ssrSep = make_shared<MultiAttr>();
@@ -849,7 +867,6 @@ Object::Object(const Object &obj) : myWin(obj.myWin) //COPY CONSTRUCTOR
                 else if (multiObj[i]->name == "piv") piv = multiObj[i];
                 else if (multiObj[i]->name == "rotOrder") rotOrder = multiObj[i];
 
-
             //CAMLI
             else if (multiObj[i]->name == "camLiType") camLiType = multiObj[i];
 
@@ -914,6 +931,10 @@ Object::Object(const Object &obj) : myWin(obj.myWin) //COPY CONSTRUCTOR
             else if (multiObj[i]->name == "ssaoInten") ssaoInten = multiObj[i];
             else if (multiObj[i]->name == "ssaoKernel") ssaoKernel = multiObj[i];
             else if (multiObj[i]->name == "ssaoRad") ssaoRad = multiObj[i];
+
+            //TRANSP
+            else if (multiObj[i]->name == "transpSep") transpSep = multiObj[i];
+            else if (multiObj[i]->name == "transpW") transpW = multiObj[i];
 
             //SSR
             else if (multiObj[i]->name == "ssrSep") ssrSep = multiObj[i];
@@ -1310,14 +1331,22 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
 
             glm::vec4 comboU;
 
-            if (proN == "pBB" || proN == "pWireframe")
+            if (proN == "pBB")
             {
-                if (proN == "pBB")
+                if (myGL->colorPickTgl)
+                    comboU = glm::vec4(Crand, 1.f);
+
+                else
                 {
-                    comboU = glm::vec4(Crand, myGL->colorPickTgl);
-                    glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.r);
+                    auto temp = (selected) ? myWin.glslTable->Csel->val_3 : Cwire->val_3;
+                    comboU = glm::vec4(temp, 1.f);
                 }
 
+                glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.r);
+            }
+
+            if (proN == "pWireframe")
+            {
                 auto temp = (selected) ? myWin.glslTable->Csel->val_3 : Cwire->val_3;
                 glUniform3fv(glGetUniformLocation(proH, "Cwire"), 1, &temp.r);
             }
@@ -1358,9 +1387,74 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                 glUniformMatrix4fv(glGetUniformLocation(proH, "depthMVP"), 1, GL_FALSE, &depthMVP[0][0]);
             }
 
+            else if (proN == "pTransp")
+            {
+                glUniformMatrix4fv(glGetUniformLocation(proH, "MV"), 1, GL_FALSE, &MV[0][0]);
+
+                tileMaps(proH, "get");
+
+                for (auto &j : myWin.myGLWidgetSh->allMaps)
+                {
+                    if (j.name == albedoM->val_s && j.type == "ALBEDO")
+                        glProgramUniformHandleui64ARB(proH, 0, myWin.myGLWidgetSh->topLayer(j).tex1_64);
+
+                    else if (j.name == alphaM->val_s && j.type == "ALPHA")
+                        glProgramUniformHandleui64ARB(proH, 1, myWin.myGLWidgetSh->topLayer(j).tex1_64);
+                }
+
+                comboU = glm::vec4(myWin.myFSQ->transpW->val_f, myGL->debug0, Ko->val_f, 0.f);
+                glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
+            }
+
+            else if (proN == "pTranspComp")
+            {
+                glProgramUniformHandleui64ARB(proH, 0, myGL->gBuf6_64);
+                glProgramUniformHandleui64ARB(proH, 1, myGL->gBuf7_64);
+            }
+
             else if (proN == myGL->pGBufferDyn)
             {
-                //cout << "in pGBufferDyn for : " << myGL->pGBufferDyn << endl;
+//                cout << "rendering gBuffDyn : " << myGL->pGBufferDyn << endl;
+
+
+                /* LOOK AT */
+                auto PV = glm::mat4(PM * VM);
+                glUniformMatrix4fv(glGetUniformLocation(proH, "PV"), 1, GL_FALSE, &PV[0][0]);
+
+                glm::vec3 camRight_WS(VM[0][0], VM[1][0], VM[2][0]);
+                glm::vec3 camUP_WS(VM[0][1], VM[1][1], VM[2][1]);
+                glUniform3fv(glGetUniformLocation(proH, "camRight_WS"), 1, &camRight_WS.x);
+                glUniform3fv(glGetUniformLocation(proH, "camUp_WS"), 1, &camUP_WS.x);
+
+
+//                /* LOOK AT TEST */
+//                glm::vec3 upWorld(0.f, 1.f, 0.f);
+
+//                glm::vec3 targO_d = myGL->selCamLi->t->val_3;
+//                glm::vec3 lookO_d = glm::normalize(targO_d - t->val_3);
+//                glm::vec3 rightO_d = glm::normalize(glm::cross(lookO_d, upWorld));
+//                glm::vec3 upO_d = glm::cross(rightO_d, lookO_d);
+
+//                glm::mat4 lookAtM = glm::lookAt(t->val_3, targO_d, upO_d);
+//                lookAtM *= glm::rotate(glm::mat4(), glm::radians(myGL->selCamLi->r->val_3.z), glm::vec3(0.f, 0.f, 1.f));
+
+//                glUniformMatrix4fv(glGetUniformLocation(proH, "lookAtM"), 1, GL_FALSE, &lookAtM[0][0]);
+//                glUniformMatrix4fv(glGetUniformLocation(proH, "PM"), 1, GL_FALSE, &PM[0][0]);
+//                glUniformMatrix4fv(glGetUniformLocation(proH, "VM"), 1, GL_FALSE, &VM[0][0]);
+
+//                glUniform3fv(glGetUniformLocation(proH, "camRight_WS"), 1, &myGL->selCamLi->rightO.x);
+//                glUniform3fv(glGetUniformLocation(proH, "camUp_WS"), 1, &myGL->selCamLi->upO.x);
+
+
+//                glm::vec3 camRight_WS2(VM[0][0], VM[1][0], VM[2][0]);
+//                glm::vec3 camUP_WS2(VM[0][1], VM[1][1], VM[2][1]);
+//                glUniform3fv(glGetUniformLocation(proH, "camRight_WS2"), 1, &camRight_WS2.x);
+//                glUniform3fv(glGetUniformLocation(proH, "camUp_WS2"), 1, &camUP_WS2.x);
+
+
+
+
+//                cout << "in pGBufferDyn for : " << myGL->pGBufferDyn << endl;
 
                 glUniformMatrix4fv(glGetUniformLocation(proH, "MM"), 1, GL_FALSE, &MM[0][0]);
 
@@ -1638,12 +1732,14 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                 glProgramUniformHandleui64ARB(proH, 2, myGL->cursorN.tex1_64);
                 glProgramUniformHandleui64ARB(proH, 3, myGL->deferredN.tex1_64);
                 glProgramUniformHandleui64ARB(proH, 4, myGL->brushN.tex2_64);
+                glProgramUniformHandleui64ARB(proH, 5, myGL->gBuf6_64); //transp_d
+                glProgramUniformHandleui64ARB(proH, 6, myGL->gBuf7_64); //transp_d
 
                 comboU = glm::vec4(myGL->rezGate_LD, myGL->rezGate_RU);
                 glUniform4fv(glGetUniformLocation(proH, "LDRU"), 1, &comboU.x);
 
                 auto rezGateTgl = (myGL->rezGateTgl || myGL->rezGateTgl_sel) ? true : false;
-                comboU = glm::vec4(rezGateTgl, myGL->dragDrop, myGL->debug0, 0.f);
+                comboU = glm::vec4(rezGateTgl, myGL->dragDrop, myGL->debug0, myGL->debug1);
                 glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
             }
 
@@ -1761,7 +1857,7 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
             else if (proN == "pGiz")
                 glUniform3fv(glGetUniformLocation(proH, "Cgiz"), 1, &Cgiz.r);
 
-            else if (proN == "pGiz_circ") //NEW
+            else if (proN == "pGiz_circ")
             {
                 glUniform3fv(glGetUniformLocation(proH, "Cgiz"), 1, &Cgiz.r);
 

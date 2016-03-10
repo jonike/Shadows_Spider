@@ -21,17 +21,12 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450 core
 
-layout(location = 0) out vec4 rttC;
-layout(location = 1) out vec4 rttGiz;
 
-uniform vec3 Cwire;
-uniform vec4 comboU0; //(Crand.rgb, myGL->colorPickTgl)
+layout(location = 0) out vec4 rttC_or_rttGiz;
+
+uniform vec4 comboU0; //if colorpick : Crand ..... else Csel / Cwire
 
 void main()
 {
-    if (comboU0.a == 1.f)
-        rttC = vec4(comboU0.rgb, 1.f);
-
-    else
-        rttGiz = vec4(Cwire, 1.f);
+    rttC_or_rttGiz = comboU0;
 }

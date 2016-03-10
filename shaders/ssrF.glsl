@@ -83,7 +83,6 @@ layout(bindless_sampler, location = 4) uniform sampler2D tonemap_noGiz;
 layout(location = 0) out vec4 Ci;
 
 uniform mat4 PM, PMinv, PM_SS_d3d, VM;
-//vec2 screenSize = textureSize(gBuf1, 0);
 vec2 screenSize = textureSize(gBuf_DS, 0);
 
 uniform vec4 comboU0; //vec4(farClip, nearClip, ssrIter, ssrRefine)
@@ -282,8 +281,8 @@ void main()
 {
     vec3 P_VS = reconstructP(v.uv);
 
-    uvec4 data2 = texelFetch(gBuf2, ivec2(gl_FragCoord.xy), 0);
-    vec3 N_VS = vec3(unpackHalf2x16(data2.g).g, unpackHalf2x16(data2.b));
+    uvec4 data1 = texelFetch(gBuf1, ivec2(gl_FragCoord.xy), 0);
+    vec3 N_VS = vec3(unpackHalf2x16(data1.y).y, unpackHalf2x16(data1.z));
 
     vec3 R_VS = normalize(reflect(normalize(P_VS), normalize(N_VS)));
 
@@ -301,4 +300,3 @@ void main()
     hitPix = mix(v.uv, hitPix, intersect);
     Ci = vec4(texture(tonemap_noGiz, hitPix).rgb, alpha);
 }
-

@@ -21,13 +21,11 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450 core
 
-layout(location = 0) out vec4 rttC;
-layout(location = 1) out vec4 rttGiz;
+layout(location = 0) out vec4 rttGiz;
 
 uniform vec3 Cgiz;
 
 void main()
 {
-    rttC = vec4(0.f);
     rttGiz = vec4(Cgiz, 1.f);
 }

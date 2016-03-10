@@ -19,23 +19,25 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-#ifndef PREFS_H
-#define PREFS_H
+#version 450 core
+#extension GL_ARB_bindless_texture : require
 
-#include "MainWin.h"
-
-class Prefs : public QTabWidget
+out Vert
 {
-    Q_OBJECT
-public:
-    MainWin &myWin;
-    Prefs(MainWin &, QWidget *parent = 0);
+    vec2 UV;
+    float myDepth;
+} v;
 
-    QSplitter *gfxTab_H,  *pathTab_H;
+layout(location = 0) in vec3 pE;
+layout(location = 1) in vec2 uvE;
 
-protected:
+uniform mat4 MVP, MV;
 
-};
+void main()
+{
+    gl_Position = MVP * vec4(pE, 1.f);
+    v.myDepth = -(MV * vec4(pE, 1.f)).z;
 
-#endif // PREFS_H
+    v.UV = uvE;
+}
 

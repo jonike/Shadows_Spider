@@ -386,7 +386,9 @@ void MainWin::objInit()
         myPivot = i;
     }
 
-    startupScene("teapotPlane");
+//    startupScene("billboard");
+    startupScene("BOIT");
+//    startupScene("teapotPlane");
 //    startupScene("pointShadows");
 //    startupScene("lotsOfSpheres");
 
@@ -433,36 +435,92 @@ void MainWin::objInit()
 
 void MainWin::startupScene(string name)
 {
-    if (name == "teapotPlane")
+    if (name == "billboard")
     {
-        //myFSQ->Kgi->val_f = 0.f;
+        auto conc = pathTable->pathObj->val_s;
+        conc.append("plane.obj");
 
-        newObj = myGLWidgetSh->VBOup("999", "POINT", "light", 0);
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "billboard", 0);
         for (auto &i : newObj)
         {
-            i->t->val_3 = glm::vec3(5.f);
+            i->albedoM->val_s = "abj";
+            i->Ko->val_f = 1.f;
+            //i->shadowCast->val_b = false;
+            i->t->val_3 = glm::vec3(0.f);
             i->piv->val_3 = i->t->val_3;
-            i->Cgiz = glm::vec3(1.f, 0.f, 0.f);
-            i->setTarg(i->targO, 0.f);
-            i->lInten->val_f = 5.f;
-            i->nearShadow->val_f = 1.f;
+//            i->r->val_3 = glm::vec3(90.f, 0.f, 0.f);
+            i->r->val_3 = glm::vec3(90.f, -90.f, 0.f);
+            i->s->val_3 = glm::vec3(20.f);
+            allObj.push_back(i);
+        }
+    }
 
+    else if (name == "BOIT")
+    {
+        /* OPAQUE */
+        auto conc = pathTable->pathObj->val_s;
+        conc.append("teapot.obj");
+
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "teapot", 0);
+        for (auto &i : newObj)
+        {
+            //i->metallicM->val_s = "WHITE";
+            //i->ruffM->val_s = "white";
+            //i->shadowCast->val_b = false;
+            i->t->val_3 = glm::vec3(0.f, 0.f, -15.f);
+            i->piv->val_3 = i->t->val_3;
+            i->r->val_3 = glm::vec3(0.f, 90.f, 0.f);
+            i->s->val_3 = glm::vec3(1.5f);
             allObj.push_back(i);
         }
 
-//        newObj = myGLWidgetSh->VBOup("999", "SPOT", "light", 0);
-//        for (auto &i : newObj)
-//        {
-//            i->t->val_3 = glm::vec3(0.f, 8.f, 8.f);
-//            i->piv->val_3 = i->t->val_3;
-//            i->Cgiz = glm::vec3(1.f, 0.f, 0.f);
-//            i->setTarg(i->targO, 0.f);
-//            //i->lSpotO->val_f = 40.f;
-//            i->lInten->val_f = 5.f;
-//            i->nearShadow->val_f = 2.f;
+        /* TRANSPARENT - three planes */
+        conc = pathTable->pathObj->val_s;
+        conc.append("plane.obj");
 
-//            allObj.push_back(i);
-//        }
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "BOIT_blue", 0);
+        for (auto &i : newObj)
+        {
+            i->albedoM->val_s = "blue";
+            i->Ko->val_f = 1.f;
+            //i->shadowCast->val_b = false;
+            i->t->val_3 = glm::vec3(10.f, 5.f, 0.f);
+            i->piv->val_3 = i->t->val_3;
+            i->r->val_3 = glm::vec3(90.f, 0.f, 0.f);
+            i->s->val_3 = glm::vec3(20.f);
+            allObj.push_back(i);
+        }
+
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "BOIT_yellow", 0);
+        for (auto &i : newObj)
+        {
+            i->albedoM->val_s = "yellow";
+            i->Ko->val_f = .75f;
+            //i->shadowCast->val_b = false;
+            i->t->val_3 = glm::vec3(5.f, 2.5f, -5.f);
+            i->piv->val_3 = i->t->val_3;
+            i->r->val_3 = glm::vec3(90.f, 0.f, 0.f);
+            i->s->val_3 = glm::vec3(20.f);
+            allObj.push_back(i);
+        }
+
+        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "BOIT_red", 0);
+        for (auto &i : newObj)
+        {
+            i->albedoM->val_s = "red";
+            i->Ko->val_f = .75f;
+            //i->shadowCast->val_b = false;
+            i->t->val_3 = glm::vec3(0.f, 0.f, -10.f);
+            i->piv->val_3 = i->t->val_3;
+            i->r->val_3 = glm::vec3(90.f, 0.f, 0.f);
+            i->s->val_3 = glm::vec3(20.f);
+            allObj.push_back(i);
+        }
+    }
+
+    else if (name == "teapotPlane")
+    {
+        //myFSQ->Kgi->val_f = 0.f;
 
 //        newObj = myGLWidgetSh->VBOup("999", "SPOT", "light", 0);
 //        for (auto &i : newObj)
@@ -490,6 +548,33 @@ void MainWin::startupScene(string name)
 
 //            allObj.push_back(i);
 //        }
+
+        newObj = myGLWidgetSh->VBOup("999", "POINT", "light", 0);
+        for (auto &i : newObj)
+        {
+            i->t->val_3 = glm::vec3(5.f);
+            i->piv->val_3 = i->t->val_3;
+            i->Cgiz = glm::vec3(1.f, 0.f, 0.f);
+            i->setTarg(i->targO, 0.f);
+            i->lInten->val_f = 5.f;
+            i->nearShadow->val_f = 1.f;
+
+            allObj.push_back(i);
+        }
+
+        newObj = myGLWidgetSh->VBOup("999", "SPOT", "light", 0);
+        for (auto &i : newObj)
+        {
+            i->t->val_3 = glm::vec3(0.f, 8.f, 8.f);
+            i->piv->val_3 = i->t->val_3;
+            i->Cgiz = glm::vec3(1.f, 0.f, 0.f);
+            i->setTarg(i->targO, 0.f);
+            //i->lSpotO->val_f = 40.f;
+            i->lInten->val_f = 5.f;
+            i->nearShadow->val_f = 2.f;
+
+            allObj.push_back(i);
+        }
 
         auto conc = pathTable->pathObj->val_s;
         conc.append("teapot.obj");
@@ -531,6 +616,7 @@ void MainWin::startupScene(string name)
             i->Cgiz = glm::vec3(1.f, 0.f, 0.f);
             i->setTarg(i->targO, 0.f);
             i->lInten->val_f = 5.f;
+            i->nearShadow->val_f = .6f; //
 
             allObj.push_back(i);
         }
@@ -567,16 +653,6 @@ void MainWin::startupScene(string name)
             i->s->val_3 = glm::vec3(1.f);
             allObj.push_back(i);
         }
-
-        //        newObj = myGLWidgetSh->VBOup(conc, "OBJ", "sphereR", 0);
-        //        for (auto &i : newObj)
-        //        {
-        //            i->ruffM->val_s = "white";
-        //            i->t->val_3 = glm::vec3(5.f, yShift, 0.f);
-        //            i->piv->val_3 = i->t->val_3;
-        //            i->s->val_3 = glm::vec3(1.f);
-        //            allObj.push_back(i);
-        //        }
 
         newObj = myGLWidgetSh->VBOup(conc, "OBJ", "sphereU", 0);
         for (auto &i : newObj)

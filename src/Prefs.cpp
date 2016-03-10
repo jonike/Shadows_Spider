@@ -44,9 +44,5 @@ Prefs::Prefs(MainWin &myWinTemp, QWidget *parent) : QTabWidget(parent), myWin(my
     pathTab_H->insertWidget(0, myWin.pathTable);
 
     addTab(pathTab_H, "path");
-}
 
-void Prefs::enterEvent(QEvent *)
-{
-    setFocus();
 }

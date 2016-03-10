@@ -129,6 +129,13 @@ void GLWidgetSh::mapInit()
     allMaps.push_back( { "gold", "ALBEDO", "single/gold_256.tga" } );
     allMaps.push_back( { "abj", "ALBEDO", "albedo/ABJ.png" } );
 
+    allMaps.push_back( { "red", "ALBEDO", "single/colors/BLANK_red_256.png" } );
+    allMaps.push_back( { "green", "ALBEDO", "single/colors/BLANK_green_256.png" } );
+    allMaps.push_back( { "blue", "ALBEDO", "single/colors/BLANK_blue_256.png" } );
+    allMaps.push_back( { "cyan", "ALBEDO", "single/colors/BLANK_cyan_256.png" } );
+    allMaps.push_back( { "yellow", "ALBEDO", "single/colors/BLANK_yellow_256.png" } );
+    allMaps.push_back( { "magenta", "ALBEDO", "single/colors/BLANK_magenta_256.png" } );
+
     //ALPHA
     allMaps.push_back( { "BLANK", "ALPHA", "single/BLANK_white_1024.png" } );
 //    allMaps.push_back( { "BLANK", "ALPHA", "single/BLANK_white_1024.tga" } );
@@ -180,9 +187,7 @@ void GLWidgetSh::mapInit()
 
     //RUFF
     allMaps.push_back( { "BLANK", "RUFF", "single/BLANK_black_256.tga" } );
-//    allMaps.push_back( { "BLANK", "RUFF", "single/BLANK_gray_256.tga" } );
     allMaps.push_back( { "gray", "RUFF", "single/BLANK_gray_256.tga" } );
-//    allMaps.push_back( { "BLANK", "RUFF", "single/BLANK_white_256.tga" } );
     allMaps.push_back( { "white", "RUFF", "single/BLANK_white_256.tga" } );
     allMaps.push_back( { "squiggle0", "RUFF", "ruff/squiggle0.tga" } );
     allMaps.push_back( { "squiggle1", "RUFF", "ruff/squiggle1.tga" } );
@@ -451,7 +456,6 @@ AbjNode GLWidgetSh::shadowN_create(string name, int widthIn, int heightIn)
         cout << "error with shadowN_create FBO1" << endl;
 
 
-
     GLuint fboNew2;
     glCreateFramebuffers(1, &fboNew2);
 
@@ -485,11 +489,7 @@ AbjNode GLWidgetSh::texN_create(string name, string type, string pathIn, int idx
 
     GLuint fboNew;
     glCreateFramebuffers(1, &fboNew);
-
-    GLenum DrawBuffers[] =
-    {
-        GL_COLOR_ATTACHMENT0,
-    };
+    GLenum DrawBuffers[] = { GL_COLOR_ATTACHMENT0 };
 
     //upload tex into slot 0...consider additional slots (2 total) for brush's outline silhouette
     auto pathTex = myWin.pathTable->pathTex->val_s;
@@ -594,7 +594,6 @@ AbjNode GLWidgetSh::texN_create(string name, string type, string pathIn, int idx
         else numMip = 1 + floor(log2(glm::max(imgW, imgH)));
 
         glCreateTextures(GL_TEXTURE_2D, 1, &tex);
-
         glTextureStorage2D(tex, numMip, formatI, imgW, imgH);
         glTextureSubImage2D(tex, 0, 0, 0, imgW, imgH, formatP, GL_UNSIGNED_BYTE, img);
 
@@ -623,13 +622,8 @@ AbjNode GLWidgetSh::texN_create(string name, string type, string pathIn, int idx
     if (type == "BRUSH")
     {
         glCreateFramebuffers(1, &fboNew2);
-
-        GLenum DrawBuffers[] =
-        {
-            GL_COLOR_ATTACHMENT0,
-        };
-
         glCreateTextures(GL_TEXTURE_2D, 1, &tex2);
+        GLenum DrawBuffers[] = { GL_COLOR_ATTACHMENT0 };
 
         glTextureStorage2D(tex2, 1, GL_RGBA16F, imgW, imgH);
         glTextureParameteri(tex2, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -648,13 +642,8 @@ AbjNode GLWidgetSh::texN_create(string name, string type, string pathIn, int idx
     {
         //create the "copyTex" FBO
         glCreateFramebuffers(1, &fboNew2);
-
-        GLenum DrawBuffers[] =
-        {
-            GL_COLOR_ATTACHMENT0,
-        };
-
         glCreateTextures(GL_TEXTURE_2D, 1, &tex2);
+        GLenum DrawBuffers[] = { GL_COLOR_ATTACHMENT0 };
 
         glTextureStorage2D(tex2, 1, GL_RGBA16F, imgW, imgH);
         glTextureParameteri(tex2, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -759,6 +748,8 @@ void GLWidgetSh::proInit()
     allPro.push_back( { "pStencilHi", createProg("stencilHiV.glsl", "", "stencilHiF.glsl") } );
     allPro.push_back( { "pStencilGeo", createProg("stencilGeoV.glsl", "", "stencilGeoF.glsl") } );
     allPro.push_back( { "pTonemap", createProg("fboV.glsl", "", "tonemapF.glsl") } );
+    allPro.push_back( { "pTransp", createProg("transpV.glsl", "", "transpF.glsl") } );
+    allPro.push_back( { "pTranspComp", createProg("fboV.glsl", "", "transpCompF.glsl") } );
     allPro.push_back( { "pTxt", createProg("txtV.glsl", "txtG.glsl", "txtF.glsl") } );
     allPro.push_back( { "pVolumeLight", createProg("volumeLightV.glsl", "", "volumeLightF.glsl") } );
     allPro.push_back( { "pWireframe", createProg("wireframeV.glsl", "", "wireframeF.glsl") } );

@@ -142,6 +142,7 @@ public:
     bool searchB;
     int savedIdx = 2;
     int ID_lastFocused = 0;
+    bool isTyping = false;
 
     string lastScene, oldSelB, layoutType, myStyle;
     string selMode = "OBJ";

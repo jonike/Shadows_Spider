@@ -66,7 +66,6 @@ void GLWidget::enterEvent(QEvent *)
 
 void GLWidget::leaveEvent(QEvent *)
 {
-    altTgl = ctrlTgl = shiftTgl = false;
     clearFocus();
 }
 
@@ -267,11 +266,19 @@ void GLWidget::keyReleaseEvent(QKeyEvent *e)
         debug0 = !debug0;
         myWin.attrTable->refreshTable();
 
-        cout << "debug0 : " << debug0 << endl;
+        cout << "debug0 / debug1 " << debug0 << " : " << debug1 << endl;
     }
+
+    //F4 reserved for selecting myWin.myFSQ
 
     else if (e->key() == Qt::Key_F5)
     {
+        debug1 = !debug1;
+        myWin.attrTable->refreshTable();
+
+        cout << "debug0 / debug1 " << debug0 << " : " << debug1 << endl;
+
+
 //        myWin.setLightsDirty();
 
 //        auto pt0 = glm::vec2(0.f, 0.f);
@@ -973,11 +980,11 @@ bool GLWidget::gridMatch(shared_ptr<Object> obj)
 
 void GLWidget::paintGL()
 {
-//    chronoPt1 = chrono0.now();
-//    cout << "chrono diff = " << chrono::duration_cast<chrono::seconds>(chronoPt1 - chronoPt0).count() << endl;s
-//    cout << "chrono diff = " << chrono::duration_cast<chrono::milliseconds>(chronoPt1 - chronoPt0).count() << endl;
-//    cout << "chrono diff = " << chrono::duration_cast<chrono::microseconds>(chronoPt1 - chronoPt0).count() << endl;
-//    cout << "chrono diff = " << chrono::duration_cast<chrono::nanoseconds>(chronoPt1 - chronoPt0).count() << endl;
+    //    chronoPt1 = chrono0.now();
+    //    cout << "chrono diff = " << chrono::duration_cast<chrono::seconds>(chronoPt1 - chronoPt0).count() << endl;
+    //    cout << "chrono diff = " << chrono::duration_cast<chrono::milliseconds>(chronoPt1 - chronoPt0).count() << endl;
+    //    cout << "chrono diff = " << chrono::duration_cast<chrono::microseconds>(chronoPt1 - chronoPt0).count() << endl;
+    //    cout << "chrono diff = " << chrono::duration_cast<chrono::nanoseconds>(chronoPt1 - chronoPt0).count() << endl;
 
     if (myWin.layerLay->getNewOrder)
     {
@@ -1044,6 +1051,7 @@ void GLWidget::paintGL()
         i->loadVAO(activeGL);
     }
 
+
     myWin.myGLWidgetSh->glUseProgram2("pShadow");
 
     for (auto &i : myWin.allObj)
@@ -1080,8 +1088,13 @@ void GLWidget::paintGL()
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    GLenum DrawBuffersBG_0[] = { GL_COLOR_ATTACHMENT0 };
+    GLenum DrawBuffersBG_1[] = { GL_COLOR_ATTACHMENT1 };
+
+    glNamedFramebufferDrawBuffers(bgN.fbo1, 1, DrawBuffersBG_0);
 
     glDisable(GL_DEPTH_TEST);
     myWin.myGLWidgetSh->glUseProgram2("pSky");
@@ -1098,6 +1111,9 @@ void GLWidget::paintGL()
                 i->render(activeGL);
         }
     }
+
+
+    glNamedFramebufferDrawBuffers(bgN.fbo1, 1, DrawBuffersBG_1);
 
     myWin.myGLWidgetSh->glUseProgram2("pGiz");
     if (gizSideTgl)
@@ -1164,6 +1180,7 @@ void GLWidget::paintGL()
     }
 
     myWin.myGLWidgetSh->glUseProgram2("pBB");
+
     for (auto &i : myWin.allObj)
     {
         if (i->bb->val_b && myWin.searchUp(i))
@@ -1224,7 +1241,7 @@ void GLWidget::paintGL()
         }
     }
 
-    //REV DEPTH
+    //REVERSE DEPTH
     glBindFramebuffer(GL_FRAMEBUFFER, depthRevN.fbo1);
     glViewport(0, 0, depthRevN.width, depthRevN.height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1244,43 +1261,18 @@ void GLWidget::paintGL()
     {
         if (i->type == "OBJ" && !i->bb->val_b && myWin.searchUp(i))
         {
-            if (i->twoSided->val_s != "OFF")
-                glDisable(GL_CULL_FACE);
+            if (i->Ko->val_f == 1.f) // (PARTIALLY) OPAQUE OBJECTS
+            {
+                if (i->twoSided->val_s != "OFF")
+                    glDisable(GL_CULL_FACE);
 
-            i->render(activeGL);
-            glEnable(GL_CULL_FACE);
+                i->render(activeGL);
+                glEnable(GL_CULL_FACE);
+            }
         }
     }
 
-    /* G BUFFER */
-    glBindFramebuffer(GL_FRAMEBUFFER, gBufN.fbo1);
-    glViewport(0, 0, gBufN.width, gBufN.height);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glShadeModel(GL_SMOOTH);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    glFrontFace(GL_CCW);
-    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glDisable(GL_BLEND);
-
-    pGBufferDyn = "pGBuffer";
-    pGBufferDyn.append(to_string(myWin.lightCt));
-    myWin.myGLWidgetSh->glUseProgram2(pGBufferDyn);
-
-    for (auto &i : myWin.allObj)
-    {
-        if (i->type == "OBJ" && !i->bb->val_b && myWin.searchUp(i))
-        {
-            if (i->twoSided->val_s != "OFF")
-                glDisable(GL_CULL_FACE);
-
-            i->render(activeGL);
-            glEnable(GL_CULL_FACE);
-        }
-    }
+    GBuffer_BOIT();
 
     if (myWin.myGLWidgetSh->brushOutlineUpB)
         brushOutlineUp();
@@ -1301,6 +1293,94 @@ void GLWidget::paintGL()
     overlay2D();
 
     tick_oldFPS = tick_newFPS;
+}
+
+void GLWidget::GBuffer_BOIT()
+{
+//    /* OPAQUE PASS */
+//    /* ALPHA TESTING in opaque pass shader (for alpha == 1.f) */
+//    if (col.a <= threshold)
+//        discard;
+
+    /* G BUFFER */
+    GLenum DrawBuffersOpaque[] =
+    {
+        GL_COLOR_ATTACHMENT0,
+        GL_COLOR_ATTACHMENT1,
+        GL_COLOR_ATTACHMENT2,
+        GL_COLOR_ATTACHMENT3,
+        GL_COLOR_ATTACHMENT4,
+        GL_COLOR_ATTACHMENT5,
+    };
+
+    const auto cAttachNumO = arraySize(DrawBuffersOpaque);
+    glNamedFramebufferDrawBuffers(gBufN.fbo1, cAttachNumO, DrawBuffersOpaque);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, gBufN.fbo1);
+    glViewport(0, 0, gBufN.width, gBufN.height);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glShadeModel(GL_SMOOTH);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glFrontFace(GL_CCW);
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+    glEnable(GL_CULL_FACE);
+//    glDisable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glDisable(GL_BLEND);
+
+    pGBufferDyn = "pGBuffer";
+    pGBufferDyn.append(to_string(myWin.lightCt));
+    myWin.myGLWidgetSh->glUseProgram2(pGBufferDyn);
+
+    for (auto &i : myWin.allObj)
+    {
+        if (i->type == "OBJ" && !i->bb->val_b && myWin.searchUp(i))
+        {
+            if (i->Ko->val_f == 1.f) // (PARTIALLY) OPAQUE OBJECTS
+            {
+                if (i->twoSided->val_s != "OFF")
+                    glDisable(GL_CULL_FACE);
+
+                i->render(activeGL);
+                glEnable(GL_CULL_FACE);
+            }
+        }
+    }
+
+    /* TRANSPARENT PASS */
+    GLenum DrawBuffersTransp[] = { GL_COLOR_ATTACHMENT6, GL_COLOR_ATTACHMENT7 };
+    glNamedFramebufferDrawBuffers(gBufN.fbo1, 2, DrawBuffersTransp);
+
+    glDepthMask(GL_FALSE); //read depth from opaque pass but dont write to it
+
+    float clearColor0[4] = { 0.f, 0.f, 0.f, 0.f };
+    float clearColor1[4] = { 1.f, 1.f, 1.f, 1.f };
+    glClearNamedFramebufferfv(gBufN.fbo1, GL_COLOR, 0, clearColor0);
+    glClearNamedFramebufferfv(gBufN.fbo1, GL_COLOR, 1, clearColor1);
+
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFunci(0, GL_ONE, GL_ONE);
+    glBlendFunci(1, GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
+
+    myWin.myGLWidgetSh->glUseProgram2("pTransp");
+
+    for (auto &i : myWin.allObj)
+    {
+        if (i->type == "OBJ" && !i->bb->val_b && myWin.searchUp(i))
+        {
+            if (i->Ko->val_f < 1.f)
+            {
+                BOIT_name_D = i->name->val_s;
+                i->render(activeGL);
+            }
+        }
+    }
+
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
 }
 
 void GLWidget::paintAndCursorDrawHideTimer0() //this is a REVERSE timer that counts UP
@@ -1801,8 +1881,8 @@ void GLWidget::bakeSomething()
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //
     glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //
 
     myLayerIdx = getCurrPaintLayer(); //get correct selLayer
 

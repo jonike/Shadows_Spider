@@ -21,7 +21,7 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450 core
 
-layout(location = 1) out vec4 rttGiz;
+layout(location = 0) out vec4 rttGiz;
 
 uniform vec3 CstencilHi;
 

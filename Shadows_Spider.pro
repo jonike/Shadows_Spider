@@ -117,6 +117,9 @@ DISTFILES += \
     shaders/gBuf/gBuffer2F.glsl \
     shaders/gBuf/gBuffer2V.glsl \
     shaders/gBuf/gBuffer3F.glsl \
-    shaders/gBuf/gBuffer3V.glsl
+    shaders/gBuf/gBuffer3V.glsl \
+    shaders/transpF.glsl \
+    shaders/transpV.glsl \
+    shaders/transpCompF.glsl
 
 

@@ -46,7 +46,7 @@ public:
     glm::vec3 upWorld, from_OBB, to_OBB, aspectXYZ;
     vector<Stroke> strokes_brush, strokes_eraser, strokes_brush_cursor, strokes_eraser_cursor, strokes_cursor;
 
-    string pGBufferDyn;
+    string pGBufferDyn, BOIT_name_D;
 
     //giz
     string gizHoverType = "NONE";
@@ -68,6 +68,7 @@ public:
     int blendModeD = 999;
     int copyTgt = 0;
     bool debug0 = false;
+    bool debug1 = false;
     bool moveDist_paint = false;
     bool firstPress = true;
     bool doEraserDebug = true;
@@ -170,6 +171,7 @@ protected:
     Map getCurrPaintLayer();
     void blendModeDebug(string);
     void paintAndCursorDrawHideTimer0();
+    void GBuffer_BOIT();
 
 signals:
     void changed(const QMimeData *mimeData = 0);

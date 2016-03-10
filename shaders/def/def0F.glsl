@@ -238,11 +238,11 @@ void main()
 
         Ci.rgb *= twoSided; //
 
-    //    if (twoSided == 0.f) //doesnt work right with Alpha
-    //    {
-    //        Ci.rgb = vec3(0.f);
-    //        Ci.a = 1.f;
-    //    }
+        //    if (twoSided == 0.f) //doesnt work right with Alpha
+        //    {
+        //        Ci.rgb = vec3(0.f);
+        //        Ci.a = 1.f;
+        //    }
     }
 
     vec4 skyT = texture(sky, v.uv);

@@ -29,11 +29,8 @@ in Vert
 
 layout(binding = 0) uniform samplerCube cubeM_spec;
 layout(location = 0) out vec4 simp_sky;
-layout(location = 1) out vec4 simp_giz;
 
 void main()
 {
     simp_sky = texture(cubeM_spec, v.uv);
-
-    simp_giz = vec4(0.f);
 }

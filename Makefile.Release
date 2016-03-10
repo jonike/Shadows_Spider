@@ -162,7 +162,10 @@ DIST          = shaders/bbF.glsl \
 		shaders/gBuf/gBuffer2F.glsl \
 		shaders/gBuf/gBuffer2V.glsl \
 		shaders/gBuf/gBuffer3F.glsl \
-		shaders/gBuf/gBuffer3V.glsl include\stb_image.h \
+		shaders/gBuf/gBuffer3V.glsl \
+		shaders/transpF.glsl \
+		shaders/transpV.glsl \
+		shaders/transpCompF.glsl include\stb_image.h \
 		src\Anim.h \
 		src\Attrs.h \
 		src\CamCombo.h \

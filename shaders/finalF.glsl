@@ -32,12 +32,13 @@ layout(bindless_sampler, location = 1) uniform sampler2D ssr;
 layout(bindless_sampler, location = 2) uniform sampler2D cursor;
 layout(bindless_sampler, location = 3) uniform sampler2D deferred;
 layout(bindless_sampler, location = 4) uniform sampler2D brush;
-layout(bindless_sampler, location = 5) uniform sampler2D ssao;
+layout(bindless_sampler, location = 5) uniform sampler2D accum; //
+layout(bindless_sampler, location = 6) uniform sampler2D revealage; //
 
 out vec3 Ci;
 
 uniform vec4 LDRU;
-uniform vec4 comboU0; //vec4(rezGateTgl, dragDrop, debug0, 0.f)
+uniform vec4 comboU0; //vec4(rezGateTgl, dragDrop, debug0, debug1)
 
 float rezGateAlpha(vec2 uv, vec2 pLD, vec2 pRU, float dragDrop)
 {
@@ -54,18 +55,17 @@ void main() //3D
 {
     vec4 brushT = texture(brush, v.uv);
     vec4 cursorT = texture(cursor, v.uv);
+    float revealageT = texture(revealage, v.uv).r;
 
 //    Ci = texture(deferred, v.uv).rgb;
-    Ci = texture(fxaa, v.uv).rgb;
-//    Ci = texture(fxaa, v.uv).rgb + texture(ssr, v.uv).rgb;
+//    Ci = texture(fxaa, v.uv).rgb;
 //    Ci = texture(ssr, v.uv).rgb;
+    Ci = texture(fxaa, v.uv).rgb + (revealageT * texture(ssr, v.uv).rgb);
 
     Ci = mix(Ci, brushT.rgb, brushT.a); // paint
     Ci = mix(Ci, cursorT.rgb, cursorT.a); //paint cursor
 
-//     if (comboU0.z == 1.f)
-//     {
-//     }
+    //if (comboU0.z == 1.f)
 
     if (comboU0.x == 1.f || comboU0.y == 1.f)
         Ci *= rezGateAlpha(v.uv, LDRU.xy, LDRU.zw, comboU0.y);

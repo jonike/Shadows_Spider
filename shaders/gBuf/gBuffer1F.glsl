@@ -57,8 +57,6 @@ layout(location = 2) out uvec4 gBuf2;
 layout(location = 3) out uvec4 gBuf3;
 layout(location = 4) out uvec4 gBuf4;
 //layout(location = 5) out uvec4 gBuf5;
-//layout(location = 6) out uvec4 gBuf6;
-//layout(location = 7) out uvec4 gBuf7;
 
 uniform int NUM_LIGHTS;
 uniform float anisoType;
@@ -112,7 +110,7 @@ void main()
     albedoT = pow(albedoT, vec3(2.2f)); //gamma space input tex req decoding
 
     float anisoM  = getAniso(anisoType);
-    float alphaT = texture(alpha, albedoAlphaTile.ba * v.UV).r * comboU0.z; // (w/ overall alpha param)
+    float alphaT = texture(alpha, albedoAlphaTile.ba * v.UV).r * comboU0.z;
     float metallicT = texture(metallic, metallicRuffTile.rg * v.UV).r;
 
     float ruffT = texture(ruff, metallicRuffTile.ba * v.UV).r;
@@ -167,14 +165,4 @@ void main()
     //    gBuf5.y = packHalf2x16(vec2(0.f));
     //    gBuf5.z = packHalf2x16(vec2(0.f));
     //    gBuf5.w = packHalf2x16(vec2(0.f));
-
-    //    gBuf6.x = packHalf2x16(vec2(0.f));
-    //    gBuf6.y = packHalf2x16(vec2(0.f));
-    //    gBuf6.z = packHalf2x16(vec2(0.f));
-    //    gBuf6.w = packHalf2x16(vec2(0.f));
-
-    //    gBuf7.x = packHalf2x16(vec2(0.f));
-    //    gBuf7.y = packHalf2x16(vec2(0.f));
-    //    gBuf7.z = packHalf2x16(vec2(0.f));
-    //    gBuf7.w = packHalf2x16(vec2(0.f));
 }

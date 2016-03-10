@@ -60,6 +60,7 @@ public:
     shared_ptr<MultiAttr> ssaoSep, ssaoBias, ssaoInten, ssaoKernel, ssaoRad;
     shared_ptr<MultiAttr> paintSep, clearBehav, displMode, edgeThr;
     shared_ptr<MultiAttr> ssrSep, ssrIter, ssrRefine, ssrPixStride, ssrPixZSize, ssrPixStrideZ, ssrMaxRayDist, ssrEdgeFade, ssrEyeFade0, ssrEyeFade1;
+    shared_ptr<MultiAttr> transpSep, transpW;
 
     float distO;
     glm::vec3 lookO, rightO, upO, targO, lookFPS, rightFPS, upFPS;

@@ -127,12 +127,7 @@ AbjNode PP::bgN_create()
     GLuint fboNew;
     glCreateFramebuffers(1, &fboNew);
 
-    GLenum DrawBuffers[] =
-    {
-        GL_COLOR_ATTACHMENT0,
-        GL_COLOR_ATTACHMENT1,
-    };
-
+    GLenum DrawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
     const auto cAttachNum = arraySize(DrawBuffers);
 
     GLuint setupRTT[cAttachNum];
@@ -198,12 +193,7 @@ AbjNode PP::tonemapN_create()
     GLuint fboNew;
     glCreateFramebuffers(1, &fboNew);
 
-    GLenum DrawBuffers[] =
-    {
-        GL_COLOR_ATTACHMENT0,
-        GL_COLOR_ATTACHMENT1,
-    };
-
+    GLenum DrawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
     const auto cAttachNum = arraySize(DrawBuffers);
 
     GLuint setupRTT[cAttachNum];
@@ -243,11 +233,7 @@ AbjNode PP::singleN_create(string name, GLenum format, int widthIn, int heightIn
     GLuint fboNew;
     glCreateFramebuffers(1, &fboNew);
 
-    GLenum DrawBuffers[] =
-    {
-        GL_COLOR_ATTACHMENT0,
-    };
-
+    GLenum DrawBuffers[] = { GL_COLOR_ATTACHMENT0 };
     const auto cAttachNum = arraySize(DrawBuffers);
 
     GLuint texNew[cAttachNum];
@@ -297,11 +283,7 @@ AbjNode PP::dualN_create(string name, GLenum format, int widthIn, int heightIn)
     GLuint nodeNew[numFBO];
     glCreateFramebuffers(numFBO, nodeNew);
 
-    GLenum DrawBuffers[] =
-    {
-        GL_COLOR_ATTACHMENT0,
-    };
-
+    GLenum DrawBuffers[] = { GL_COLOR_ATTACHMENT0 };
     const auto cAttachNum = arraySize(DrawBuffers);
 
     GLuint setupRTT[numFBO * cAttachNum];
@@ -354,6 +336,12 @@ AbjNode PP::gBufN_create()
     {
         if (i == 0)
             glTextureStorage2D(setupRTT[i], 1, GL_RGBA32F, myGL->width(), myGL->height());
+
+        else if (i == 6)
+            glTextureStorage2D(setupRTT[i], 1, GL_RGBA16F, myGL->width(), myGL->height());
+
+        else if (i == 7)
+            glTextureStorage2D(setupRTT[i], 1, GL_R16F, myGL->width(), myGL->height());
 
         else
             glTextureStorage2D(setupRTT[i], 1, GL_RGBA32UI, myGL->width(), myGL->height());
@@ -522,6 +510,14 @@ void PP::postFX(shared_ptr<GLWidget> myGLin)
     myWin.myGLWidgetSh->glUseProgram2(pDefDyn);
     myWin.myFSQ->render(myGL);
 
+        /* TRANSP COMPOSITE */
+        glEnable(GL_BLEND);
+        glBlendEquation(GL_FUNC_ADD);
+        glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
+        myWin.myGLWidgetSh->glUseProgram2("pTranspComp");
+        myWin.myFSQ->render(myGL);
+        glDisable(GL_BLEND);
+
     //LUMA INIT
     glBindFramebuffer(GL_FRAMEBUFFER, myGL->lumaInitN.fbo1);
     glViewport(0, 0, myGL->lumaInitN.width, myGL->lumaInitN.height);
@@ -563,11 +559,12 @@ void PP::postFX(shared_ptr<GLWidget> myGLin)
     myWin.myFSQ->render(myGL);
 
     //SSR
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //
-    glEnable(GL_BLEND);
     glBindFramebuffer(GL_FRAMEBUFFER, myGL->ssrN.fbo1);
     glViewport(0, 0, myGL->ssrN.width, myGL->ssrN.height);
     glClear(GL_COLOR_BUFFER_BIT);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //
     myWin.myGLWidgetSh->glUseProgram2("pSSR");
     myWin.myFSQ->render(myGL);
     glDisable(GL_BLEND);
@@ -607,6 +604,7 @@ void PP::resizeTexClearMem(shared_ptr<GLWidget> myGLin)
     glDeleteFramebuffers(1, &myGL->gBufN.fbo1);
 
     myWin.myGLWidgetSh->up64N(myGL->alphaGaussN, 0);
+    myWin.myGLWidgetSh->up64N(myGL->bgN, 0);
     myWin.myGLWidgetSh->up64N(myGL->bloomN, 0);
     myWin.myGLWidgetSh->up64N(myGL->bloomCN, 0);
     myWin.myGLWidgetSh->up64N(myGL->deferredN, 0);
@@ -618,11 +616,11 @@ void PP::resizeTexClearMem(shared_ptr<GLWidget> myGLin)
     myWin.myGLWidgetSh->up64N(myGL->eraserN, 0);
     myWin.myGLWidgetSh->up64N(myGL->cursorN, 0);
     myWin.myGLWidgetSh->up64N(myGL->ssaoN, 0);
-    myWin.myGLWidgetSh->up64N(myGL->bgN, 0);
     myWin.myGLWidgetSh->up64N(myGL->ssrN, 0);
     myWin.myGLWidgetSh->up64N(myGL->ssaoGaussN, 0);
     myWin.myGLWidgetSh->up64N(myGL->tonemapN, 0);
     myWin.myGLWidgetSh->up64N(myGL->tonemapExpN, 0);
+
     myWin.myGLWidgetSh->up64N(myGL->lumaInitN, 0);
 
     for (int i = 0; i < 2; ++i)

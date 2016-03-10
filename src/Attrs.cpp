@@ -65,7 +65,6 @@ Attrs::Attrs(MainWin &myWinTemp, QWidget *parent) : QTableWidget(parent), myWin(
 
 void Attrs::enterEvent(QEvent *)
 {
-    setFocus();
     multiCutTgl(0);
 }
 
