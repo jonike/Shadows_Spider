@@ -65,7 +65,7 @@ void main()
 //uniform mat3 NM;
 //uniform mat4 MVP, MM, PV;
 //uniform int NUM_LIGHTS;
-//uniform vec3 camRight_WS, camUp_WS;
+//uniform vec4 camRight_WS, camUp_WS;
 
 //vec4 P_WS = MM * vec4(pE, 1.f);
 
@@ -86,8 +86,8 @@ void main()
 //    vec3 P_WS_d = vec3(0.f);
 //    vec3 mySize = vec3(5.f);
 
-////    vec3 vertexP_WS = P_WS_d + (camRight_WS * pE.x * mySize) + (camUp_WS * pE.z * mySize);
-//    vec3 vertexP_WS = P_WS_d + (camRight_WS * vertices[gl_VertexID].x * mySize) + (camUp_WS * vertices[gl_VertexID].y * mySize);
+////    vec3 vertexP_WS = P_WS_d + (camRight_WS.xyz * pE.x * mySize) + (camUp_WS.xyz * pE.z * mySize);
+//    vec3 vertexP_WS = P_WS_d + (camRight_WS.xyz * vertices[gl_VertexID].x * mySize) + (camUp_WS.xyz * vertices[gl_VertexID].y * mySize);
 
 //    gl_Position = PV * vec4(vertexP_WS, 1.f);
 

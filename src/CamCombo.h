@@ -29,8 +29,7 @@ class CamCombo : public QComboBox
     Q_OBJECT
 public:
     MainWin &myWin;
-    shared_ptr<GLWidget> myGL;
-    CamCombo(MainWin &, shared_ptr<GLWidget>, QWidget *parent = 0);
+    CamCombo(MainWin &, QWidget *parent = 0);
 
     void refresh();
 

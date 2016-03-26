@@ -115,13 +115,12 @@ void RadPop::paintEvent(QPaintEvent *)
         else usableTxtSize = 11;
 
         //cout << "i.name / len = " << i.name << i.name.size() << usableTxtSize << endl;
-
         painter.setFont(QFont("DejaVu Sans Mono", usableTxtSize, 75));
         painter.drawText(myRect, Qt::AlignCenter, QString::fromStdString(i.name));
 
-        //        //draw tris debug
-//                painter.setPen(myWin.toQC(glm::vec3(1.f, 0.f, 0.f))); //
-        //        painter.drawPolygon(i.hoverTri.translated(startP));
+        /* draw tris debug */
+        //painter.setPen(myWin.toQC(glm::vec3(1.f, 0.f, 0.f))); //
+        //painter.drawPolygon(i.hoverTri.translated(startP));
     }
 
     //draw line to cursor
@@ -140,11 +139,8 @@ void RadPop::paintEvent(QPaintEvent *)
 
         hide();
 
-        for (auto &i : myWin.allGL)
-        {
-            i->rmbTgl = 0;
-            i->shiftTgl = 0;
-        }
+        myWin.myGL->rmbTgl = 0;
+        myWin.myGL->shiftTgl = 0;
 
         quitTgl = false;
     }
@@ -312,23 +308,16 @@ void RadPop::hitFind(string hit)
         {
             for (auto &i : myWin.allCamCombo)
             {
-                if (i->myGL == myGL)
-                {
-                    int camIdx = i->findText(QString::fromStdString(hit));
-                    i->setCurrentIndex(camIdx);
-                    i->activated(camIdx);
-                }
+                int camIdx = i->findText(QString::fromStdString(hit));
+                i->setCurrentIndex(camIdx);
+                i->activated(camIdx);
             }
         }
 
-        if (hit == "gizSpace") myGL->gizSpaceTgl_swap();
-        else if (hit == "mpf") myGL->mpfTgl_swap();
-        else if (hit == "rez") myGL->rezGateTgl_swap();
-        else if (hit == "stats") myGL->statsTgl_swap();
-
-        else if (hit == "hLay") myWin.hLayTgl();
-        else if (hit == "gridLay") myWin.gridLayTgl();
-        else if (hit == "vLay") myWin.vLayTgl();
+        if (hit == "gizSpace") myWin.myGL->gizSpaceTgl_swap();
+        else if (hit == "mpf") myWin.myGL->mpfTgl_swap();
+        else if (hit == "rez") myWin.myGL->rezGateTgl_swap();
+        else if (hit == "stats") myWin.myGL->statsTgl_swap();
     }
 }
 

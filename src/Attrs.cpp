@@ -159,10 +159,7 @@ void Attrs::keyPressEvent(QKeyEvent *e)
                             j->val_f = i->val_f;
 
                             if (j->name == "fov")
-                            {
-                                for (auto &k : myWin.allGL)
-                                    k->resizeGL(k->width(), k->height());
-                            }
+                                    myWin.myGL->resizeGL(myWin.myGL->width(), myWin.myGL->height());
                         }
 
                         else if (i->type == "int")
@@ -1222,16 +1219,10 @@ void Attrs::boolChange()
                         }
 
                         else if (k->name == "fxaaBlur")
-                        {
-                            for (auto &l : myWin.allGL)
-                                myWin.myPP->resizeTexClearMem(l);
-                        }
+                            myWin.myPP->resizeTexClearMem();
 
                         else if (k->name == "gizSide")
-                        {
-                            for (auto &l : myWin.allGL)
-                                l->gizSideTgl_swap();
-                        }
+                            myWin.myGL->gizSideTgl_swap();
 
                         else if (k->name == "orthoFree" && k->val_b == false)
                             resetOrtho(j);
@@ -1353,11 +1344,8 @@ void Attrs::changeEnum(string text)
                                     i->RM = i->rotOrderUse(i->rotOrder->val_s);
                                 }
 
-                                for (auto &k : myWin.allGL)
-                                {
-                                    if (k->isVisible() && k->selCamLi == myWin.selB)
-                                        k->changeCamLiType_();
-                                }
+                                if (myWin.myGL->selCamLi == myWin.selB)
+                                    myWin.myGL->changeCamLiType_();
 
                                 myWin.lightCt = myWin.countLights();
                                 myWin.myGLWidgetSh->addDeleteShadows("refresh");
@@ -1483,10 +1471,7 @@ void Attrs::writeActions(string type, string name, shared_ptr<Object> obj, share
         }
 
         else if (name == "fov" || name == "orthoZoom" || name == "nearClip" || name == "farClip")
-        {
-            for (auto &i : myWin.allGL)
-                i->resizeGL(i->width(), i->height());
-        }
+            myWin.myGL->resizeGL(myWin.myGL->width(), myWin.myGL->height());
 
         else if (name == "nearShadow" || name == "farShadow")
             obj->dirtyShadow = true;
@@ -1542,6 +1527,11 @@ void Attrs::writeActions(string type, string name, shared_ptr<Object> obj, share
     else if (type == "vec3")
     {
         attr->val_3[idxV] = val;
+
+        if (name == "t" || name == "r" || name == "s")
+        {
+            obj->AABB_toWS();
+        }
 
         if (name == "t")
         {

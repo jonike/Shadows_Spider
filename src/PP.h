@@ -30,11 +30,9 @@ public:
     MainWin &myWin;
     PP(MainWin &);
 
-    shared_ptr<GLWidget> myGL;
-
     string pDefDyn;
 
-    bool fboPrep(shared_ptr<GLWidget>); //ep
+    bool fboPrep();
     void bloomBufferCreate();
     AbjNode depthRevN_create();
     AbjNode bgN_create();
@@ -51,8 +49,8 @@ public:
     GLuint gaussianBlur(AbjNode, AbjNode, int);
     GLuint gaussianBlur2(GLuint, AbjNode, int);
 
-    void postFX(shared_ptr<GLWidget>); //ep
-    void resizeTexClearMem(shared_ptr<GLWidget>); //ep
+    void postFX();
+    void resizeTexClearMem();
 };
 
 #endif // PP_H

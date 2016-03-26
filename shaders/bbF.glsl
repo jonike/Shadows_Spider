@@ -24,7 +24,7 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(location = 0) out vec4 rttC_or_rttGiz;
 
-uniform vec4 comboU0; //if colorpick : Crand ..... else Csel / Cwire
+uniform vec4 comboU0; //vec4(Crand, 1.f) (COLORPICK) else vec4(Csel / Cwire, 1.f)
 
 void main()
 {

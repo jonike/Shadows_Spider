@@ -33,7 +33,8 @@ public:
     shared_ptr<Object> Clone() const { return(shared_ptr<Object>(CloneImpl())); }
     virtual Object* CloneImpl() const { return(new Object(*this)); }
 
-    vector<DynVAO> dynVAO_perGL;
+    bool VAO_loaded;
+    GLuint VAO;
     vector<glm::vec3> pE, nE, tE;
     vector<glm::vec2> uvE;
     vector<GLushort> idxE;
@@ -81,6 +82,18 @@ public:
     string gizType;
     bool gizSideObj = false;
 
+    //frustum D
+    glm::vec3 nc, ntl, ntr, nbl, nbr, fc, ftl, ftr, fbl, fbr;
+    float Hnear, Wnear, Hfar, Wfar;
+    vector<FPlane> fPlanes_temp;
+    glm::vec4 fPlanes[6];
+    vector<glm::vec3> AABB_WS;
+    void setMM();
+    void AABB_toWS();
+    void buildFrustumPlanes();
+    void frustumCull();
+    bool isAABBinFrustum();
+
     const char *txt2D;
     glm::vec2 txtOrigin;
 
@@ -91,8 +104,8 @@ public:
     glm::vec3 bbMin, bbMax, bbCenter, bbSize, bbSizeFull;
     glm::vec3 pivRt;
 
-    void loadVAO(shared_ptr<GLWidget>);
-    void render(shared_ptr<GLWidget>);
+    void VAO_load();
+    void render();
     void shadowPass();
 
     void BBup();
@@ -105,12 +118,13 @@ public:
     void setDirty();
     glm::mat4 rotOrderUse(string);
     void tileMaps(GLuint, string);
-    void mvpGet(shared_ptr<GLWidget>);
+    void mvpGet();
     void populateTexCombos();
     void setTexSel_init();
 
+
 protected:
-    void proUse(shared_ptr<GLWidget>);
+    void proUse();
 
     glm::vec3 genColorID();
     string getIncName(string);

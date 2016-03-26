@@ -29,8 +29,7 @@ class GLWidget : public QGLWidget
     Q_OBJECT
 public:
     MainWin &myWin;
-    QSplitter &mySplitV;
-    GLWidget(MainWin &, QSplitter &, const QGLWidget *shareWidget = 0, QWidget *parent = 0);
+    GLWidget(MainWin &, const QGLWidget *shareWidget = 0, QWidget *parent = 0);
 
     int prevCursorShape;
 
@@ -60,11 +59,9 @@ public:
     string mpf;
     vector<glm::vec2> selRectPts_color, selRectPts_usable;
 
-    FourGrid_idx splitIdx;
     shared_ptr<Object> selCamLi;
-    shared_ptr<GLWidget> activeGL;
+    vector<shared_ptr<Object>> frustumObj;
 
-    int ID_GLWidget;
     int blendModeD = 999;
     int copyTgt = 0;
     bool debug0 = false;
@@ -77,6 +74,7 @@ public:
     glm::vec2 paintCursorResize_p;
     glm::vec2 P_currF, P_prevF;
     Map myLayerIdx, sobelMap;
+    bool runOnce = false;
 
     //timer
     unsigned int tick_frames = 0;
@@ -115,9 +113,7 @@ public:
     void changeCamLiType_();
     void VMup(shared_ptr<Object>);
     void overlay2D();
-    shared_ptr<GLWidget> getActiveGL();
     glm::vec2 toNDC(glm::vec2, string);
-    bool jumpSwitch();
     void dupeStenFix_check(shared_ptr<Object>);
 
     virtual void gizSideTgl_swap() { gizSideTgl = !gizSideTgl; }
@@ -153,12 +149,10 @@ protected:
     //timers
     void mpfTimerStart();
     void fpsCtrls();
-    void getIndexIntoSplit();
     void getPtsBetweenRect();
     bool gridMatch(shared_ptr<Object>);
     void PMupOrtho();
     void radPop_GL(string);
-    void switchGL_layout();
     void updateCamAttrs(string);
 
     bool paintCursorResize_request();

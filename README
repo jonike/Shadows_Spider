@@ -1,14 +1,10 @@
-Shadow's Spider is a realtime 3d rendering application. It's built around OpenGL 4.5 and Qt.
-
-NEW - 2/19/2016 :
-- point lights / shadows
-- improved switching between lights
-
+Shadow's Spider is a realtime 3d rendering application built around OpenGL 4.5 and Qt.
 
 FEATURES:
 - intuitive interface with multiple page attribute editor and radial popups
 - transform gizmos
-- defferred shading, PBR
+- frustum culling
+- defferred shading, PBR, SSR
 - C++11
 - obj and texture files located at https://drive.google.com/file/d/0B5Eg0nuMXxh9b0ZPWWxQR1VneFE/view?usp=sharing
 - Windows
@@ -19,11 +15,4 @@ HOW TO BUILD:
 - glm 972
 - search for pathObj->val_s / pathTex->val_s and change path to your name
 
-Video demo at https://youtu.be/ll6h43GsIdM (VERY OLD)
-
-The controls are Alt-LMB / RMB camera navigation with shift, ctrl, and space modifiers.
-
-Dragging manipulators and changing the values of attribute editor cells is done with MMB with ctrl or shift modifiers to slow down or speed up the value change.
-
-Every QComboBox is a radial menu opened by holding RMB over it.
-
+Demonstration at https://youtu.be/ll6h43GsIdM

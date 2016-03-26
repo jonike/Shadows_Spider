@@ -51,21 +51,33 @@ float rezGateAlpha(vec2 uv, vec2 pLD, vec2 pRU, float dragDrop)
     return 0.f;
 }
 
+//void main() //SPEED
+//{
+////    Ci = texture(deferred, v.uv).rgb;
+////    Ci = texture(fxaa, v.uv).rgb;
+////    Ci = texture(ssr, v.uv).rgb;
+//    Ci = texture(fxaa, v.uv).rgb + (revealageT * texture(ssr, v.uv).rgb);
+
+////    if (comboU0.z == 1.f)
+
+//    Ci = pow(Ci, vec3(1.f / 2.2f));
+//}
+
 void main() //3D
 {
     vec4 brushT = texture(brush, v.uv);
     vec4 cursorT = texture(cursor, v.uv);
     float revealageT = texture(revealage, v.uv).r;
 
-//    Ci = texture(deferred, v.uv).rgb;
-//    Ci = texture(fxaa, v.uv).rgb;
-//    Ci = texture(ssr, v.uv).rgb;
+    //    Ci = texture(deferred, v.uv).rgb;
+    //    Ci = texture(fxaa, v.uv).rgb;
+    //    Ci = texture(ssr, v.uv).rgb;
     Ci = texture(fxaa, v.uv).rgb + (revealageT * texture(ssr, v.uv).rgb);
 
     Ci = mix(Ci, brushT.rgb, brushT.a); // paint
     Ci = mix(Ci, cursorT.rgb, cursorT.a); //paint cursor
 
-    //if (comboU0.z == 1.f)
+    //    if (comboU0.z == 1.f)
 
     if (comboU0.x == 1.f || comboU0.y == 1.f)
         Ci *= rezGateAlpha(v.uv, LDRU.xy, LDRU.zw, comboU0.y);

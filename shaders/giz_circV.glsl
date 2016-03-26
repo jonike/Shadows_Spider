@@ -23,7 +23,7 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(location = 0) in vec3 pE;
 
-uniform vec3 circRight;
+uniform vec4 circRight;
 uniform vec4 comboU0; //vec4(circUpOrFront, fullCirc)
 
 const float PI = 3.14159;
@@ -36,7 +36,7 @@ void main()
 
     float theta = mult * PI * gl_VertexID / seg;
 
-    vec3 rotPt = circRight * cos(theta);
+    vec3 rotPt = circRight.xyz * cos(theta);
     rotPt += comboU0.xyz * sin(theta);
 
     gl_Position = MVP * vec4(rotPt, 1.f);

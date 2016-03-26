@@ -21,7 +21,7 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "GLWidget.h"
 
-GLWidget::GLWidget(MainWin &myWinTemp, QSplitter &mySplitVTemp, const QGLWidget *shareWidget, QWidget *parent) : QGLWidget(parent, shareWidget), myWin(myWinTemp), mySplitV(mySplitVTemp)
+GLWidget::GLWidget(MainWin &myWinTemp, const QGLWidget *shareWidget, QWidget *parent) : QGLWidget(parent, shareWidget), myWin(myWinTemp)
 {
     altTgl = ctrlTgl = shiftTgl = lmbTgl = mmbTgl = rmbTgl = spaceTgl = colorPickTgl = false;
     wTgl = sTgl = aTgl = dTgl = rTgl = fTgl = vTgl = false;
@@ -367,11 +367,7 @@ void GLWidget::keyReleaseEvent(QKeyEvent *e)
 
     else if (e->key() == Qt::Key_Shift) shiftTgl = false;
 
-    else if (e->key() == Qt::Key_Space)
-    {
-        spaceTgl = false;
-        jumpSwitch();
-    }
+    else if (e->key() == Qt::Key_Space) spaceTgl = false;
 
     // A-Z
     else if (e->key() == Qt::Key_A) aTgl = false;
@@ -510,52 +506,6 @@ void GLWidget::keyReleaseEvent(QKeyEvent *e)
     else if (e->key() == Qt::Key_Z) zTgl = false;
 }
 
-bool GLWidget::jumpSwitch()
-{
-    cout << "in jumpSwitch()" << endl;
-
-    //JUMP TO OTHER SELECTED CAMLI OR CHANGE LAYOUT
-    for (auto &i : myWin.allObj)
-    {
-        if (i->type == "CAMLI" && i->selected && i != selCamLi)
-        {
-            if (i->camLiType->val_s == "DIR") //switch to persp since cant look through it like spot
-            {
-                for (auto &j : myWin.allObj)
-                {
-                    if (j->name->val_s == "persp")
-                    {
-                        if (selCamLi->camLiTypeGet("cam")) //already looking thru a cam, desel
-                            return false;
-
-                        else
-                        {
-                            j->camLiType->val_s = "PERSP"; //reset to persp if something else
-                            j->nearClip->val_f = .01f;
-                            j->farClip->val_f = 100.f;
-                            selCamLi = j;
-                        }
-                    }
-                }
-            }
-
-            else
-                selCamLi = i;
-
-            resizeGL(width(), height());
-
-            for (auto &j : myWin.allCamCombo)
-                j->refresh();
-
-            return true;
-        }
-    }
-
-    switchGL_layout();
-
-    return true;
-}
-
 void GLWidget::tabletEvent(QTabletEvent *e)
 {
     if (e->pointerType() == QTabletEvent::Eraser)
@@ -602,7 +552,7 @@ void GLWidget::mousePressEvent(QMouseEvent *e)
         lmbTgl = false; mmbTgl = true; rmbTgl = false;
 
         if (!altTgl)
-            gizTransType = myWin.myGizmo->hover(activeGL);
+            gizTransType = myWin.myGizmo->hover();
 
         clearCursor(paintMode);
     }
@@ -668,7 +618,7 @@ void GLWidget::mouseReleaseEvent(QMouseEvent *e)
             myWin.myGLWidgetSh->glUseProgram2("pCopyTex");
 
             copyTgt = 5; //brushN2
-            myWin.myFSQ->render(activeGL);
+            myWin.myFSQ->render();
 
 //            cout << "resetting debug paint settings 0" << endl;
             firstPress = 1;
@@ -717,12 +667,12 @@ void GLWidget::mouseMoveEvent(QMouseEvent *e)
     {
         if (gizTransType == "NONE")
         {
-            gizHoverType = myWin.myGizmo->hover(activeGL);
+            gizHoverType = myWin.myGizmo->hover();
             myWin.myGizmo->resetSetCol(gizHoverType);
         }
 
         else
-            myWin.myGizmo->transform(activeGL);
+            myWin.myGizmo->transform();
     }
 
     if (paintMode)
@@ -851,7 +801,7 @@ void GLWidget::resizeGL(int w, int h)
     aspectXYZ.z = 1.f;
 
     if (fboReady)
-        myWin.myPP->resizeTexClearMem(activeGL);
+        myWin.myPP->resizeTexClearMem();
 
     selCamLi->setDirty();
 }
@@ -869,6 +819,8 @@ void GLWidget::PMupOrtho()
         aspectSide = 1.f;
 
     selCamLi->PM = glm::ortho(-selCamLi->orthoZoom->val_f * aspect, selCamLi->orthoZoom->val_f * aspect, -selCamLi->orthoZoom->val_f, selCamLi->orthoZoom->val_f, selCamLi->nearClip->val_f, selCamLi->farClip->val_f);
+
+    selCamLi->buildFrustumPlanes();
 }
 
 void GLWidget::VMup(shared_ptr<Object> obj)
@@ -899,21 +851,18 @@ void GLWidget::VMup(shared_ptr<Object> obj)
         obj->VM *= glm::rotate(glm::mat4(), glm::radians(obj->r->val_3.z), glm::vec3(0.f, 0.f, 1.f));
     }
 
-    //update VMgizSide if this object is the selcam for a visible GL
-    for (auto &i : myWin.allGL)
+    //update VMgizSide if this object is the selcam
+    if (obj == myWin.myGL->selCamLi)
     {
-        if (i->isVisible() && obj == i->selCamLi)
-        {
-            // UPDATE VM for GIZSIDE
-            auto R = glm::yawPitchRoll(glm::radians(obj->r->val_3.x), glm::radians(obj->r->val_3.y), 0.f);
-            auto posG = glm::vec3(R * glm::vec4(0.f, 0.f, myWin.glslTable->gizSideS->val_3.z, 0.f));
-            auto lookG = glm::normalize(-posG);
-            auto rightG = glm::cross(lookG, upWorld);
-            auto upG = glm::cross(rightG, lookG);
+        // UPDATE VM for GIZSIDE
+        auto R = glm::yawPitchRoll(glm::radians(obj->r->val_3.x), glm::radians(obj->r->val_3.y), 0.f);
+        auto posG = glm::vec3(R * glm::vec4(0.f, 0.f, myWin.glslTable->gizSideS->val_3.z, 0.f));
+        auto lookG = glm::normalize(-posG);
+        auto rightG = glm::cross(lookG, upWorld);
+        auto upG = glm::cross(rightG, lookG);
 
-            if (obj->camLiType->val_s == "FPS") posG *= -1.f;
-            i->VMgizSide = glm::lookAt(posG, glm::vec3(0.f), upG);
-        }
+        if (obj->camLiType->val_s == "FPS") posG *= -1.f;
+        myWin.myGL->VMgizSide = glm::lookAt(posG, glm::vec3(0.f), upG);
     }
 
     obj->dirtyVM = false;
@@ -928,6 +877,8 @@ void GLWidget::VMup(shared_ptr<Object> obj)
         bakeNow = true;
 //        clearCanvas();
     }
+
+    selCamLi->buildFrustumPlanes();
 }
 
 void GLWidget::fpsCtrls()
@@ -992,21 +943,10 @@ void GLWidget::paintGL()
         myWin.layerLay->getNewOrder = false;
     }
 
-    if (hasFocus() || myWin.ID_lastFocused == ID_GLWidget)
-    {
-        myWin.ID_lastFocused = ID_GLWidget;
-        upTimer->setInterval(8);
-    }
-
-    else
-        upTimer->setInterval(64);
-
-    activeGL = getActiveGL();
+    upTimer->setInterval(8);
 
     if (mpfTgl)
         mpfTimerStart();
-
-    makeCurrent();
 
     tick_newFPS = GetTickCount();
     tick_diffFPS = tick_newFPS - tick_oldFPS;
@@ -1018,27 +958,17 @@ void GLWidget::paintGL()
         fpsCtrls();
 
     if (!fboReady)
-        fboReady = myWin.myPP->fboPrep(activeGL);
+        fboReady = myWin.myPP->fboPrep();
 
+    /* MVPGET / LOAD VAO */
     for (auto &i : myWin.allObj)
     {
-        auto type = i->type;
-        auto name = i->name->val_s;
-
-        if (myWin.searchUp(i))
+        if (i->type != "SELRECT" && i->type != "TXT")
         {
-            if (type != "VOL" && !i->gizSideObj && name != "pivot")
+            if (!i->gizSideObj && i->name->val_s != "pivot")
             {
-                i->mvpGet(activeGL);
-
-//                if (name == "torus") //teapot
-//                {
-//                    i->r->val_3.y = myWin.myAnim->dynAnim("cycle") * 50.f;
-//                    i->r->val_3.x = myWin.myAnim->dynAnim("cycle") * 200.f;
-//                    i->t->val_3.y = myWin.myAnim->dynAnim("cycle");
-//                    i->t->val_3.y = myWin.myAnim->dynAnim("cycle") * 3.f + 7.f;
-//                    i->shadowCast->val_b = false;
-//                }
+                if (myWin.searchUp(i))
+                    i->mvpGet();
             }
         }
 
@@ -1048,15 +978,31 @@ void GLWidget::paintGL()
         if (i->dupeStenFix != "999")
             dupeStenFix_check(i);
 
-        i->loadVAO(activeGL);
+        i->VAO_load();
     }
+
+    /* FRUSTUM CULL */
+    frustumObj.clear();
+
+    for (auto &i : myWin.allObj)
+    {
+        if (i->type != "SELRECT" && i->type != "TXT" && myWin.searchUp(i))
+        {
+            //cout << "i->type / name FRUSTUMOBJ 0 = " << i->type << " " << i->name->val_s << endl;
+
+            if (i->isAABBinFrustum())
+                frustumObj.push_back(i);
+        }
+    }
+
+//    cout << "# objs in frustum = " << frustumObj.size() << " //// " << endl;
 
 
     myWin.myGLWidgetSh->glUseProgram2("pShadow");
 
-    for (auto &i : myWin.allObj)
+    for (auto &i : myWin.allCamLi)
     {
-        if (i->type == "CAMLI" && (i->v->val_b || i == selCamLi))
+        if (i->v->val_b || i == selCamLi)
         {
             if (i->dirtyVM)
                 VMup(i);
@@ -1068,7 +1014,7 @@ void GLWidget::paintGL()
 
             if (i->dirtyShadow && i->camLiTypeGet("light"))
             {
-//                cout << "dirtyShadow for " << i->name->val_s << endl;
+                //cout << "dirtyShadow for " << i->name->val_s << endl;
                 myWin.myGLWidgetSh->writeShadow(i);
             }
         }
@@ -1098,20 +1044,19 @@ void GLWidget::paintGL()
 
     glDisable(GL_DEPTH_TEST);
     myWin.myGLWidgetSh->glUseProgram2("pSky");
-    myWin.myFSQ->render(activeGL);
+    myWin.myFSQ->render();
     glEnable(GL_DEPTH_TEST);
 
     if (selCamLi->gridV)
     {
         myWin.myGLWidgetSh->glUseProgram2("pGrid");
 
-        for (auto &i : myWin.allObj)
+        for (auto &i : myWin.allGrid)
         {
             if (i->type == "GRID" && gridMatch(i))
-                i->render(activeGL);
+                i->render();
         }
     }
-
 
     glNamedFramebufferDrawBuffers(bgN.fbo1, 1, DrawBuffersBG_1);
 
@@ -1122,8 +1067,8 @@ void GLWidget::paintGL()
 
         for (auto &i : myWin.allGizSide)
         {
-            i->mvpGet(activeGL);
-            i->render(activeGL);
+            i->mvpGet();
+            i->render();
         }
 
         glViewport(0, 0, width(), height());
@@ -1131,36 +1076,46 @@ void GLWidget::paintGL()
 
     if (myWin.myPivot->v->val_b)
     {
-        myWin.myPivot->mvpGet(activeGL);
-        myWin.myPivot->render(activeGL);
+        myWin.myPivot->mvpGet();
+        myWin.myPivot->render();
     }
 
-    for (auto &i : myWin.allObj)
+    for (auto &i : myWin.allCamLi)
     {
-        auto type = i->type;
-
-        if (type == "CAMLI" && i->selected && myWin.searchUp(i))
+        if (myWin.searchUp(i))
         {
-            if (!i->bb->val_b && myWin.selMode == "OBJ")
+            if (i->selected)
             {
-                //wireframe already, change color only
-                auto Cgiz_temp = i->Cgiz;
-                i->Cgiz = myWin.glslTable->Csel->val_3;
-                i->render(activeGL);
-                i->Cgiz = Cgiz_temp;
+                if (!i->bb->val_b && myWin.selMode == "OBJ")
+                {
+                    //wireframe already, change color only
+                    auto Cgiz_temp = i->Cgiz;
+                    i->Cgiz = myWin.glslTable->Csel->val_3;
+                    i->render();
+                    i->Cgiz = Cgiz_temp;
+                }
             }
-        }
 
-        else if (type == "CAMLI" || type == "GIZ_CONE" || type == "GIZ_CUBE" || type == "GIZ_DUAL_HANDLE" || type == "GIZ_LINE")
-        {
-            if (!i->gizSideObj && myWin.searchUp(i))
+            else
             {
                 glDisable(GL_DEPTH_TEST);
                 glDisable(GL_CULL_FACE);
-                i->render(activeGL);
+                i->render();
                 glEnable(GL_DEPTH_TEST);
                 glEnable(GL_CULL_FACE);
             }
+        }
+    }
+
+    for (auto &i : myWin.allGiz)
+    {
+        if (!i->gizSideObj && myWin.searchUp(i))
+        {
+            glDisable(GL_DEPTH_TEST);
+            glDisable(GL_CULL_FACE);
+            i->render();
+            glEnable(GL_DEPTH_TEST);
+            glEnable(GL_CULL_FACE);
         }
     }
 
@@ -1168,12 +1123,12 @@ void GLWidget::paintGL()
     {
         myWin.myGLWidgetSh->glUseProgram2("pGiz_circ");
 
-        for (auto &i : myWin.allObj)
+        for (auto &i : myWin.allGiz)
         {
             if (i->type == "GIZ_CIRC" || i->type == "GIZ_CIRC_HALF")
             {
                 glDisable(GL_DEPTH_TEST);
-                i->render(activeGL);
+                i->render();
                 glEnable(GL_DEPTH_TEST);
             }
         }
@@ -1181,31 +1136,31 @@ void GLWidget::paintGL()
 
     myWin.myGLWidgetSh->glUseProgram2("pBB");
 
-    for (auto &i : myWin.allObj)
+    for (auto &i : frustumObj)
     {
-        if (i->bb->val_b && myWin.searchUp(i))
-            i->render(activeGL);
+        if (i->bb->val_b)
+            i->render();
     }
 
-    for (auto &i : myWin.allObj)
+    for (auto &i : frustumObj)
     {
-        if (i->type == "OBJ" && !i->bb->val_b && myWin.searchUp(i))
+        if (i->type == "OBJ" && !i->bb->val_b)
         {
             if (wireOverTgl)
             {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
                 myWin.myGLWidgetSh->glUseProgram2("pWireframe");
-                i->render(activeGL);
+                i->render();
 
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
         }
     }
 
-    for (auto &i : myWin.allObj)
+    for (auto &i : frustumObj)
     {
-        if (i->selected && i->type == "OBJ" && !i->bb->val_b && myWin.searchUp(i))
+        if (i->selected && i->type == "OBJ" && !i->bb->val_b)
         {
             if (myWin.selMode == "OBJ")
             {
@@ -1222,7 +1177,7 @@ void GLWidget::paintGL()
                 if (i->twoSided->val_s != "OFF")
                     glDisable(GL_CULL_FACE);
 
-                i->render(activeGL);
+                i->render();
                 glEnable(GL_CULL_FACE);
 
                 //THICK WIRE VERSION
@@ -1232,7 +1187,7 @@ void GLWidget::paintGL()
 
                 glPolygonMode(GL_FRONT, GL_LINE);
                 myWin.myGLWidgetSh->glUseProgram2("pStencilHi");
-                i->render(activeGL);
+                i->render();
                 glDisable(GL_STENCIL_TEST);
 
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -1257,16 +1212,16 @@ void GLWidget::paintGL()
 
     myWin.myGLWidgetSh->glUseProgram2("pDepthRev");
 
-    for (auto &i : myWin.allObj)
+    for (auto &i : frustumObj)
     {
-        if (i->type == "OBJ" && !i->bb->val_b && myWin.searchUp(i))
+        if (i->type == "OBJ" && !i->bb->val_b)
         {
             if (i->Ko->val_f == 1.f) // (PARTIALLY) OPAQUE OBJECTS
             {
                 if (i->twoSided->val_s != "OFF")
                     glDisable(GL_CULL_FACE);
 
-                i->render(activeGL);
+                i->render();
                 glEnable(GL_CULL_FACE);
             }
         }
@@ -1289,7 +1244,7 @@ void GLWidget::paintGL()
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
-    myWin.myPP->postFX(activeGL);
+    myWin.myPP->postFX();
     overlay2D();
 
     tick_oldFPS = tick_newFPS;
@@ -1334,16 +1289,16 @@ void GLWidget::GBuffer_BOIT()
     pGBufferDyn.append(to_string(myWin.lightCt));
     myWin.myGLWidgetSh->glUseProgram2(pGBufferDyn);
 
-    for (auto &i : myWin.allObj)
+    for (auto &i : frustumObj)
     {
-        if (i->type == "OBJ" && !i->bb->val_b && myWin.searchUp(i))
+        if (i->type == "OBJ" && !i->bb->val_b)
         {
             if (i->Ko->val_f == 1.f) // (PARTIALLY) OPAQUE OBJECTS
             {
                 if (i->twoSided->val_s != "OFF")
                     glDisable(GL_CULL_FACE);
 
-                i->render(activeGL);
+                i->render();
                 glEnable(GL_CULL_FACE);
             }
         }
@@ -1367,14 +1322,14 @@ void GLWidget::GBuffer_BOIT()
 
     myWin.myGLWidgetSh->glUseProgram2("pTransp");
 
-    for (auto &i : myWin.allObj)
+    for (auto &i : frustumObj)
     {
-        if (i->type == "OBJ" && !i->bb->val_b && myWin.searchUp(i))
+        if (i->type == "OBJ" && !i->bb->val_b)
         {
             if (i->Ko->val_f < 1.f)
             {
                 BOIT_name_D = i->name->val_s;
-                i->render(activeGL);
+                i->render();
             }
         }
     }
@@ -1534,15 +1489,15 @@ void GLWidget::blendModeDebug(string type)
     blendModeD = 0;
     myWin.paintStroke->s->val_3 = glm::vec3(.5f);
     myWin.paintStroke->t->val_3 = glm::vec3(-.15f, .2f, 0.f);
-    myWin.paintStroke->mvpGet(activeGL);
-    myWin.paintStroke->render(activeGL);
+    myWin.paintStroke->mvpGet();
+    myWin.paintStroke->render();
 
     blendModeD = 1;
     myWin.paintStroke->s->val_3 = glm::vec3(.5f);
 //    myWin.paintStroke->s->val_3 = glm::vec3(1.f, .5f, 0.f);
     myWin.paintStroke->t->val_3 = glm::vec3(.15f, -.2f, 0.f);
-    myWin.paintStroke->mvpGet(activeGL);
-    myWin.paintStroke->render(activeGL);
+    myWin.paintStroke->mvpGet();
+    myWin.paintStroke->render();
 
 //    glDisable(GL_BLEND);
 //    glEnable(GL_DEPTH_TEST);
@@ -1647,8 +1602,8 @@ void GLWidget::paintSomething1(string type)
         {
             myWin.paintStroke->s->val_3 = i.scale * tabletPressure;
             myWin.paintStroke->t->val_3 = glm::vec3(i.coord, 0.f);
-            myWin.paintStroke->mvpGet(activeGL);
-            myWin.paintStroke->render(activeGL);
+            myWin.paintStroke->mvpGet();
+            myWin.paintStroke->render();
         }
 
         //***************************** BLEND BG1 AND STROKE *******************************
@@ -1663,10 +1618,10 @@ void GLWidget::paintSomething1(string type)
         myWin.myGLWidgetSh->glUseProgram2("pCopyTex");
 
         copyTgt = 2; //bgN.tex1
-        myWin.myFSQ->render(activeGL);
+        myWin.myFSQ->render();
 
         copyTgt = 0; //brushTempN1
-        myWin.myFSQ->render(activeGL);
+        myWin.myFSQ->render();
 
         //***************************** COPY TO BG1 (held stroke) *******************************
         glDisable(GL_BLEND);
@@ -1676,7 +1631,7 @@ void GLWidget::paintSomething1(string type)
 
         myWin.myGLWidgetSh->glUseProgram2("pCopyTex");
         copyTgt = 4; //brushN.tex1
-        myWin.myFSQ->render(activeGL);
+        myWin.myFSQ->render();
 
         //***************************** HARDWARE BLEND STROKE AND BG2 *******************************
         glEnable(GL_BLEND);
@@ -1690,10 +1645,10 @@ void GLWidget::paintSomething1(string type)
         myWin.myGLWidgetSh->glUseProgram2("pCopyTex");
 
         copyTgt = 3; //bgN.tex2
-        myWin.myFSQ->render(activeGL);
+        myWin.myFSQ->render();
 
         copyTgt = 4; //brushN1
-        myWin.myFSQ->render(activeGL);
+        myWin.myFSQ->render();
     }
 
     else if (type == "ERASER")
@@ -1715,8 +1670,8 @@ void GLWidget::paintSomething1(string type)
         {
             myWin.paintStroke->s->val_3 = i.scale * tabletPressure;
             myWin.paintStroke->t->val_3 = glm::vec3(i.coord, 0.f);
-            myWin.paintStroke->mvpGet(activeGL);
-            myWin.paintStroke->render(activeGL);
+            myWin.paintStroke->mvpGet();
+            myWin.paintStroke->render();
         }
 
         //ERASE
@@ -1726,7 +1681,7 @@ void GLWidget::paintSomething1(string type)
         glViewport(0, 0, eraserN.width, eraserN.height);
 
         myWin.myGLWidgetSh->glUseProgram2("pEraseMix");
-        myWin.myFSQ->render(activeGL);
+        myWin.myFSQ->render();
 
         //COPY TO BG2
         glBindFramebuffer(GL_FRAMEBUFFER, brushBGN.fbo2);
@@ -1736,7 +1691,7 @@ void GLWidget::paintSomething1(string type)
         myWin.myGLWidgetSh->glUseProgram2("pCopyTex");
 
         copyTgt = 12; //eraserN.tex2
-        myWin.myFSQ->render(activeGL);
+        myWin.myFSQ->render();
 
         //COPY TO BRUSHN2
         glBindFramebuffer(GL_FRAMEBUFFER, brushN.fbo2);
@@ -1746,7 +1701,7 @@ void GLWidget::paintSomething1(string type)
         myWin.myGLWidgetSh->glUseProgram2("pCopyTex");
 
         copyTgt = 12; //eraserN.tex2
-        myWin.myFSQ->render(activeGL);
+        myWin.myFSQ->render();
     }
 
     else if (type == "BRUSH_CURSOR" || type == "ERASER_CURSOR")
@@ -1765,8 +1720,8 @@ void GLWidget::paintSomething1(string type)
         {
             myWin.paintStroke->s->val_3 = strokes_cursor[0].scale;
             myWin.paintStroke->t->val_3 = glm::vec3(paintCursorResize_p, 0.f);
-            myWin.paintStroke->mvpGet(activeGL);
-            myWin.paintStroke->render(activeGL);
+            myWin.paintStroke->mvpGet();
+            myWin.paintStroke->render();
         }
 
         else
@@ -1775,8 +1730,8 @@ void GLWidget::paintSomething1(string type)
             {
                 myWin.paintStroke->s->val_3 = i.scale;
                 myWin.paintStroke->t->val_3 = glm::vec3(i.coord, 0.f);
-                myWin.paintStroke->mvpGet(activeGL);
-                myWin.paintStroke->render(activeGL);
+                myWin.paintStroke->mvpGet();
+                myWin.paintStroke->render();
             }
         }
     }
@@ -1803,7 +1758,7 @@ void GLWidget::brushOutlineUp()
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             myWin.myGLWidgetSh->glUseProgram2("pAlphaAsRGBA");
-            myWin.myFSQ->render(activeGL);
+            myWin.myFSQ->render();
 
             //GAUSSIAN BLUR
             glMakeTextureHandleNonResidentARB(alphaGaussN.tex2_64);
@@ -1820,7 +1775,7 @@ void GLWidget::brushOutlineUp()
             myWin.myGLWidgetSh->glUseProgram2("pEdgeDetect");
 //            edgeDetect_mode = 0; // sobel
             edgeDetect_mode = 1; // freiChen
-            myWin.myFSQ->render(activeGL);
+            myWin.myFSQ->render();
         }
     }
 
@@ -1893,7 +1848,7 @@ void GLWidget::bakeSomething()
 
     myWin.myGLWidgetSh->glUseProgram2("pCopyTex");
     copyTgt = 10;
-    myWin.myFSQ->render(activeGL);
+    myWin.myFSQ->render();
 
     //2
     glBindFramebuffer(GL_FRAMEBUFFER, myLayerIdx.layer[0].fbo1);
@@ -1903,7 +1858,7 @@ void GLWidget::bakeSomething()
     myWin.myGLWidgetSh->glUseProgram2("pPaintProj");
 
     if (!myWin.selB->bb->val_b && myWin.searchUp(myWin.selB))
-        myWin.selB->render(activeGL);
+        myWin.selB->render();
 
     //3 - REGEN MIPS
     glGenerateTextureMipmap(myLayerIdx.layer[0].tex1_32);
@@ -2000,12 +1955,7 @@ void GLWidget::overlay2D()
         selRect_RU = toNDC(pMouseNew, "SELRECT");
 
         myWin.myGLWidgetSh->glUseProgram2("pSelRect");
-
-       for (auto &i : myWin.allObj)
-       {
-           if (i->type == "SELRECT")
-               i->render(activeGL);
-       }
+        myWin.mySelRect->render();
 
         getPtsBetweenRect();
     }
@@ -2026,7 +1976,7 @@ void GLWidget::overlay2D()
             }
 
             myWin.myTxt->txtOrigin = glm::vec2(.8f, -.9f);
-            myWin.myTxt->render(activeGL);
+            myWin.myTxt->render();
         }
 
         if (gizSpaceTgl) //gizSpace
@@ -2041,7 +1991,7 @@ void GLWidget::overlay2D()
             }
 
             myWin.myTxt->txtOrigin = glm::vec2(.95f, -.9f);
-            myWin.myTxt->render(activeGL);
+            myWin.myTxt->render();
         }
 
         if (statsTgl)
@@ -2071,7 +2021,7 @@ void GLWidget::overlay2D()
             }
 
             myWin.myTxt->txtOrigin = glm::vec2(.5f, .85f);
-            myWin.myTxt->render(activeGL);
+            myWin.myTxt->render();
         }
     }
 }
@@ -2145,11 +2095,6 @@ void GLWidget::radPop_GL(string type)
         pop.push_back( { "mpf", "S", 150, 50 } );
         pop.push_back( { "rez", "S", 150, 50 } );
         pop.push_back( { "stats", "S", 150, 50 } );
-
-        //layouts
-        pop.push_back( { "hLay", "W", 150, 65, -350, -300 } );
-        pop.push_back( { "gridLay", "W", 150, 65, -350, -300 } );
-        pop.push_back( { "vLay", "W", 150, 65, -350, -300 } );
     }
 
     myWin.myRadPop->popName = type;
@@ -2157,7 +2102,6 @@ void GLWidget::radPop_GL(string type)
     myWin.myRadPop->startP = myWin.toVec2(QCursor::pos());
     myWin.myRadPop->newP = myWin.myRadPop->startP;
 
-    myWin.myRadPop->myGL = activeGL;
     myWin.myRadPop->show();
 }
 
@@ -2282,12 +2226,12 @@ bool GLWidget::checkForHits() //READPIXELS
 
     myWin.myGLWidgetSh->glUseProgram2("pBB"); //gets Crand
 
-    for (auto &i : myWin.allObj)
+    for (auto &i : frustumObj)
     {
-        if ((i->type == "CAMLI" || i->type == "OBJ") && myWin.searchUp(i))
+        if (i->type == "CAMLI" || i->type == "OBJ")
         {
-            i->mvpGet(activeGL);
-            i->render(activeGL);
+            i->mvpGet();
+            i->render();
         }
     }
 
@@ -2314,7 +2258,7 @@ bool GLWidget::checkForHits() //READPIXELS
 
             glm::vec3 compareID(r / 255.f, g / 255.f, b / 255.f);
 
-            for (auto &i : myWin.allObj)
+            for (auto &i : frustumObj)
             {
                 if (i->Crand == compareID)
                 {
@@ -2354,7 +2298,7 @@ void GLWidget::matchFoundRaycast(shared_ptr<Object> obj)
     if (obj->selected && ctrlTgl)
         obj->selected = false;
 
-    if (!ctrlTgl && myWin.searchUp(obj))
+    if (!ctrlTgl)
     {
         auto type = obj->type;
 
@@ -2363,97 +2307,6 @@ void GLWidget::matchFoundRaycast(shared_ptr<Object> obj)
 
         if (type == "GIZ_CIRC" || type == "GIZ_CONE" || type == "GIZ_CUBE" || type == "GIZ_DUAL_HANDLE" || type == "GIZ_LINE")
             obj->parentTo->parentTo->selected = 1; //keep obj selected w/ manips
-    }
-}
-
-void GLWidget::getIndexIntoSplit()
-{
-    if (myWin.layoutType == "gridLay")
-    {
-        for (int i = 0; i < myWin.hLayU->count(); ++i)
-        {
-            if (&mySplitV == myWin.hLayU->widget(i))
-            {
-                splitIdx.split = myWin.hLayU;
-                splitIdx.idx = i;
-
-                break;
-            }
-        }
-
-        for (int i = 0; i < myWin.hLayD->count(); ++i)
-        {
-            if (myWin.hLayD->widget(i) == &mySplitV)
-            {
-                splitIdx.split = myWin.hLayD;
-                splitIdx.idx = i;
-
-                break;
-            }
-        }
-    }
-
-    else if (myWin.layoutType == "hLay")
-    {
-        for (int i = 0; i < myWin.hLayU->count(); ++i)
-        {
-            if (myWin.hLayU->widget(i) == &mySplitV)
-            {
-                splitIdx.idx = i;
-
-                break;
-            }
-        }
-    }
-
-    else if (myWin.layoutType == "vLay")
-    {
-        for (int i = 0; i < myWin.vLay->count(); ++i)
-        {
-            if (myWin.vLay->widget(i) == &mySplitV)
-            {
-                splitIdx.idx = i;
-
-                break;
-            }
-        }
-    }
-}
-
-void GLWidget::switchGL_layout()
-{
-    getIndexIntoSplit();
-
-    if (myWin.stackedMain->currentIndex() == 1)
-    {
-        if (myWin.layoutType == "gridLay")
-            splitIdx.split->insertWidget(splitIdx.idx, &mySplitV);
-
-        else if (myWin.layoutType == "hLay")
-            myWin.hLayU->insertWidget(splitIdx.idx, &mySplitV);
-
-        else if (myWin.layoutType == "vLay")
-            myWin.vLay->insertWidget(splitIdx.idx, &mySplitV);
-
-        mySplitV.show();
-
-        for (auto &i : myWin.allCamCombo)
-        {
-            if (i->myGL.get() == this)
-                i->myGL->resize(0, 350);
-        }
-
-        myWin.stackedMain->insertWidget(1, myWin.blankW_main);
-        myWin.stackedMain->setCurrentIndex(2);
-        myWin.savedIdx = 2;
-     }
-
-    else //zoom
-    {
-        myWin.blankW_main->setParent(0);
-        myWin.stackedMain->insertWidget(1, &mySplitV);
-        myWin.stackedMain->setCurrentIndex(1);
-        myWin.savedIdx = 1;
     }
 }
 
@@ -2473,21 +2326,4 @@ glm::vec2 GLWidget::toNDC(glm::vec2 pt, string mode)
     }
 
     return pt;
-}
-
-shared_ptr<GLWidget> GLWidget::getActiveGL()
-{
-    auto myActiveGL = myWin.allGL[0]; //dummy
-
-    for (auto &i : myWin.allGL)
-    {
-        if (i.get() == this)
-        {
-            myActiveGL = i;
-
-            break;
-        }
-    }
-
-    return myActiveGL;
 }

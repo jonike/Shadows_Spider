@@ -67,7 +67,6 @@ public:
     void proInit();
 
     AbjNode texN_create(string, string, string, int);
-    void VAOup(shared_ptr<Object>);
     vector<shared_ptr<Object>> VBOup(string, string, string, shared_ptr<Object>);
 
     //OPENGL-TUTORIAL.ORG

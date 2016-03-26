@@ -36,11 +36,11 @@ in Geo
 layout(bindless_sampler, location = 0) uniform sampler2D txtAtlasT;
 out vec4 Ci;
 
-uniform vec3 Ctxt;
+uniform vec4 Ctxt;
 
 void main()
 {
     float A = texture(txtAtlasT, g.uv).r;
 
-    Ci = vec4(Ctxt, A);
+    Ci = vec4(Ctxt.rgb, A);
 }

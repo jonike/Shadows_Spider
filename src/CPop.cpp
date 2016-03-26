@@ -101,10 +101,7 @@ void CPop::keyReleaseEvent(QKeyEvent *e)
         ctrlTgl = false;
 
     else if (e->key() == Qt::Key_K)
-    {
-        if (myWin.stackedMain->currentIndex() == 1)
-            myWin.PaintWinTgl(0, 999);
-    }
+        myWin.PaintWinTgl(0, 999);
 }
 
 void CPop::resizeEvent(QResizeEvent *)

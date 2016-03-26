@@ -746,6 +746,8 @@ Object::Object(MainWin &myWinTemp) : myWin(myWinTemp)
     expand = gridV = ignoreOutliner = ref = selected = false;
     deletable = selectable = true;
     type = "EMPTY";
+    VAO_loaded = false;
+    VAO = 0;
 
     biasM = glm::mat4(
         .5f, 0.f, 0.f, 0.f,\
@@ -951,7 +953,8 @@ Object::Object(const Object &obj) : myWin(obj.myWin) //COPY CONSTRUCTOR
     }
 
     //VBO vertex attrs
-    dynVAO_perGL = obj.dynVAO_perGL; //
+    VAO_loaded = 0;
+    VAO = 0;
 
     pE = obj.pE;
     nE = obj.nE;
@@ -1051,83 +1054,80 @@ void Object::populateTexCombos()
     }
 }
 
-void Object::loadVAO(shared_ptr<GLWidget> myGL)
+void Object::VAO_load()
 {
     glGetError();
 
-    for (auto &i : dynVAO_perGL)
+    if (!VAO_loaded)
     {
-        if (i.GL == myGL && !i.loaded)
+        for (auto &j : myWin.myGLWidgetSh->GLDataSh)
         {
-            for (auto &j : myWin.myGLWidgetSh->GLDataSh)
+            if (j.obj.get() == this)
             {
-                if (j.obj.get() == this)
+                glCreateVertexArrays(1, &VAO);
+
+                if (type == "BB")
                 {
-                    glCreateVertexArrays(1, &i.VAO);
+                    glEnableVertexArrayAttrib(VAO, 0);
+                    glVertexArrayVertexBuffer(VAO, 0, j.VBO_P, 0, 12);
+                    glVertexArrayAttribFormat(VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
 
-                    if (type == "BB")
-                    {
-                        glEnableVertexArrayAttrib(i.VAO, 0);
-                        glVertexArrayVertexBuffer(i.VAO, 0, j.VBO_P, 0, 12);
-                        glVertexArrayAttribFormat(i.VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
-
-                        glVertexArrayElementBuffer(i.VAO, j.VBO_IDX);
-                    }
-
-                    else if (type == "GRID")
-                    {
-                        glEnableVertexArrayAttrib(i.VAO, 0);
-                        glVertexArrayVertexBuffer(i.VAO, 0, j.VBO_P, 0, 12);
-                        glVertexArrayAttribFormat(i.VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
-                    }
-
-                    else if (type == "TXT")
-                    {
-                        glEnableVertexArrayAttrib(i.VAO, 0);
-                        glVertexArrayVertexBuffer(i.VAO, 0, j.VBO_P, 0, 1);
-                        glVertexArrayAttribIFormat(i.VAO, 0, 1, GL_UNSIGNED_BYTE, 0);
-                    }
-
-                    else if (type == "GIZ_CIRC" || type == "GIZ_CONE" || type == "GIZ_CUBE" || type == "GIZ_DUAL_HANDLE" || type == "GIZ_CIRC_HALF" || type == "GIZ_LINE" || type == "CAMLI")
-                    {
-                        glEnableVertexArrayAttrib(i.VAO, 0);
-                        glVertexArrayVertexBuffer(i.VAO, 0, j.VBO_P, 0, 12);
-                        glVertexArrayAttribFormat(i.VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
-
-                        if (type == "GIZ_CUBE")
-                            glVertexArrayElementBuffer(i.VAO, j.VBO_IDX);
-                    }
-
-                    else if (type == "OBJ" || type == "VOL")
-                    {
-                        glEnableVertexArrayAttrib(i.VAO, 0);
-                        glVertexArrayVertexBuffer(i.VAO, 0, j.VBO_P, 0, 12);
-                        glVertexArrayAttribFormat(i.VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
-
-                        glEnableVertexArrayAttrib(i.VAO, 1);
-                        glVertexArrayVertexBuffer(i.VAO, 1, j.VBO_UV, 0, 8);
-                        glVertexArrayAttribFormat(i.VAO, 1, 2, GL_FLOAT, GL_FALSE, 0);
-
-                        glEnableVertexArrayAttrib(i.VAO, 2);
-                        glVertexArrayVertexBuffer(i.VAO, 2, j.VBO_T, 0, 12);
-                        glVertexArrayAttribFormat(i.VAO, 2, 3, GL_FLOAT, GL_FALSE, 0);
-
-                        glEnableVertexArrayAttrib(i.VAO, 3);
-                        glVertexArrayVertexBuffer(i.VAO, 3, j.VBO_N, 0, 12);
-                        glVertexArrayAttribFormat(i.VAO, 3, 3, GL_FLOAT, GL_FALSE, 0);
-
-                        glVertexArrayElementBuffer(i.VAO, j.VBO_IDX);
-                    }
-
-                    vertsOnObj = (int)pE.size();
+                    glVertexArrayElementBuffer(VAO, j.VBO_IDX);
                 }
-            }
 
-            i.loaded = true;
+                else if (type == "GRID")
+                {
+                    glEnableVertexArrayAttrib(VAO, 0);
+                    glVertexArrayVertexBuffer(VAO, 0, j.VBO_P, 0, 12);
+                    glVertexArrayAttribFormat(VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
+                }
+
+                else if (type == "TXT")
+                {
+                    glEnableVertexArrayAttrib(VAO, 0);
+                    glVertexArrayVertexBuffer(VAO, 0, j.VBO_P, 0, 1);
+                    glVertexArrayAttribIFormat(VAO, 0, 1, GL_UNSIGNED_BYTE, 0);
+                }
+
+                else if (type == "GIZ_CIRC" || type == "GIZ_CONE" || type == "GIZ_CUBE" || type == "GIZ_DUAL_HANDLE" || type == "GIZ_CIRC_HALF" || type == "GIZ_LINE" || type == "CAMLI")
+                {
+                    glEnableVertexArrayAttrib(VAO, 0);
+                    glVertexArrayVertexBuffer(VAO, 0, j.VBO_P, 0, 12);
+                    glVertexArrayAttribFormat(VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
+
+                    if (type == "GIZ_CUBE")
+                        glVertexArrayElementBuffer(VAO, j.VBO_IDX);
+                }
+
+                else if (type == "OBJ" || type == "VOL")
+                {
+                    glEnableVertexArrayAttrib(VAO, 0);
+                    glVertexArrayVertexBuffer(VAO, 0, j.VBO_P, 0, 12);
+                    glVertexArrayAttribFormat(VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
+
+                    glEnableVertexArrayAttrib(VAO, 1);
+                    glVertexArrayVertexBuffer(VAO, 1, j.VBO_UV, 0, 8);
+                    glVertexArrayAttribFormat(VAO, 1, 2, GL_FLOAT, GL_FALSE, 0);
+
+                    glEnableVertexArrayAttrib(VAO, 2);
+                    glVertexArrayVertexBuffer(VAO, 2, j.VBO_T, 0, 12);
+                    glVertexArrayAttribFormat(VAO, 2, 3, GL_FLOAT, GL_FALSE, 0);
+
+                    glEnableVertexArrayAttrib(VAO, 3);
+                    glVertexArrayVertexBuffer(VAO, 3, j.VBO_N, 0, 12);
+                    glVertexArrayAttribFormat(VAO, 3, 3, GL_FLOAT, GL_FALSE, 0);
+
+                    glVertexArrayElementBuffer(VAO, j.VBO_IDX);
+                }
+
+                vertsOnObj = (int)pE.size();
+            }
         }
+
+        VAO_loaded = true;
     }
 
-    glErrorPrint("Couldn't load VAO into dynVAO_perGL");
+    glErrorPrint("Couldn't load VAO");
 }
 
 void Object::BBup()
@@ -1227,10 +1227,9 @@ bool Object::camLiTypeGet(string toFind)
     return found;
 }
 
-void Object::mvpGet(shared_ptr<GLWidget> myGL)
+void Object::mvpGet()
 {
-    auto usableScale = s->val_3;
-    SM = glm::scale(glm::mat4(), usableScale);
+    SM = glm::scale(glm::mat4(), s->val_3);
 
     if (type == "CAMLI" && camLiType->val_s != "DIR")
         RM = glm::yawPitchRoll(glm::radians(r->val_3.x), glm::radians(r->val_3.y), 0.f);
@@ -1242,8 +1241,8 @@ void Object::mvpGet(shared_ptr<GLWidget> myGL)
 
     if (this == myWin.paintStroke.get())
     {
-        PM2D = glm::ortho(-1.f * myGL->aspect, 1.f * myGL->aspect, -1.f, 1.f, -1.f, 1.f);
-        TM = glm::translate(glm::mat4(), t->val_3 * myGL->aspectXYZ);
+        PM2D = glm::ortho(-1.f * myWin.myGL->aspect, 1.f * myWin.myGL->aspect, -1.f, 1.f, -1.f, 1.f);
+        TM = glm::translate(glm::mat4(), t->val_3 * myWin.myGL->aspectXYZ);
     }
 
     if (name->val_s == "giz")
@@ -1279,14 +1278,14 @@ void Object::mvpGet(shared_ptr<GLWidget> myGL)
 
     if (gizSideObj)
     {
-        PM = myGL->PMgizSide;
-        VM = myGL->VMgizSide;
+        PM = myWin.myGL->PMgizSide;
+        VM = myWin.myGL->VMgizSide;
     }
 
     else
     {
-        PM = myGL->selCamLi->PM;
-        VM = myGL->selCamLi->VM;
+        PM = myWin.myGL->selCamLi->PM;
+        VM = myWin.myGL->selCamLi->VM;
     }
 
     if (parentTo == 0 || name->val_s == "pivot")
@@ -1313,7 +1312,7 @@ void Object::mvpGet(shared_ptr<GLWidget> myGL)
     }
 }
 
-void Object::proUse(shared_ptr<GLWidget> myGL)
+void Object::proUse()
 {
     for (auto &i : myWin.myGLWidgetSh->GLDataSh)
     {
@@ -1322,7 +1321,7 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
             auto &proH = myWin.myGLWidgetSh->pro;
             auto proN = myWin.myGLWidgetSh->proN;
 
-            if ((proN == myGL->pGBufferDyn) && myWin.lightCt > 0) //
+            if ((proN == myWin.myGL->pGBufferDyn) && myWin.lightCt > 0) //
                 shadowPass();
 
             //OBJ MATRIX
@@ -1333,7 +1332,7 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
 
             if (proN == "pBB")
             {
-                if (myGL->colorPickTgl)
+                if (myWin.myGL->colorPickTgl)
                     comboU = glm::vec4(Crand, 1.f);
 
                 else
@@ -1348,18 +1347,22 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
             if (proN == "pWireframe")
             {
                 auto temp = (selected) ? myWin.glslTable->Csel->val_3 : Cwire->val_3;
-                glUniform3fv(glGetUniformLocation(proH, "Cwire"), 1, &temp.r);
+                comboU = glm::vec4(temp, 1.f);
+                glUniform4fv(glGetUniformLocation(proH, "Cwire"), 1, &comboU.x);
             }
 
             if (proN == "pSky")
             {
-                glUniformMatrix4fv(glGetUniformLocation(proH, "PMinv_cube"), 1, GL_FALSE, &myGL->PMinv_cube[0][0]);
+                glUniformMatrix4fv(glGetUniformLocation(proH, "PMinv_cube"), 1, GL_FALSE, &myWin.myGL->PMinv_cube[0][0]);
                 glUniformMatrix4fv(glGetUniformLocation(proH, "VM"), 1, GL_FALSE, &VM[0][0]);
                 glBindTextureUnit(0, myWin.cubeM_specular_32);
             }
 
             else if (proN == "pGrid")
-                glUniform3fv(glGetUniformLocation(proH, "Cgrid"), 1, &myWin.glslTable->Cgrid->val_3.r);
+            {
+                comboU = glm::vec4(myWin.glslTable->Cgrid->val_3, 1.f);
+                glUniform4fv(glGetUniformLocation(proH, "Cgrid"), 1, &comboU.x);
+            }
 
             else if (proN == "pShadow") //WRITE TO A SINGLE LIGHT
             {
@@ -1402,63 +1405,35 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                         glProgramUniformHandleui64ARB(proH, 1, myWin.myGLWidgetSh->topLayer(j).tex1_64);
                 }
 
-                comboU = glm::vec4(myWin.myFSQ->transpW->val_f, myGL->debug0, Ko->val_f, 0.f);
+                comboU = glm::vec4(myWin.myFSQ->transpW->val_f, myWin.myGL->debug0, Ko->val_f, 0.f);
                 glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
             }
 
             else if (proN == "pTranspComp")
             {
-                glProgramUniformHandleui64ARB(proH, 0, myGL->gBuf6_64);
-                glProgramUniformHandleui64ARB(proH, 1, myGL->gBuf7_64);
+                glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->gBuf6_64);
+                glProgramUniformHandleui64ARB(proH, 1, myWin.myGL->gBuf7_64);
             }
 
-            else if (proN == myGL->pGBufferDyn)
+            else if (proN == myWin.myGL->pGBufferDyn)
             {
-//                cout << "rendering gBuffDyn : " << myGL->pGBufferDyn << endl;
+//                /* LOOK AT (BILLBOARDING, MOVE TO SEP SHADER) */
+//                auto PV = glm::mat4(PM * VM);
+//                glUniformMatrix4fv(glGetUniformLocation(proH, "PV"), 1, GL_FALSE, &PV[0][0]);
 
+//                glm::vec3 camRight_WS(VM[0][0], VM[1][0], VM[2][0]);
+//                glm::vec3 camUP_WS(VM[0][1], VM[1][1], VM[2][1]);
 
-                /* LOOK AT */
-                auto PV = glm::mat4(PM * VM);
-                glUniformMatrix4fv(glGetUniformLocation(proH, "PV"), 1, GL_FALSE, &PV[0][0]);
+//                comboU = glm::vec4(camRight_WS, 0.f);
+//                glUniform4fv(glGetUniformLocation(proH, "camRight_WS"), 1, &comboU.x);
 
-                glm::vec3 camRight_WS(VM[0][0], VM[1][0], VM[2][0]);
-                glm::vec3 camUP_WS(VM[0][1], VM[1][1], VM[2][1]);
-                glUniform3fv(glGetUniformLocation(proH, "camRight_WS"), 1, &camRight_WS.x);
-                glUniform3fv(glGetUniformLocation(proH, "camUp_WS"), 1, &camUP_WS.x);
+//                comboU = glm::vec4(camUP_WS, 0.f);
+//                glUniform4fv(glGetUniformLocation(proH, "camUp_WS"), 1, &comboU.x);
 
-
-//                /* LOOK AT TEST */
-//                glm::vec3 upWorld(0.f, 1.f, 0.f);
-
-//                glm::vec3 targO_d = myGL->selCamLi->t->val_3;
-//                glm::vec3 lookO_d = glm::normalize(targO_d - t->val_3);
-//                glm::vec3 rightO_d = glm::normalize(glm::cross(lookO_d, upWorld));
-//                glm::vec3 upO_d = glm::cross(rightO_d, lookO_d);
-
-//                glm::mat4 lookAtM = glm::lookAt(t->val_3, targO_d, upO_d);
-//                lookAtM *= glm::rotate(glm::mat4(), glm::radians(myGL->selCamLi->r->val_3.z), glm::vec3(0.f, 0.f, 1.f));
-
-//                glUniformMatrix4fv(glGetUniformLocation(proH, "lookAtM"), 1, GL_FALSE, &lookAtM[0][0]);
-//                glUniformMatrix4fv(glGetUniformLocation(proH, "PM"), 1, GL_FALSE, &PM[0][0]);
-//                glUniformMatrix4fv(glGetUniformLocation(proH, "VM"), 1, GL_FALSE, &VM[0][0]);
-
-//                glUniform3fv(glGetUniformLocation(proH, "camRight_WS"), 1, &myGL->selCamLi->rightO.x);
-//                glUniform3fv(glGetUniformLocation(proH, "camUp_WS"), 1, &myGL->selCamLi->upO.x);
-
-
-//                glm::vec3 camRight_WS2(VM[0][0], VM[1][0], VM[2][0]);
-//                glm::vec3 camUP_WS2(VM[0][1], VM[1][1], VM[2][1]);
-//                glUniform3fv(glGetUniformLocation(proH, "camRight_WS2"), 1, &camRight_WS2.x);
-//                glUniform3fv(glGetUniformLocation(proH, "camUp_WS2"), 1, &camUP_WS2.x);
-
-
-
-
-//                cout << "in pGBufferDyn for : " << myGL->pGBufferDyn << endl;
 
                 glUniformMatrix4fv(glGetUniformLocation(proH, "MM"), 1, GL_FALSE, &MM[0][0]);
 
-                comboU = glm::vec4(ior->val_f, ruffOren->val_f, Ko->val_f, myGL->debug0);
+                comboU = glm::vec4(ior->val_f, ruffOren->val_f, Ko->val_f, myWin.myGL->debug0);
                 glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
 
                 auto shadowCastF = (shadowCast->val_b) ? 1.f : 0.f;
@@ -1509,10 +1484,10 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
 
                 //pt shadows at 7/8
                 //reg shadows at 9/10/11
-                //note : shadows only need to be generated up at a certain distance say 50 :
 
-                //in pShadow only render objs at dist < 50
-                //in gBuffer only calc lights for objs at dist < 50 (actually this wont matter b/c it'll do it anyway)
+                //for future release : shadows only need to be generated up at a certain distance (25, 50)
+                    //in pShadow only render objs at dist < 50
+                    //in gBuffer only calc lights for objs at dist < 50
 
                 int start = 7;
                 int realIdx = 0;
@@ -1520,11 +1495,11 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                 //PT SHADOWS SHOULD BE 7/8
                 for (unsigned int j = 0; j < myWin.myGLWidgetSh->allShadow.size(); ++j)
                 {
-                    for (unsigned int k = 0; k < myWin.allObj.size(); ++k)
+                    for (unsigned int k = 0; k < myWin.allCamLi.size(); ++k)
                     {
-                        if (myWin.myGLWidgetSh->allShadow[j].name == myWin.allObj[k]->name->val_s)
+                        if (myWin.myGLWidgetSh->allShadow[j].name == myWin.allCamLi[k]->name->val_s)
                         {
-                            if (myWin.allObj[k]->camLiType->val_s == "POINT")
+                            if (myWin.allCamLi[k]->camLiType->val_s == "POINT")
                             {
                                 //cout << "POINT SHADOWS for : " << myWin.myGLWidgetSh->allShadow[j].name << " " << start + realIdx << " " << start << " " << realIdx << endl;
                                 glBindTextureUnit(start + realIdx, myWin.myGLWidgetSh->allShadow[j].tex2_32);
@@ -1536,15 +1511,15 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
 
                 start = 9;
                 realIdx = 0;
-                
+
                 //SPOT SHADOWS SHOULD BE 9/10
                 for (unsigned int j = 0; j < myWin.myGLWidgetSh->allShadow.size(); ++j)
                 {
-                    for (unsigned int k = 0; k < myWin.allObj.size(); ++k)
+                    for (unsigned int k = 0; k < myWin.allCamLi.size(); ++k)
                     {
-                        if (myWin.myGLWidgetSh->allShadow[j].name == myWin.allObj[k]->name->val_s)
+                        if (myWin.myGLWidgetSh->allShadow[j].name == myWin.allCamLi[k]->name->val_s)
                         {
-                            if (myWin.allObj[k]->camLiType->val_s == "DIR" || myWin.allObj[k]->camLiType->val_s == "SPOT")
+                            if (myWin.allCamLi[k]->camLiType->val_s == "DIR" || myWin.allCamLi[k]->camLiType->val_s == "SPOT")
                             {
                                 //cout << "SPOT SHADOWS for : " << myWin.myGLWidgetSh->allShadow[j].name << " " << start + realIdx << " " << start << " " << realIdx << endl;
                                 glProgramUniformHandleui64ARB(proH, start + realIdx, myWin.myGLWidgetSh->allShadow[j].tex1_64);
@@ -1560,7 +1535,7 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
             {
 //                cout << "in pDefDyn for : " << myWin.myPP->pDefDyn << endl;
 
-                auto PMinv = glm::inverse(myGL->selCamLi->PM);
+                auto PMinv = glm::inverse(myWin.myGL->selCamLi->PM);
                 glUniformMatrix4fv(glGetUniformLocation(proH, "PMinv"), 1, GL_FALSE, &PMinv[0][0]);
 
                 glUniformMatrix4fv(glGetUniformLocation(proH, "VM"), 1, GL_FALSE, &VM[0][0]);
@@ -1568,19 +1543,19 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                 auto VMinv = glm::inverse(VM);
                 glUniformMatrix4fv(glGetUniformLocation(proH, "VMinv"), 1, GL_FALSE, &VMinv[0][0]);
 
-                glProgramUniformHandleui64ARB(proH, 0, myGL->gBuf0_64);
-                glProgramUniformHandleui64ARB(proH, 1, myGL->gBuf1_64);
-                glProgramUniformHandleui64ARB(proH, 2, myGL->gBuf2_64);
-                glProgramUniformHandleui64ARB(proH, 3, myGL->gBuf3_64);
-                glProgramUniformHandleui64ARB(proH, 4, myGL->gBuf4_64);
-                glProgramUniformHandleui64ARB(proH, 5, myGL->gBuf5_64);
-//                glProgramUniformHandleui64ARB(proH, 6, myGL->gBuf6_64);
-//                glProgramUniformHandleui64ARB(proH, 7, myGL->gBuf7_64);
-                glProgramUniformHandleui64ARB(proH, 8, myGL->ssaoGaussN.tex2_64);
-                glProgramUniformHandleui64ARB(proH, 9, myGL->bgN.tex1_64); // sky
+                glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->gBuf0_64);
+                glProgramUniformHandleui64ARB(proH, 1, myWin.myGL->gBuf1_64);
+                glProgramUniformHandleui64ARB(proH, 2, myWin.myGL->gBuf2_64);
+                glProgramUniformHandleui64ARB(proH, 3, myWin.myGL->gBuf3_64);
+                glProgramUniformHandleui64ARB(proH, 4, myWin.myGL->gBuf4_64);
+                glProgramUniformHandleui64ARB(proH, 5, myWin.myGL->gBuf5_64);
+//                glProgramUniformHandleui64ARB(proH, 6, myWin.myGL->gBuf6_64);
+//                glProgramUniformHandleui64ARB(proH, 7, myWin.myGL->gBuf7_64);
+                glProgramUniformHandleui64ARB(proH, 8, myWin.myGL->ssaoGaussN.tex2_64);
+                glProgramUniformHandleui64ARB(proH, 9, myWin.myGL->bgN.tex1_64); // sky
                 glBindTextureUnit(10, myWin.cubeM_specular_32);
                 glBindTextureUnit(11, myWin.cubeM_irradiance_32);
-                glBindTextureUnit(12, myGL->gBuf_DS_32);
+                glBindTextureUnit(12, myWin.myGL->gBuf_DS_32);
 
                 for (auto &j : myWin.myGLWidgetSh->allMaps)
                 {
@@ -1588,44 +1563,44 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                         glProgramUniformHandleui64ARB(proH, 12, myWin.myGLWidgetSh->topLayer(j).tex1_64);
                 }
 
-                comboU = glm::vec4(myWin.myFSQ->Kgi->val_f, myWin.lightCt, myGL->debug0, 0.f);
+                comboU = glm::vec4(myWin.myFSQ->Kgi->val_f, myWin.lightCt, myWin.myGL->debug0, 0.f);
                 glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
             }
 
             else if (proN == "pLumaInit")
             {
-                glProgramUniformHandleui64ARB(proH, 0, myGL->deferredN.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->deferredN.tex1_64);
             }
 
             else if (proN == "pLumaAdapt")
             {
-                glProgramUniformHandleui64ARB(proH, 0, myGL->lumaAdaptN[!myGL->currLum].tex1_64);
-                glProgramUniformHandleui64ARB(proH, 1, myGL->lumaInitN.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->lumaAdaptN[!myWin.myGL->currLum].tex1_64);
+                glProgramUniformHandleui64ARB(proH, 1, myWin.myGL->lumaInitN.tex1_64);
 
-                glUniform1f(glGetUniformLocation(proH, "dTime"), myGL->dTime);
+                glUniform1f(glGetUniformLocation(proH, "dTime"), myWin.myGL->dTime);
             }
 
             else if (proN == "pLumaAdapt_viz")
-                glProgramUniformHandleui64ARB(proH, 0, myGL->lumaAdaptN[!myGL->currLum].tex1_64);
+                glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->lumaAdaptN[!myWin.myGL->currLum].tex1_64);
 
             else if (proN == "pDown")
             {
-                glProgramUniformHandleui64ARB(proH, 0, myGL->downSamp_64);
-                glUniform2fv(glGetUniformLocation(proH, "texelSize"), 1, &myGL->texelSize.r);
+                glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->downSamp_64);
+                glUniform2fv(glGetUniformLocation(proH, "texelSize"), 1, &myWin.myGL->texelSize.r);
             }
 
             else if (proN == "pGauss")
             {
-                glProgramUniformHandleui64ARB(proH, 0, myGL->rttGaussIn64);
+                glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->rttGaussIn64);
                 glUniform1i(glGetUniformLocation(proH, "gaussStage"), gaussStage);
             }
 
             else if (proN == "pBloom")
             {
                 for (int j = 0; j < 6; ++j)
-                    glProgramUniformHandleui64ARB(proH, j, myGL->bloomGaussN[j].tex2_64);
+                    glProgramUniformHandleui64ARB(proH, j, myWin.myGL->bloomGaussN[j].tex2_64);
 
-                glProgramUniformHandleui64ARB(proH, 6, myGL->deferredN.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 6, myWin.myGL->deferredN.tex1_64);
 
                 for (auto &j : myWin.myGLWidgetSh->allMaps)
                 {
@@ -1639,20 +1614,20 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
 
             else if (proN == "pBloomC")
             {
-                glProgramUniformHandleui64ARB(proH, 0, myGL->deferredN.tex1_64);
-                glProgramUniformHandleui64ARB(proH, 1, myGL->bloomN.tex1_64);
-                glProgramUniformHandleui64ARB(proH, 2, myGL->ssaoGaussN.tex2_64);
+                glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->deferredN.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 1, myWin.myGL->bloomN.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 2, myWin.myGL->ssaoGaussN.tex2_64);
             }
 
             else if (proN == "pSSAO_32" || proN == "pSSAO_64")
             {
                 glUniformMatrix4fv(glGetUniformLocation(proH, "PM"), 1, GL_FALSE, &PM[0][0]);
 
-                auto PMinv = glm::inverse(myGL->selCamLi->PM);
+                auto PMinv = glm::inverse(myWin.myGL->selCamLi->PM);
                 glUniformMatrix4fv(glGetUniformLocation(proH, "PMinv"), 1, GL_FALSE, &PMinv[0][0]);
 
-                glProgramUniformHandleui64ARB(proH, 0, myGL->gBuf1_64);
-                glBindTextureUnit(1, myGL->gBuf_DS_32);
+                glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->gBuf1_64);
+                glBindTextureUnit(1, myWin.myGL->gBuf_DS_32);
 
                 for (auto &j : myWin.myGLWidgetSh->allMaps)
                 {
@@ -1672,7 +1647,7 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                 glUniformMatrix4fv(glGetUniformLocation(proH, "PMinv"), 1, GL_FALSE, &PMinv[0][0]);
 
                 // projection matrix that maps to screen pixels (not NDC)
-                auto screenScaleM = glm::scale(glm::mat4(), glm::vec3(myGL->width(), myGL->height(), 1.f));
+                auto screenScaleM = glm::scale(glm::mat4(), glm::vec3(myWin.myGL->width(), myWin.myGL->height(), 1.f));
 
                 auto trs = glm::mat4(1.f);
                 trs[0][0] = .5f;
@@ -1689,27 +1664,28 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                 glUniformMatrix4fv(glGetUniformLocation(proH, "PM_SS_d3d"), 1, GL_FALSE, &PM_SS_d3d[0][0]);
                 glUniformMatrix4fv(glGetUniformLocation(proH, "VM"), 1, GL_FALSE, &VM[0][0]);
 
-                glProgramUniformHandleui64ARB(proH, 0, myGL->gBuf1_64);
-                glProgramUniformHandleui64ARB(proH, 1, myGL->gBuf2_64);
-                glBindTextureUnit(2, myGL->gBuf_DS_32);
-                glProgramUniformHandleui64ARB(proH, 3, myGL->depthRevN.DS_64);
-                glProgramUniformHandleui64ARB(proH, 4, myGL->tonemapN.tex2_64);
+                glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->gBuf1_64);
+                glProgramUniformHandleui64ARB(proH, 1, myWin.myGL->gBuf2_64);
+                glBindTextureUnit(2, myWin.myGL->gBuf_DS_32);
+                glProgramUniformHandleui64ARB(proH, 3, myWin.myGL->depthRevN.DS_64);
+                glProgramUniformHandleui64ARB(proH, 4, myWin.myGL->tonemapN.tex1_64); // w/ giz
+                //glProgramUniformHandleui64ARB(proH, 4, myWin.myGL->tonemapN.tex2_64); // no giz
 
-                comboU = glm::vec4(myGL->selCamLi->farClip->val_f, myGL->selCamLi->nearClip->val_f, myWin.myFSQ->ssrIter->val_i, myWin.myFSQ->ssrRefine->val_i);
+                comboU = glm::vec4(myWin.myGL->selCamLi->farClip->val_f, myWin.myGL->selCamLi->nearClip->val_f, myWin.myFSQ->ssrIter->val_i, myWin.myFSQ->ssrRefine->val_i);
                 glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
 
                 comboU = glm::vec4(myWin.myFSQ->ssrPixStride->val_i, myWin.myFSQ->ssrPixStrideZ->val_f, myWin.myFSQ->ssrPixZSize->val_f, myWin.myFSQ->ssrMaxRayDist->val_f);
                 glUniform4fv(glGetUniformLocation(proH, "comboU1"), 1, &comboU.x);
 
-                comboU = glm::vec4(myWin.myFSQ->ssrEdgeFade->val_f, myWin.myFSQ->ssrEyeFade0->val_f, myWin.myFSQ->ssrEyeFade1->val_f, myGL->debug0);
+                comboU = glm::vec4(myWin.myFSQ->ssrEdgeFade->val_f, myWin.myFSQ->ssrEyeFade0->val_f, myWin.myFSQ->ssrEyeFade1->val_f, myWin.myGL->debug0);
                 glUniform4fv(glGetUniformLocation(proH, "comboU2"), 1, &comboU.x);
             }
 
             else if (proN == "pTonemap")
             {
-                glProgramUniformHandleui64ARB(proH, 0, myGL->bloomCN.tex1_64);
-                glProgramUniformHandleui64ARB(proH, 1, myGL->lumaAdaptN[myGL->currLum].tex1_64);
-                glProgramUniformHandleui64ARB(proH, 2, myGL->bgN.tex2_64);
+                glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->bloomCN.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 1, myWin.myGL->lumaAdaptN[myWin.myGL->currLum].tex1_64);
+                glProgramUniformHandleui64ARB(proH, 2, myWin.myGL->bgN.tex2_64);
 
                 comboU = glm::vec4(log(myWin.myFSQ->expo->val_f), myWin.myFSQ->adaptAuto->val_b, myWin.myFSQ->vign->val_b, myWin.myFSQ->vignDist->val_f);
                 glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
@@ -1717,38 +1693,38 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
 
             else if (proN == "pFxaa")
             {
-                glProgramUniformHandleui64ARB(proH, 0, myGL->tonemapN.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->tonemapN.tex1_64);
 
-                comboU = glm::vec4(myGL->edgeDetect_mode, myWin.myFSQ->fxaaSubPix->val_f, myWin.myFSQ->fxaaEdgeThr->val_f, myWin.myFSQ->fxaaEdgeThrMin->val_f);
+                comboU = glm::vec4(myWin.myGL->edgeDetect_mode, myWin.myFSQ->fxaaSubPix->val_f, myWin.myFSQ->fxaaEdgeThr->val_f, myWin.myFSQ->fxaaEdgeThrMin->val_f);
                 glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
 
-                glUniform1i(glGetUniformLocation(proH, "debug0"), myGL->debug0);
+                glUniform1i(glGetUniformLocation(proH, "debug0"), myWin.myGL->debug0);
             }
 
             else if (proN == "pFinal")
             {
-                glProgramUniformHandleui64ARB(proH, 0, myGL->fxaaN.tex1_64);
-                glProgramUniformHandleui64ARB(proH, 1, myGL->ssrN.tex1_64);
-                glProgramUniformHandleui64ARB(proH, 2, myGL->cursorN.tex1_64);
-                glProgramUniformHandleui64ARB(proH, 3, myGL->deferredN.tex1_64);
-                glProgramUniformHandleui64ARB(proH, 4, myGL->brushN.tex2_64);
-                glProgramUniformHandleui64ARB(proH, 5, myGL->gBuf6_64); //transp_d
-                glProgramUniformHandleui64ARB(proH, 6, myGL->gBuf7_64); //transp_d
+                glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->fxaaN.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 1, myWin.myGL->ssrN.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 2, myWin.myGL->cursorN.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 3, myWin.myGL->deferredN.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 4, myWin.myGL->brushN.tex2_64);
+                glProgramUniformHandleui64ARB(proH, 5, myWin.myGL->gBuf6_64); //BOIT accum
+                glProgramUniformHandleui64ARB(proH, 6, myWin.myGL->gBuf7_64); //BOIT revealage
 
-                comboU = glm::vec4(myGL->rezGate_LD, myGL->rezGate_RU);
+                comboU = glm::vec4(myWin.myGL->rezGate_LD, myWin.myGL->rezGate_RU);
                 glUniform4fv(glGetUniformLocation(proH, "LDRU"), 1, &comboU.x);
 
-                auto rezGateTgl = (myGL->rezGateTgl || myGL->rezGateTgl_sel) ? true : false;
-                comboU = glm::vec4(rezGateTgl, myGL->dragDrop, myGL->debug0, myGL->debug1);
+                auto rezGateTgl = (myWin.myGL->rezGateTgl || myWin.myGL->rezGateTgl_sel) ? true : false;
+                comboU = glm::vec4(rezGateTgl, myWin.myGL->dragDrop, myWin.myGL->debug0, myWin.myGL->debug1);
                 glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
             }
 
             else if (proN == "pEdgeDetect")
             {
-                glProgramUniformHandleui64ARB(proH, 0, myGL->alphaGaussN.tex2_64);
+                glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->alphaGaussN.tex2_64);
 
-//                comboU = glm::vec4(myGL->edgeDetect_mode, myWin.myFSQ->edgeThr->val_f, 0.f, 0.f);
-                comboU = glm::vec4(myGL->edgeDetect_mode, .6f, 0.f, 0.f);
+//                comboU = glm::vec4(myWin.myGL->edgeDetect_mode, myWin.myFSQ->edgeThr->val_f, 0.f, 0.f);
+                comboU = glm::vec4(myWin.myGL->edgeDetect_mode, .6f, 0.f, 0.f);
                 glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
             }
 
@@ -1760,65 +1736,65 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                     {
                         if (j.name == myWin.myGLWidgetSh->selBrush->name)
                         {
-                            if (myGL->paintType == "BRUSH")
+                            if (myWin.myGL->paintType == "BRUSH")
                                 glProgramUniformHandleui64ARB(proH, 0, myWin.myGLWidgetSh->topLayer(j).tex1_64);
 
-                            else if (myGL->paintType == "BRUSH_CURSOR")
+                            else if (myWin.myGL->paintType == "BRUSH_CURSOR")
                                 glProgramUniformHandleui64ARB(proH, 0, myWin.myGLWidgetSh->topLayer(j).tex2_64);
                         }
 
                         else if (j.name == myWin.myGLWidgetSh->selEraser->name)
                         {
-                            if (myGL->paintType == "ERASER")
+                            if (myWin.myGL->paintType == "ERASER")
                                 glProgramUniformHandleui64ARB(proH, 0, myWin.myGLWidgetSh->topLayer(j).tex1_64);
 
-                            else if (myGL->paintType == "ERASER_CURSOR")
+                            else if (myWin.myGL->paintType == "ERASER_CURSOR")
                                 glProgramUniformHandleui64ARB(proH, 0, myWin.myGLWidgetSh->topLayer(j).tex2_64);
                         }
                     }
                 }
 
-                glUniform4fv(glGetUniformLocation(proH, "brushRGBA"), 1, &myGL->brushRGBA.x);
+                glUniform4fv(glGetUniformLocation(proH, "brushRGBA"), 1, &myWin.myGL->brushRGBA.x);
             }
 
             else if (proN == "pEraseMix")
             {
-                glProgramUniformHandleui64ARB(proH, 0, myGL->brushBGN.tex2_64);
-                glProgramUniformHandleui64ARB(proH, 1, myGL->eraserN.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->brushBGN.tex2_64);
+                glProgramUniformHandleui64ARB(proH, 1, myWin.myGL->eraserN.tex1_64);
             }
 
             else if (proN == "pCopyTex")
             {
-                if (myGL->copyTgt == 0)
-                    glProgramUniformHandleui64ARB(proH, 0, myGL->brushTempN.tex1_64);
+                if (myWin.myGL->copyTgt == 0)
+                    glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->brushTempN.tex1_64);
 
-                else if (myGL->copyTgt == 1)
-                    glProgramUniformHandleui64ARB(proH, 0, myGL->brushTempN.tex2_64);
+                else if (myWin.myGL->copyTgt == 1)
+                    glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->brushTempN.tex2_64);
 
-                else if (myGL->copyTgt == 2)
-                    glProgramUniformHandleui64ARB(proH, 0, myGL->brushBGN.tex1_64);
+                else if (myWin.myGL->copyTgt == 2)
+                    glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->brushBGN.tex1_64);
 
-                else if (myGL->copyTgt == 3)
-                    glProgramUniformHandleui64ARB(proH, 0, myGL->brushBGN.tex2_64);
+                else if (myWin.myGL->copyTgt == 3)
+                    glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->brushBGN.tex2_64);
 
-                else if (myGL->copyTgt == 4)
-                    glProgramUniformHandleui64ARB(proH, 0, myGL->brushN.tex1_64);
+                else if (myWin.myGL->copyTgt == 4)
+                    glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->brushN.tex1_64);
 
-                else if (myGL->copyTgt == 5)
-                    glProgramUniformHandleui64ARB(proH, 0, myGL->brushN.tex2_64);
+                else if (myWin.myGL->copyTgt == 5)
+                    glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->brushN.tex2_64);
 
-                else if (myGL->copyTgt == 10)
-                    glProgramUniformHandleui64ARB(proH, 0, myGL->myLayerIdx.layer[0].tex1_64);
+                else if (myWin.myGL->copyTgt == 10)
+                    glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->myLayerIdx.layer[0].tex1_64);
 
-                else if (myGL->copyTgt == 11)
-                    glProgramUniformHandleui64ARB(proH, 0, myGL->eraserN.tex1_64);
+                else if (myWin.myGL->copyTgt == 11)
+                    glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->eraserN.tex1_64);
 
-                else if (myGL->copyTgt == 12)
-                    glProgramUniformHandleui64ARB(proH, 0, myGL->eraserN.tex2_64);
+                else if (myWin.myGL->copyTgt == 12)
+                    glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->eraserN.tex2_64);
 
-                else if (myGL->copyTgt == 99)
+                else if (myWin.myGL->copyTgt == 99)
                 {
-                    glProgramUniformHandleui64ARB(proH, 0, myGL->eraserN.tex2_64);
+                    glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->eraserN.tex2_64);
 
                     for (auto &j : myWin.myGLWidgetSh->allMaps)
                     {
@@ -1830,18 +1806,18 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
 
             else if (proN == "pPaintProj")
             {
-                glProgramUniformHandleui64ARB(proH, 0, myGL->brushN.tex1_64);
-                glProgramUniformHandleui64ARB(proH, 1, myGL->myLayerIdx.layer[0].tex2_64);
+                glProgramUniformHandleui64ARB(proH, 0, myWin.myGL->brushN.tex1_64);
+                glProgramUniformHandleui64ARB(proH, 1, myWin.myGL->myLayerIdx.layer[0].tex2_64);
 
-                glUniformMatrix4fv(glGetUniformLocation(proH, "VM"), 1, GL_FALSE, &myGL->selCamLi->VM[0][0]);
+                glUniformMatrix4fv(glGetUniformLocation(proH, "VM"), 1, GL_FALSE, &myWin.myGL->selCamLi->VM[0][0]);
 
-                auto ProjectorM = biasM * myGL->selCamLi->PM * myGL->selCamLi->VM * MM;
+                auto ProjectorM = biasM * myWin.myGL->selCamLi->PM * myWin.myGL->selCamLi->VM * MM;
                 glUniformMatrix4fv(glGetUniformLocation(proH, "ProjectorM"), 1, GL_FALSE, &ProjectorM[0][0]);
             }
 
             else if (proN == "pAlphaAsRGBA")
             {
-                glProgramUniformHandleui64ARB(proH, 0, myWin.myGLWidgetSh->topLayer(myGL->sobelMap).tex1_64);
+                glProgramUniformHandleui64ARB(proH, 0, myWin.myGLWidgetSh->topLayer(myWin.myGL->sobelMap).tex1_64);
             }
 
             else if (proN == "pBlendMode")
@@ -1855,17 +1831,22 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
 
             //GIZ
             else if (proN == "pGiz")
-                glUniform3fv(glGetUniformLocation(proH, "Cgiz"), 1, &Cgiz.r);
+            {
+                comboU = glm::vec4(Cgiz, 1.f);
+                glUniform4fv(glGetUniformLocation(proH, "Cgiz"), 1, &comboU.x);
+            }
 
             else if (proN == "pGiz_circ")
             {
-                glUniform3fv(glGetUniformLocation(proH, "Cgiz"), 1, &Cgiz.r);
+                comboU = glm::vec4(Cgiz, 1.f);
+                glUniform4fv(glGetUniformLocation(proH, "Cgiz"), 1, &comboU.x);
 
                 if (type == "GIZ_CIRC")
                 {
-                    glUniform3fv(glGetUniformLocation(proH, "circRight"), 1, &myGL->selCamLi->rightO.x);
+                    comboU = glm::vec4(myWin.myGL->selCamLi->rightO, 0.f);
+                    glUniform4fv(glGetUniformLocation(proH, "circRight"), 1, &comboU.x);
 
-                    comboU = glm::vec4(myGL->selCamLi->upO, 1);
+                    comboU = glm::vec4(myWin.myGL->selCamLi->upO, 1);
                     glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
                 }
 
@@ -1891,26 +1872,27 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
 
                     if (name->val_s == "gizCircHalfX")
                     {
-                        circHalfRight = glm::normalize(glm::cross(myGL->selCamLi->lookO, axX));
+                        circHalfRight = glm::normalize(glm::cross(myWin.myGL->selCamLi->lookO, axX));
                         circHalfFront = glm::normalize(glm::cross(circHalfRight, axX));
-                        myGL->gizHoverCheckX = circHalfFront;
+                        myWin.myGL->gizHoverCheckX = circHalfFront;
                     }
 
                     else if (name->val_s == "gizCircHalfY")
                     {
-                        circHalfRight = glm::normalize(glm::cross(myGL->selCamLi->lookO, axY));
+                        circHalfRight = glm::normalize(glm::cross(myWin.myGL->selCamLi->lookO, axY));
                         circHalfFront = glm::normalize(glm::cross(circHalfRight, axY));
-                        myGL->gizHoverCheckY = circHalfFront;
+                        myWin.myGL->gizHoverCheckY = circHalfFront;
                     }
 
                     else if (name->val_s == "gizCircHalfZ")
                     {
-                        circHalfRight = glm::normalize(glm::cross(myGL->selCamLi->lookO, axZ));
+                        circHalfRight = glm::normalize(glm::cross(myWin.myGL->selCamLi->lookO, axZ));
                         circHalfFront = glm::normalize(glm::cross(circHalfRight, axZ));
-                        myGL->gizHoverCheckZ = circHalfFront;
+                        myWin.myGL->gizHoverCheckZ = circHalfFront;
                     }
 
-                    glUniform3fv(glGetUniformLocation(proH, "circRight"), 1, &circHalfRight.x);
+                    comboU = glm::vec4(circHalfRight, 0.f);
+                    glUniform4fv(glGetUniformLocation(proH, "circRight"), 1, &comboU.x);
 
                     comboU = glm::vec4(circHalfFront, 0);
                     glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
@@ -1919,13 +1901,14 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
 
             else if (type == "SELRECT")
             {
-                glm::vec4 LDRU(myGL->selRect_LD, myGL->selRect_RU);
+                glm::vec4 LDRU(myWin.myGL->selRect_LD, myWin.myGL->selRect_RU);
                 glUniform4fv(glGetUniformLocation(proH, "LDRU"), 1, &LDRU.x);
             }
 
             else if (proN == "pStencilHi")
             {
-                glUniform3fv(glGetUniformLocation(proH, "CstencilHi"), 1, &myWin.glslTable->Csel->val_3.r);
+                comboU = glm::vec4(myWin.glslTable->Csel->val_3, 1.f);
+                glUniform4fv(glGetUniformLocation(proH, "CstencilHi"), 1, &comboU.x);
             }
 
             else if (proN == "pTxt")
@@ -1936,13 +1919,14 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
                         glProgramUniformHandleui64ARB(proH, 0, myWin.myGLWidgetSh->topLayer(j).tex1_64);
                 }
 
-                glUniform3fv(glGetUniformLocation(proH, "Ctxt"), 1, &myWin.glslTable->Ctxt->val_3.r);
+                comboU = glm::vec4(myWin.glslTable->Ctxt->val_3, 0.f);
+                glUniform4fv(glGetUniformLocation(proH, "Ctxt"), 1, &comboU.x);
 
                 glm::vec2 txtCellSize(1.f / 16, (300.f / 384) / 6);
                 glm::vec2 txtCellOffset(.5f / 256);
 
                 auto txtSize = .8f;
-                glm::vec2 txtSizeUse(.75f * 16 / (myGL->width() / txtSize), .75f * 33.33 / (myGL->height() / txtSize));
+                glm::vec2 txtSizeUse(.75f * 16 / (myWin.myGL->width() / txtSize), .75f * 33.33 / (myWin.myGL->height() / txtSize));
 
                 comboU = glm::vec4(txtCellSize, txtCellOffset);
                 glUniform4fv(glGetUniformLocation(proH, "comboU0"), 1, &comboU.x);
@@ -1955,7 +1939,8 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
             {
                 glUniformMatrix4fv(glGetUniformLocation(proH, "MV"), 1, GL_FALSE, &MV[0][0]);
 
-                glUniform3fv(glGetUniformLocation(proH, "parentCl"), 1, &parentTo->Cl->val_3.r);
+                comboU = glm::vec4(parentTo->Cl->val_3, 0.f);
+                glUniform4fv(glGetUniformLocation(proH, "parentCl"), 1, &comboU.x);
 
                 auto volTipView = glm::vec3(VM * glm::vec4(parentTo->t->val_3, 1.f));
 
@@ -1966,12 +1951,157 @@ void Object::proUse(shared_ptr<GLWidget> myGL)
     }
 }
 
+void Object::setMM()
+{
+    if (this != myWin.paintStroke.get())
+    {
+        SM = glm::scale(glm::mat4(), s->val_3);
+
+        if (type == "CAMLI" && camLiType->val_s != "DIR")
+            RM = glm::yawPitchRoll(glm::radians(r->val_3.x), glm::radians(r->val_3.y), 0.f);
+
+        else
+            RM = rotOrderUse(rotOrder->val_s);
+
+        TM = glm::translate(glm::mat4(), t->val_3);
+
+    //    if (this == myWin.paintStroke.get())
+    //    {
+    //        PM2D = glm::ortho(-1.f * myGL->aspect, 1.f * myGL->aspect, -1.f, 1.f, -1.f, 1.f);
+    //        TM = glm::translate(glm::mat4(), t->val_3 * myGL->aspectXYZ);
+    //    }
+
+        if (parentTo != 0)
+        {
+            if (name->val_s == "giz")
+            {
+                if (myWin.gizSpace == "local")
+                    RM = parentTo->RM;
+
+                SM = glm::scale(glm::mat4(), glm::vec3(myWin.gizScale));
+            }
+
+            if (name->val_s == "pivot" || name->val_s == "giz")
+            {
+                //TM = glm::translate(glm::mat4(), parentTo->piv->val_3);
+                TM = glm::translate(glm::mat4(), parentTo->t->val_3); //
+            }
+        }
+
+        //PIV
+        pivM = glm::translate(glm::mat4(), t->val_3 - piv->val_3);
+        pivRtM = glm::translate(glm::mat4(), pivRt);
+
+        //MM
+        //    if (piv->val_3 == glm::vec3(0.f)) MM = TM * RM * SM;
+        //    else MM = TM * pivRtM * glm::inverse(pivM) * RM * SM * pivM;
+        MM = TM * RM * SM;
+    }
+}
+
+void Object::AABB_toWS()
+{
+    setMM();
+
+    AABB_WS =
+    {
+        //near (maxZ)
+        { bbMin.x, bbMin.y, bbMax.z },
+        { bbMax.x, bbMin.y, bbMax.z },
+        { bbMax.x, bbMax.y, bbMax.z },
+        { bbMin.x, bbMax.y, bbMax.z },
+
+        //far (minZ)
+        { bbMin.x, bbMin.y, bbMin.z },
+        { bbMax.x, bbMin.y, bbMin.z },
+        { bbMax.x, bbMax.y, bbMin.z },
+        { bbMin.x, bbMax.y, bbMin.z },
+    };
+
+    //    for (int i = 0; i < 8; ++i)
+    //        cout << i <<  " OS = " << glm::to_string(AABB_WS[i]) << endl;
+
+    // transform into WS
+    for (int i = 0; i < 8; ++i)
+    {
+        for (int j = 0; j < 3; ++j)
+            AABB_WS[i][j] = (AABB_WS[i].x * MM[0][j]) + (AABB_WS[i].y * MM[1][j]) + (AABB_WS[i].z * MM[2][j]) + MM[3][j];
+    }
+
+    //    for (int i = 0; i < 8; ++i)
+    //        cout << i <<  " WS = " << glm::to_string(AABB_WS[i]) << endl;
+}
+
+void Object::buildFrustumPlanes()
+{
+    //NEAR
+    nc = t->val_3 + lookO * nearClip->val_f;
+    Hnear = 2.f * tan(glm::radians(fov->val_f / 2.f)) * nearClip->val_f;
+    Wnear = Hnear * myWin.myGL->aspect;
+    ntl = nc + (upO * Hnear / 2.f) - (rightO * Wnear / 2.f);
+    ntr = nc + (upO * Hnear / 2.f) + (rightO * Wnear / 2.f);
+    nbl = nc - (upO * Hnear / 2.f) - (rightO * Wnear / 2.f);
+    nbr = nc - (upO * Hnear / 2.f) + (rightO * Wnear / 2.f);
+
+    //FAR
+    fc = t->val_3 + lookO * farClip->val_f;
+    Hfar = 2.f * tan(glm::radians(fov->val_f / 2.f)) * farClip->val_f;
+    Wfar = Hfar * myWin.myGL->aspect;
+    ftl = fc + (upO * Hfar / 2.f) - (rightO * Wfar / 2.f);
+    ftr = fc + (upO * Hfar / 2.f) + (rightO * Wfar / 2.f);
+    fbl = fc - (upO * Hfar / 2.f) - (rightO * Wfar / 2.f);
+    fbr = fc - (upO * Hfar / 2.f) + (rightO * Wfar / 2.f);
+
+    fPlanes_temp =
+    {
+        { ntr, ntl, ftl }, //U
+        { nbl, nbr, fbr }, //D
+        { ntl, nbl, fbl }, //L
+        { nbr, ntr, fbr }, //R
+        { ntl, ntr, nbr }, //N
+        { ftr, ftl, fbl }, //F
+    };
+
+    for (int i = 0; i < 6; ++i)
+    {
+        glm::vec3 e1 = fPlanes_temp[i].v2 - fPlanes_temp[i].v1;
+        glm::vec3 e2 = fPlanes_temp[i].v3 - fPlanes_temp[i].v1;
+
+        glm::vec3 N = glm::normalize(glm::cross(e1, e2));
+        float d = -glm::dot(N, fPlanes_temp[i].v2);
+
+        fPlanes[i] = glm::vec4(N, d);
+    }
+}
+
+bool Object::isAABBinFrustum()
+{
+    for (int i = 0; i < 6; ++i)
+    {
+        bool inside = false;
+
+        for (int j = 0; j < 8; ++j)
+        {
+            if (glm::dot(AABB_WS[j], glm::vec3(myWin.myGL->selCamLi->fPlanes[i])) + myWin.myGL->selCamLi->fPlanes[i].w > 0.f)
+            {
+                inside = true;
+                break;
+            }
+        }
+
+        if (inside == false)
+            return false;
+    }
+
+    return true;
+}
+
 void Object::shadowPass()
 {
     //READ FROM MULTIPLE LIGHTS
     auto lightIter = 1;
 
-    for (auto &i : myWin.allObj)
+    for (auto &i : myWin.allCamLi)
     {
         if (i->v->val_b && i->camLiTypeGet("light"))
         {
@@ -2005,138 +2135,132 @@ void Object::shadowPass()
     }
 }
 
-void Object::render(shared_ptr<GLWidget> myGL)
+void Object::render()
 {
-    proUse(myGL);
+    proUse();
 
-    for (unsigned int i = 0; i < dynVAO_perGL.size(); ++i)
+    if (bb->val_b)
     {
-        if (dynVAO_perGL[i].GL == myGL)
+        glLineWidth(2.f);
+
+        glBindVertexArray(myWin.myBB->VAO);
+        glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_SHORT, 0);
+        glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_SHORT, (GLvoid*)(4 * 2));
+        glDrawElements(GL_LINES, 8, GL_UNSIGNED_SHORT, (GLvoid*)(8 * 2));
+
+        glLineWidth(1.f);
+    }
+
+    else
+    {
+        if (type == "FBO" || type == "SELRECT")
         {
-            if (bb->val_b)
+            glBindVertexArray(VAO);
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        }
+
+        else if (type == "GRID")
+        {
+            glLineWidth(2.f);
+
+            glBindVertexArray(VAO);
+
+            int gridLines = myWin.glslTable->gridLines->val_i + 1;
+            for (int i = 0; i < gridLines; ++i)
+                glDrawArrays(GL_LINE_STRIP, gridLines * i, gridLines);
+
+            glLineWidth(1.f);
+        }
+
+        else if (type == "OBJ")
+        {
+            glBindVertexArray(VAO);
+            glDrawElements(GL_TRIANGLES, (GLsizei)idxE.size(), GL_UNSIGNED_SHORT, 0);
+        }
+
+        else if (type == "VOL")
+        {
+            glBindVertexArray(myWin.myVolCone->VAO);
+            glDrawElements(GL_TRIANGLES, (GLsizei)myWin.myVolCone->idxE.size(), GL_UNSIGNED_SHORT, 0);
+        }
+
+        else if (type == "CAMLI")
+        {
+            glLineWidth(2.f);
+            glDisable(GL_DEPTH_TEST);
+
+            if (camLiTypeGet("cam"))
             {
-                glLineWidth(2.f);
-
-                glBindVertexArray(myWin.myBB->dynVAO_perGL[i].VAO);
-                glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_SHORT, 0);
-                glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_SHORT, (GLvoid*)(4 * 2));
-                glDrawElements(GL_LINES, 8, GL_UNSIGNED_SHORT, (GLvoid*)(8 * 2));
-
-                glLineWidth(1.f);
+                glBindVertexArray(VAO);
+                glDrawArrays(GL_LINE_LOOP, 0, (GLsizei)pE.size());
             }
 
             else
             {
-                if (type == "FBO" || type == "SELRECT")
+                if (camLiType->val_s == "AREA")
                 {
-                    glBindVertexArray(dynVAO_perGL[i].VAO);
-                    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+                    glBindVertexArray(myWin.myAreaLight->VAO);
+                    glDrawArrays(GL_LINE_LOOP, 0, (GLsizei)myWin.myAreaLight->pE.size());
                 }
 
-                else if (type == "GRID")
+                else if (camLiType->val_s == "DIR")
                 {
-                    glLineWidth(2.f);
-
-                    glBindVertexArray(dynVAO_perGL[i].VAO);
-
-                    int gridLines = myWin.glslTable->gridLines->val_i + 1;
-                    for (int j = 0; j < gridLines; ++j)
-                        glDrawArrays(GL_LINE_STRIP, gridLines * j, gridLines);
-
-                    glLineWidth(1.f);
+                    glBindVertexArray(myWin.myDirLight->VAO);
+                    glDrawArrays(GL_LINE_LOOP, 0, (GLsizei)myWin.myDirLight->pE.size());
                 }
 
-                else if (type == "OBJ")
+                else if (camLiType->val_s == "POINT")
                 {
-                    glBindVertexArray(dynVAO_perGL[i].VAO);
-                    glDrawElements(GL_TRIANGLES, (GLsizei)idxE.size(), GL_UNSIGNED_SHORT, 0);
+                    glBindVertexArray(myWin.myPointLight->VAO);
+                    glDrawArrays(GL_LINE_LOOP, 0, (GLsizei)myWin.myPointLight->pE.size());
                 }
 
-                else if (type == "VOL")
+                else if (camLiType->val_s == "SPOT")
                 {
-                    glBindVertexArray(myWin.myVolCone->dynVAO_perGL[i].VAO);
-                    glDrawElements(GL_TRIANGLES, (GLsizei)myWin.myVolCone->idxE.size(), GL_UNSIGNED_SHORT, 0);
-                }
-
-                else if (type == "CAMLI")
-                {
-                    glLineWidth(2.f);
-                    glDisable(GL_DEPTH_TEST);
-
-                    if (camLiTypeGet("cam"))
-                    {
-                        glBindVertexArray(dynVAO_perGL[i].VAO);
-                        glDrawArrays(GL_LINE_LOOP, 0, (GLsizei)pE.size());
-                    }
-
-                    else
-                    {
-                        if (camLiType->val_s == "AREA")
-                        {
-                            glBindVertexArray(myWin.myAreaLight->dynVAO_perGL[i].VAO);
-                            glDrawArrays(GL_LINE_LOOP, 0, (GLsizei)myWin.myAreaLight->pE.size());
-                        }
-
-                        else if (camLiType->val_s == "DIR")
-                        {
-                            glBindVertexArray(myWin.myDirLight->dynVAO_perGL[i].VAO);
-                            glDrawArrays(GL_LINE_LOOP, 0, (GLsizei)myWin.myDirLight->pE.size());
-                        }
-
-                        else if (camLiType->val_s == "POINT")
-                        {
-                            glBindVertexArray(myWin.myPointLight->dynVAO_perGL[i].VAO);
-                            glDrawArrays(GL_LINE_LOOP, 0, (GLsizei)myWin.myPointLight->pE.size());
-                        }
-
-                        else if (camLiType->val_s == "SPOT")
-                        {
-                            glBindVertexArray(myWin.mySpotLight->dynVAO_perGL[i].VAO);
-                            glDrawArrays(GL_LINE_LOOP, 0, (GLsizei)myWin.mySpotLight->pE.size());
-                        }
-                    }
-
-                    glLineWidth(1.f);
-                    glEnable(GL_DEPTH_TEST);
-                }
-
-                else if (type == "TXT")
-                {
-                    glBindVertexArray(dynVAO_perGL[i].VAO);
-                    glEnableVertexArrayAttrib(dynVAO_perGL[i].VAO, 0);
-                    glDrawArrays(GL_POINTS, 0, (GLsizei)strlen(txt2D));
-                }
-
-                else if (type == "GIZ_CONE" || type == "GIZ_DUAL_HANDLE")
-                {
-                    if (type == "GIZ_DUAL_HANDLE")
-                        glDisable(GL_CULL_FACE);
-
-                    glBindVertexArray(dynVAO_perGL[i].VAO);
-                    glEnableVertexArrayAttrib(dynVAO_perGL[i].VAO, 0);
-                    glDrawArrays(GL_TRIANGLE_FAN, 0, (GLsizei)pE.size());
-
-                    if (type == "GIZ_DUAL_HANDLE")
-                        glEnable(GL_CULL_FACE);
-                }
-
-                else if (type == "GIZ_CIRC" || type == "GIZ_CIRC_HALF" || type == "GIZ_LINE")
-                {
-                    glLineWidth(3.f);
-
-                    glBindVertexArray(dynVAO_perGL[i].VAO);
-                    glEnableVertexArrayAttrib(dynVAO_perGL[i].VAO, 0);
-                    glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)pE.size());
-
-                    glLineWidth(1.f);
-                }
-
-                else if (type == "GIZ_CUBE")
-                {
-                    glBindVertexArray(dynVAO_perGL[i].VAO);
-                    glDrawElements(GL_TRIANGLES, (GLsizei)idxE.size(), GL_UNSIGNED_SHORT, 0);
+                    glBindVertexArray(myWin.mySpotLight->VAO);
+                    glDrawArrays(GL_LINE_LOOP, 0, (GLsizei)myWin.mySpotLight->pE.size());
                 }
             }
+
+            glLineWidth(1.f);
+            glEnable(GL_DEPTH_TEST);
+        }
+
+        else if (type == "TXT")
+        {
+            glBindVertexArray(VAO);
+            glEnableVertexArrayAttrib(VAO, 0);
+            glDrawArrays(GL_POINTS, 0, (GLsizei)strlen(txt2D));
+        }
+
+        else if (type == "GIZ_CONE" || type == "GIZ_DUAL_HANDLE")
+        {
+            if (type == "GIZ_DUAL_HANDLE")
+                glDisable(GL_CULL_FACE);
+
+            glBindVertexArray(VAO);
+            glEnableVertexArrayAttrib(VAO, 0);
+            glDrawArrays(GL_TRIANGLE_FAN, 0, (GLsizei)pE.size());
+
+            if (type == "GIZ_DUAL_HANDLE")
+                glEnable(GL_CULL_FACE);
+        }
+
+        else if (type == "GIZ_CIRC" || type == "GIZ_CIRC_HALF" || type == "GIZ_LINE")
+        {
+            glLineWidth(3.f);
+
+            glBindVertexArray(VAO);
+            glEnableVertexArrayAttrib(VAO, 0);
+            glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)pE.size());
+
+            glLineWidth(1.f);
+        }
+
+        else if (type == "GIZ_CUBE")
+        {
+            glBindVertexArray(VAO);
+            glDrawElements(GL_TRIANGLES, (GLsizei)idxE.size(), GL_UNSIGNED_SHORT, 0);
         }
     }
 }
@@ -2367,12 +2491,8 @@ void Object::deleteVAO_VBO()
     }
 
     glBindVertexArray(0);
-
-    for (auto &i : dynVAO_perGL)
-    {
-        glDeleteVertexArrays(1, &i.VAO);
-        i.loaded = false;
-    }
+    glDeleteVertexArrays(1, &VAO);
+    VAO_loaded = false;
 
     glErrorPrint("Couldnt delete VAOs");
 }

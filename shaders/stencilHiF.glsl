@@ -23,9 +23,9 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(location = 0) out vec4 rttGiz;
 
-uniform vec3 CstencilHi;
+uniform vec4 CstencilHi;
 
 void main()
 {
-    rttGiz = vec4(CstencilHi, 1.f);
+    rttGiz = CstencilHi;
 }

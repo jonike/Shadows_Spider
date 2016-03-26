@@ -49,7 +49,7 @@ void GLWidgetSh::UBO_update()
 {
     auto lightIter = 0;
 
-    for (auto &i : myWin.allObj)
+    for (auto &i : myWin.allCamLi)
     {
         if (i->v->val_b && i->camLiTypeGet("light"))
         {
@@ -315,7 +315,7 @@ void GLWidgetSh::addDeleteShadows(string type)
 {
     if (type == "add")
     {
-        for (auto &i : myWin.allObj)
+        for (auto &i : myWin.allCamLi)
         {
             if (i->v->val_b && i->camLiTypeGet("light"))
             {
@@ -377,16 +377,6 @@ void GLWidgetSh::writeShadow(shared_ptr<Object> obj)
         if (i.name == obj->name->val_s) // if it's a light
         {
             shadowObj = obj; //found the light
-            shared_ptr<GLWidget> activeGL;
-
-            for (auto &j : myWin.allGL)
-            {
-                if (j->isVisible())
-                {
-                    activeGL = j;
-                    break;
-                }
-            }
 
             if (obj->camLiType->val_s == "DIR" || obj->camLiType->val_s == "SPOT")
             {
@@ -397,7 +387,7 @@ void GLWidgetSh::writeShadow(shared_ptr<Object> obj)
                 for (auto &j : myWin.allObj)
                 {
                     if (j->type == "OBJ" && j->shadowCast->val_b && myWin.searchUp(j))
-                        j->render(activeGL); //
+                        j->render(); //
                 }
             }
 
@@ -419,7 +409,7 @@ void GLWidgetSh::writeShadow(shared_ptr<Object> obj)
                     for (auto &k : myWin.allObj)
                     {
                         if (k->type == "OBJ" && k->shadowCast->val_b && myWin.searchUp(k))
-                            k->render(activeGL); //
+                            k->render(); //
                     }
                 }
             }
@@ -431,7 +421,7 @@ void GLWidgetSh::writeShadow(shared_ptr<Object> obj)
 
 AbjNode GLWidgetSh::shadowN_create(string name, int widthIn, int heightIn)
 {
-    GLuint fboNew1;
+    GLuint fboNew1; //spot / dir shadows
     glCreateFramebuffers(1, &fboNew1);
 
     GLfloat border[] = { 1.f, 1.f, 1.f, 1.f };
@@ -456,7 +446,7 @@ AbjNode GLWidgetSh::shadowN_create(string name, int widthIn, int heightIn)
         cout << "error with shadowN_create FBO1" << endl;
 
 
-    GLuint fboNew2;
+    GLuint fboNew2; //point shadows
     glCreateFramebuffers(1, &fboNew2);
 
     GLuint texNew2;
@@ -767,20 +757,6 @@ void GLWidgetSh::glUseProgram2(string name)
     proN = name;
 }
 
-void GLWidgetSh::VAOup(shared_ptr<Object> obj)
-{
-    if (!obj->dynVAO_perGL.empty())
-        obj->dynVAO_perGL.clear();
-
-    for (auto &i : myWin.allGL)
-    {
-        GLuint VAO = 0;
-        obj->dynVAO_perGL.push_back( { i, 0, VAO } );
-    }
-
-    obj->BBup();
-}
-
 vector<shared_ptr<Object>> GLWidgetSh::VBOup(string path, string type, string name, shared_ptr<Object> dupe)
 {
     if (!myWin.newObj.empty())
@@ -810,10 +786,10 @@ vector<shared_ptr<Object>> GLWidgetSh::VBOup(string path, string type, string na
         {
             glm::vec3 bbV[] =
             {
-                { -.5f, -.5f, -.5f }, {  .5f, -.5f, -.5f },
-                {  .5f,  .5f, -.5f }, { -.5f,  .5f, -.5f },
-                { -.5f, -.5f,  .5f }, {  .5f, -.5f,  .5f },
-                {  .5f,  .5f,  .5f }, { -.5f,  .5f,  .5f },
+                // fbl, fbr,  ftr, ftl
+                // nbl, nbr, ntr, ntl
+                { -.5f, -.5f, -.5f }, {  .5f, -.5f, -.5f }, {  .5f,  .5f, -.5f }, { -.5f,  .5f, -.5f },
+                { -.5f, -.5f,  .5f }, {  .5f, -.5f,  .5f }, {  .5f,  .5f,  .5f }, { -.5f,  .5f,  .5f },
             };
 
             for (auto &i : bbV)
@@ -1176,7 +1152,8 @@ vector<shared_ptr<Object>> GLWidgetSh::VBOup(string path, string type, string na
 
         GLDataSh.push_back( { i, VBO_P, VBO_UV, VBO_T, VBO_N, VBO_IDX } );
 
-        VAOup(i);
+        i->BBup();
+        i->AABB_toWS();
     }
 
     return newO;

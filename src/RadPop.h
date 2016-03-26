@@ -31,8 +31,6 @@ public:
     MainWin &myWin;
     RadPop(MainWin &, QWidget *parent = 0);
 
-    shared_ptr<GLWidget> myGL;
-
     vector<PopSetup> allPop;
 
     bool quitTgl = false;

@@ -35,17 +35,15 @@ public:
     MainWin &myWin;
     Gizmo(MainWin &);
 
-    shared_ptr<GLWidget> myGL;
-
-    string hover(shared_ptr<GLWidget>); //ep
-    void transform(shared_ptr<GLWidget>); //ep
+    string hover();
+    void transform();
 
     glm::vec3 rayCast(glm::vec2);
     glm::vec3 rayInter(glm::vec3, bool, string);
     bool rotatePlane(glm::vec3, glm::vec3);
+    glm::vec3 dotInterAx(glm::vec3, glm::vec3, glm::vec3, glm::vec3);
 
     void resetSetCol(string); //ep
-    glm::vec3 dotInterAx(glm::vec2, glm::vec3, glm::vec3, glm::vec3, glm::vec3, string);
 };
 
 #endif // GIZMO_H

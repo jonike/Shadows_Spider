@@ -23,71 +23,69 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 PP::PP(MainWin &myWinTemp) : myWin(myWinTemp) {}
 
-bool PP::fboPrep(shared_ptr<GLWidget> myGLin)
+bool PP::fboPrep()
 {
-    myGL = myGLin;
+    myWin.myGL->gBufN = gBufN_create();
 
-    myGL->gBufN = gBufN_create();
+    myWin.myGL->depthRevN = depthRevN_create();
+    myWin.myGLWidgetSh->up64N(myWin.myGL->depthRevN, 1);
 
-    myGL->depthRevN = depthRevN_create();
-    myWin.myGLWidgetSh->up64N(myGL->depthRevN, 1);
+    myWin.myGL->bgN = bgN_create(); //giz / grid / sky
+    myWin.myGLWidgetSh->up64N(myWin.myGL->bgN, 1);
 
-    myGL->bgN = bgN_create(); //giz / grid / sky
-    myWin.myGLWidgetSh->up64N(myGL->bgN, 1);
+    myWin.myGL->tonemapN = tonemapN_create();
+    myWin.myGLWidgetSh->up64N(myWin.myGL->tonemapN, 1);
 
-    myGL->tonemapN = tonemapN_create();
-    myWin.myGLWidgetSh->up64N(myGL->tonemapN, 1);
+    myWin.myGL->alphaGaussN = dualN_create("alphaGauss", GL_RGBA16F, myWin.myGL->width(), myWin.myGL->height());
+    myWin.myGLWidgetSh->up64N(myWin.myGL->alphaGaussN, 1);
 
-    myGL->alphaGaussN = dualN_create("alphaGauss", GL_RGBA16F, myGL->width(), myGL->height());
-    myWin.myGLWidgetSh->up64N(myGL->alphaGaussN, 1);
+    myWin.myGL->bloomCN = singleN_create("bloomC", GL_RGBA16F, myWin.myGL->width(), myWin.myGL->height());
+    myWin.myGLWidgetSh->up64N(myWin.myGL->bloomCN, 1);
 
-    myGL->bloomCN = singleN_create("bloomC", GL_RGBA16F, myGL->width(), myGL->height());
-    myWin.myGLWidgetSh->up64N(myGL->bloomCN, 1);
+    myWin.myGL->deferredN = singleN_create("def", GL_RGBA16F, myWin.myGL->width(), myWin.myGL->height());
+    myWin.myGLWidgetSh->up64N(myWin.myGL->deferredN, 1);
 
-    myGL->deferredN = singleN_create("def", GL_RGBA16F, myGL->width(), myGL->height());
-    myWin.myGLWidgetSh->up64N(myGL->deferredN, 1);
+    myWin.myGL->fxaaN = singleN_create("fxaa", GL_RGB16F, myWin.myGL->width(), myWin.myGL->height());
+    myWin.myGLWidgetSh->up64N(myWin.myGL->fxaaN, 1);
 
-    myGL->fxaaN = singleN_create("fxaa", GL_RGB16F, myGL->width(), myGL->height());
-    myWin.myGLWidgetSh->up64N(myGL->fxaaN, 1);
+    myWin.myGL->brushN = dualN_create("brush", GL_RGBA16F, myWin.myGL->width(), myWin.myGL->height());
+    myWin.myGLWidgetSh->up64N(myWin.myGL->brushN, 1);
 
-    myGL->brushN = dualN_create("brush", GL_RGBA16F, myGL->width(), myGL->height());
-    myWin.myGLWidgetSh->up64N(myGL->brushN, 1);
+    myWin.myGL->brushBGN = dualN_create("brushBG", GL_RGBA16F, myWin.myGL->width(), myWin.myGL->height());
+    myWin.myGLWidgetSh->up64N(myWin.myGL->brushBGN, 1);
 
-    myGL->brushBGN = dualN_create("brushBG", GL_RGBA16F, myGL->width(), myGL->height());
-    myWin.myGLWidgetSh->up64N(myGL->brushBGN, 1);
+    myWin.myGL->brushTempN = dualN_create("brushTemp", GL_RGBA16F, myWin.myGL->width(), myWin.myGL->height());
+    myWin.myGLWidgetSh->up64N(myWin.myGL->brushTempN, 1);
 
-    myGL->brushTempN = dualN_create("brushTemp", GL_RGBA16F, myGL->width(), myGL->height());
-    myWin.myGLWidgetSh->up64N(myGL->brushTempN, 1);
+    myWin.myGL->eraserN = dualN_create("eraser", GL_RGBA16F, myWin.myGL->width(), myWin.myGL->height());
+    myWin.myGLWidgetSh->up64N(myWin.myGL->eraserN, 1);
 
-    myGL->eraserN = dualN_create("eraser", GL_RGBA16F, myGL->width(), myGL->height());
-    myWin.myGLWidgetSh->up64N(myGL->eraserN, 1);
+    myWin.myGL->cursorN = singleN_create("cursor", GL_RGBA16F, myWin.myGL->width(), myWin.myGL->height());
+    myWin.myGLWidgetSh->up64N(myWin.myGL->cursorN, 1);
 
-    myGL->cursorN = singleN_create("cursor", GL_RGBA16F, myGL->width(), myGL->height());
-    myWin.myGLWidgetSh->up64N(myGL->cursorN, 1);
+    myWin.myGL->sobelN = singleN_create("sobel", GL_RGBA16F, myWin.myGL->width(), myWin.myGL->height());
+    myWin.myGLWidgetSh->up64N(myWin.myGL->sobelN, 1);
 
-    myGL->sobelN = singleN_create("sobel", GL_RGBA16F, myGL->width(), myGL->height());
-    myWin.myGLWidgetSh->up64N(myGL->sobelN, 1);
+    myWin.myGL->ssaoN = singleN_create("ssao", GL_R16F, myWin.myGL->width(), myWin.myGL->height());
+    myWin.myGLWidgetSh->up64N(myWin.myGL->ssaoN, 1);
 
-    myGL->ssaoN = singleN_create("ssao", GL_R16F, myGL->width(), myGL->height());
-    myWin.myGLWidgetSh->up64N(myGL->ssaoN, 1);
+    myWin.myGL->ssaoGaussN = dualN_create("ssaoGauss", GL_RGBA16F, myWin.myGL->width(), myWin.myGL->height());
+    myWin.myGLWidgetSh->up64N(myWin.myGL->ssaoGaussN, 1);
 
-    myGL->ssaoGaussN = dualN_create("ssaoGauss", GL_RGBA16F, myGL->width(), myGL->height());
-    myWin.myGLWidgetSh->up64N(myGL->ssaoGaussN, 1);
+    myWin.myGL->ssrN = singleN_create("ssr", GL_RGBA16F, myWin.myGL->width(), myWin.myGL->height());
+    myWin.myGLWidgetSh->up64N(myWin.myGL->ssrN, 1);
 
-    myGL->ssrN = singleN_create("ssr", GL_RGBA16F, myGL->width(), myGL->height());
-    myWin.myGLWidgetSh->up64N(myGL->ssrN, 1);
+    myWin.myGL->tonemapExpN = singleN_create("tonemapExp", GL_RGB16F, myWin.myGL->width(), myWin.myGL->height());
+    myWin.myGLWidgetSh->up64N(myWin.myGL->tonemapExpN, 1);
 
-    myGL->tonemapExpN = singleN_create("tonemapExp", GL_RGB16F, myGL->width(), myGL->height());
-    myWin.myGLWidgetSh->up64N(myGL->tonemapExpN, 1);
-
-    myGL->lumaInitN = singleN_create("lumaInit", GL_R16F, 1024, 1024);
+    myWin.myGL->lumaInitN = singleN_create("lumaInit", GL_R16F, 1024, 1024);
 
     for (int i = 0; i < 2; ++i)
     {
         string conc = "lumaAdapt";
         conc.append(to_string(i));
 
-        myGL->lumaAdaptN[i] = singleN_create(conc, GL_R16F, 1024, 1024);
+        myWin.myGL->lumaAdaptN[i] = singleN_create(conc, GL_R16F, 1024, 1024);
     }
 
     bloomBufferCreate();
@@ -97,25 +95,25 @@ bool PP::fboPrep(shared_ptr<GLWidget> myGLin)
 
 void PP::bloomBufferCreate()
 {
-    myGL->bloomN = singleN_create("bloom", GL_RGBA16F, myGL->width(), myGL->height());
-    myWin.myGLWidgetSh->up64N(myGL->bloomN, 1);
+    myWin.myGL->bloomN = singleN_create("bloom", GL_RGBA16F, myWin.myGL->width(), myWin.myGL->height());
+    myWin.myGLWidgetSh->up64N(myWin.myGL->bloomN, 1);
 
-    auto bWidth = myGL->width() / 2;
-    auto bHeight = myGL->height() / 2;
+    auto bWidth = myWin.myGL->width() / 2;
+    auto bHeight = myWin.myGL->height() / 2;
 
     for (int i = 0; i < 6; ++i)
     {
         string conc = "down";
         conc.append(to_string(i));
 
-        myGL->downN[i] = singleN_create(conc, GL_RGBA16F, bWidth, bHeight);
-        myWin.myGLWidgetSh->up64N(myGL->downN[i], 1);
+        myWin.myGL->downN[i] = singleN_create(conc, GL_RGBA16F, bWidth, bHeight);
+        myWin.myGLWidgetSh->up64N(myWin.myGL->downN[i], 1);
 
         conc = "bloomGauss";
         conc.append(to_string(i));
 
-        myGL->bloomGaussN[i] = dualN_create(conc, GL_RGBA16F, bWidth, bHeight);
-        myWin.myGLWidgetSh->up64N(myGL->bloomGaussN[i], 1);
+        myWin.myGL->bloomGaussN[i] = dualN_create(conc, GL_RGBA16F, bWidth, bHeight);
+        myWin.myGLWidgetSh->up64N(myWin.myGL->bloomGaussN[i], 1);
 
         bWidth /= 2;
         bHeight /= 2;
@@ -135,7 +133,7 @@ AbjNode PP::bgN_create()
 
     for (int i = 0; i < cAttachNum; ++i)
     {
-        glTextureStorage2D(setupRTT[i], 1, GL_RGBA16F, myGL->width(), myGL->height());
+        glTextureStorage2D(setupRTT[i], 1, GL_RGBA16F, myWin.myGL->width(), myWin.myGL->height());
         glTextureParameteri(setupRTT[i], GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTextureParameteri(setupRTT[i], GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTextureParameteri(setupRTT[i], GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -147,7 +145,7 @@ AbjNode PP::bgN_create()
     //DEPTH STEN
     GLuint myDS;
     glCreateTextures(GL_TEXTURE_2D, 1, &myDS);
-    glTextureStorage2D(myDS, 1, GL_DEPTH32F_STENCIL8, myGL->width(), myGL->height());
+    glTextureStorage2D(myDS, 1, GL_DEPTH32F_STENCIL8, myWin.myGL->width(), myWin.myGL->height());
     glTextureParameteri(myDS, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTextureParameteri(myDS, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTextureParameteri(myDS, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -159,7 +157,7 @@ AbjNode PP::bgN_create()
     if (glCheckNamedFramebufferStatus(fboNew, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         cout << "error with bgN_create" << endl;
 
-    return { "bg", myGL->width(), myGL->height(), fboNew, setupRTT[0], 0, 0, setupRTT[1], 0, myDS };
+    return { "bg", myWin.myGL->width(), myWin.myGL->height(), fboNew, setupRTT[0], 0, 0, setupRTT[1], 0, myDS };
 }
 
 AbjNode PP::depthRevN_create()
@@ -167,8 +165,8 @@ AbjNode PP::depthRevN_create()
     GLuint fboNew;
     glCreateFramebuffers(1, &fboNew);
 
-    auto usableW = myGL->width() / 1.f;
-    auto usableH = myGL->height() / 1.f;
+    auto usableW = myWin.myGL->width() / 1.f;
+    auto usableH = myWin.myGL->height() / 1.f;
 
     //DEPTH STEN
     GLuint myDS;
@@ -201,7 +199,7 @@ AbjNode PP::tonemapN_create()
 
     for (int i = 0; i < cAttachNum; ++i)
     {
-        glTextureStorage2D(setupRTT[i], 1, GL_RGB16F, myGL->width(), myGL->height());
+        glTextureStorage2D(setupRTT[i], 1, GL_RGB16F, myWin.myGL->width(), myWin.myGL->height());
         glTextureParameteri(setupRTT[i], GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTextureParameteri(setupRTT[i], GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
@@ -225,7 +223,7 @@ AbjNode PP::tonemapN_create()
     if (glCheckNamedFramebufferStatus(fboNew, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         cout << "error with tonemapN_create" << endl;
 
-    return { "tonemap", myGL->width(), myGL->height(), fboNew, setupRTT[0] , 0, 0, setupRTT[1] };
+    return { "tonemap", myWin.myGL->width(), myWin.myGL->height(), fboNew, setupRTT[0] , 0, 0, setupRTT[1] };
 }
 
 AbjNode PP::singleN_create(string name, GLenum format, int widthIn, int heightIn)
@@ -335,16 +333,16 @@ AbjNode PP::gBufN_create()
     for (int i = 0; i < cAttachNum; ++i)
     {
         if (i == 0)
-            glTextureStorage2D(setupRTT[i], 1, GL_RGBA32F, myGL->width(), myGL->height());
+            glTextureStorage2D(setupRTT[i], 1, GL_RGBA32F, myWin.myGL->width(), myWin.myGL->height());
 
         else if (i == 6)
-            glTextureStorage2D(setupRTT[i], 1, GL_RGBA16F, myGL->width(), myGL->height());
+            glTextureStorage2D(setupRTT[i], 1, GL_RGBA16F, myWin.myGL->width(), myWin.myGL->height());
 
         else if (i == 7)
-            glTextureStorage2D(setupRTT[i], 1, GL_R16F, myGL->width(), myGL->height());
+            glTextureStorage2D(setupRTT[i], 1, GL_R16F, myWin.myGL->width(), myWin.myGL->height());
 
         else
-            glTextureStorage2D(setupRTT[i], 1, GL_RGBA32UI, myGL->width(), myGL->height());
+            glTextureStorage2D(setupRTT[i], 1, GL_RGBA32UI, myWin.myGL->width(), myWin.myGL->height());
 
         glTextureParameteri(setupRTT[i], GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTextureParameteri(setupRTT[i], GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -354,45 +352,45 @@ AbjNode PP::gBufN_create()
         glNamedFramebufferTexture(fboNew, DrawBuffers[i], setupRTT[i], 0);
     }
 
-    myGL->gBuf0_32 = setupRTT[0];
-    myWin.myGLWidgetSh->up64T(myGL->gBuf0_32, myGL->gBuf0_64, 1);
+    myWin.myGL->gBuf0_32 = setupRTT[0];
+    myWin.myGLWidgetSh->up64T(myWin.myGL->gBuf0_32, myWin.myGL->gBuf0_64, 1);
 
-    myGL->gBuf1_32 = setupRTT[1];
-    myWin.myGLWidgetSh->up64T(myGL->gBuf1_32, myGL->gBuf1_64, 1);
+    myWin.myGL->gBuf1_32 = setupRTT[1];
+    myWin.myGLWidgetSh->up64T(myWin.myGL->gBuf1_32, myWin.myGL->gBuf1_64, 1);
 
-    myGL->gBuf2_32 = setupRTT[2];
-    myWin.myGLWidgetSh->up64T(myGL->gBuf2_32, myGL->gBuf2_64, 1);
+    myWin.myGL->gBuf2_32 = setupRTT[2];
+    myWin.myGLWidgetSh->up64T(myWin.myGL->gBuf2_32, myWin.myGL->gBuf2_64, 1);
 
-    myGL->gBuf3_32 = setupRTT[3];
-    myWin.myGLWidgetSh->up64T(myGL->gBuf3_32, myGL->gBuf3_64, 1);
+    myWin.myGL->gBuf3_32 = setupRTT[3];
+    myWin.myGLWidgetSh->up64T(myWin.myGL->gBuf3_32, myWin.myGL->gBuf3_64, 1);
 
-    myGL->gBuf4_32 = setupRTT[4];
-    myWin.myGLWidgetSh->up64T(myGL->gBuf4_32, myGL->gBuf4_64, 1);
+    myWin.myGL->gBuf4_32 = setupRTT[4];
+    myWin.myGLWidgetSh->up64T(myWin.myGL->gBuf4_32, myWin.myGL->gBuf4_64, 1);
 
-    myGL->gBuf5_32 = setupRTT[5];
-    myWin.myGLWidgetSh->up64T(myGL->gBuf5_32, myGL->gBuf5_64, 1);
+    myWin.myGL->gBuf5_32 = setupRTT[5];
+    myWin.myGLWidgetSh->up64T(myWin.myGL->gBuf5_32, myWin.myGL->gBuf5_64, 1);
 
-    myGL->gBuf6_32 = setupRTT[6];
-    myWin.myGLWidgetSh->up64T(myGL->gBuf6_32, myGL->gBuf6_64, 1);
+    myWin.myGL->gBuf6_32 = setupRTT[6];
+    myWin.myGLWidgetSh->up64T(myWin.myGL->gBuf6_32, myWin.myGL->gBuf6_64, 1);
 
-    myGL->gBuf7_32 = setupRTT[7];
-    myWin.myGLWidgetSh->up64T(myGL->gBuf7_32, myGL->gBuf7_64, 1);
+    myWin.myGL->gBuf7_32 = setupRTT[7];
+    myWin.myGLWidgetSh->up64T(myWin.myGL->gBuf7_32, myWin.myGL->gBuf7_64, 1);
 
     //DEPTH STEN
-    glCreateTextures(GL_TEXTURE_2D, 1, &myGL->gBuf_DS_32);
-    glTextureStorage2D(myGL->gBuf_DS_32, 1, GL_DEPTH32F_STENCIL8, myGL->width(), myGL->height());
-    glTextureParameteri(myGL->gBuf_DS_32, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTextureParameteri(myGL->gBuf_DS_32, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTextureParameteri(myGL->gBuf_DS_32, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTextureParameteri(myGL->gBuf_DS_32, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glCreateTextures(GL_TEXTURE_2D, 1, &myWin.myGL->gBuf_DS_32);
+    glTextureStorage2D(myWin.myGL->gBuf_DS_32, 1, GL_DEPTH32F_STENCIL8, myWin.myGL->width(), myWin.myGL->height());
+    glTextureParameteri(myWin.myGL->gBuf_DS_32, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(myWin.myGL->gBuf_DS_32, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(myWin.myGL->gBuf_DS_32, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTextureParameteri(myWin.myGL->gBuf_DS_32, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    glNamedFramebufferTexture(fboNew, GL_DEPTH_STENCIL_ATTACHMENT, myGL->gBuf_DS_32, 0);
+    glNamedFramebufferTexture(fboNew, GL_DEPTH_STENCIL_ATTACHMENT, myWin.myGL->gBuf_DS_32, 0);
     glNamedFramebufferDrawBuffers(fboNew, cAttachNum, DrawBuffers);
 
     if (glCheckNamedFramebufferStatus(fboNew, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         cout << "error with gBufN_create" << endl;
 
-    return { "def", myGL->width(), myGL->height(), fboNew };
+    return { "def", myWin.myGL->width(), myWin.myGL->height(), fboNew };
 }
 
 GLuint PP::gaussianLinear(GLuint src, AbjNode dest)
@@ -408,11 +406,11 @@ GLuint PP::gaussianLinear(GLuint src, AbjNode dest)
         glViewport(0, 0, dest.width, dest.height);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        myGL->rttGaussIn32 = (i == 0) ? src : dest.tex1_32;
-        myWin.myGLWidgetSh->up64T(myGL->rttGaussIn32, myGL->rttGaussIn64, 1);
+        myWin.myGL->rttGaussIn32 = (i == 0) ? src : dest.tex1_32;
+        myWin.myGLWidgetSh->up64T(myWin.myGL->rttGaussIn32, myWin.myGL->rttGaussIn64, 1);
 
         myWin.myFSQ->gaussStage = i;
-        myWin.myFSQ->render(myGL);
+        myWin.myFSQ->render();
     }
 
     return dest.tex2_32;
@@ -420,10 +418,10 @@ GLuint PP::gaussianLinear(GLuint src, AbjNode dest)
 
 void PP::gaussianRecursivePasses(GLuint src, AbjNode dest, int passes, int iter)
 {
-    myGL->tempGauss = gaussianLinear(src, dest);
+    myWin.myGL->tempGauss = gaussianLinear(src, dest);
 
     if (iter + 1 < passes)
-        gaussianRecursivePasses(myGL->tempGauss, dest, passes, iter + 1);
+        gaussianRecursivePasses(myWin.myGL->tempGauss, dest, passes, iter + 1);
 }
 
 GLuint PP::gaussianBlur(AbjNode src, AbjNode dest, int passes)
@@ -433,7 +431,7 @@ GLuint PP::gaussianBlur(AbjNode src, AbjNode dest, int passes)
 
     gaussianRecursivePasses(src.tex1_32, dest, passes, 0);
 
-    return myGL->tempGauss;
+    return myWin.myGL->tempGauss;
 }
 
 GLuint PP::gaussianBlur2(GLuint src, AbjNode dest, int passes)
@@ -443,7 +441,7 @@ GLuint PP::gaussianBlur2(GLuint src, AbjNode dest, int passes)
 
     gaussianRecursivePasses(src, dest, passes, 0);
 
-    return myGL->tempGauss;
+    return myWin.myGL->tempGauss;
 }
 
 void PP::downSampRender(AbjNode src, AbjNode dest, int downPixAmt)
@@ -452,10 +450,10 @@ void PP::downSampRender(AbjNode src, AbjNode dest, int downPixAmt)
     glViewport(0, 0, dest.width, dest.height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    myWin.myGLWidgetSh->up64T(src.tex1_32, myGL->downSamp_64, 1);
+    myWin.myGLWidgetSh->up64T(src.tex1_32, myWin.myGL->downSamp_64, 1);
 
-    myGL->texelSize = glm::vec2(downPixAmt / src.width, downPixAmt / src.height);
-    myWin.myFSQ->render(myGL);
+    myWin.myGL->texelSize = glm::vec2(downPixAmt / src.width, downPixAmt / src.height);
+    myWin.myFSQ->render();
 }
 
 void PP::bloomRender()
@@ -465,166 +463,264 @@ void PP::bloomRender()
     for (int i = 0; i < 6; ++i) //DOWNSAMP
     {
         if (i == 0)
-            downSampRender(myGL->deferredN, myGL->downN[i], 2);
+            downSampRender(myWin.myGL->deferredN, myWin.myGL->downN[i], 2);
 
         else
-            downSampRender(myGL->downN[i - 1], myGL->downN[i], 2);
+            downSampRender(myWin.myGL->downN[i - 1], myWin.myGL->downN[i], 2);
     }
 
     myWin.myGLWidgetSh->glUseProgram2("pGauss");
 
     for (int i = 0; i < 6; ++i)
-        gaussianBlur(myGL->downN[i], myGL->bloomGaussN[i], 4);
+        gaussianBlur(myWin.myGL->downN[i], myWin.myGL->bloomGaussN[i], 4);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, myGL->bloomN.fbo1);
-    glViewport(0, 0, myGL->bloomN.width, myGL->bloomN.height);
+    glBindFramebuffer(GL_FRAMEBUFFER, myWin.myGL->bloomN.fbo1);
+    glViewport(0, 0, myWin.myGL->bloomN.width, myWin.myGL->bloomN.height);
     glClear(GL_COLOR_BUFFER_BIT);
 
     myWin.myGLWidgetSh->glUseProgram2("pBloom");
-    myWin.myFSQ->render(myGL);
+    myWin.myFSQ->render();
 }
 
-void PP::postFX(shared_ptr<GLWidget> myGLin)
+void PP::postFX()
 {
-    myGL = myGLin;
-
     //SSAO
-    glBindFramebuffer(GL_FRAMEBUFFER, myGL->ssaoN.fbo1);
-    glViewport(0, 0, myGL->ssaoN.width, myGL->ssaoN.height);
+    glBindFramebuffer(GL_FRAMEBUFFER, myWin.myGL->ssaoN.fbo1);
+    glViewport(0, 0, myWin.myGL->ssaoN.width, myWin.myGL->ssaoN.height);
     glClear(GL_COLOR_BUFFER_BIT);
     myWin.myGLWidgetSh->glUseProgram2("pSSAO_" + myWin.myFSQ->ssaoKernel->val_s);
-    myWin.myFSQ->render(myGL);
+    myWin.myFSQ->render();
 
-    glMakeTextureHandleNonResidentARB(myGL->ssaoGaussN.tex2_64);
+    glMakeTextureHandleNonResidentARB(myWin.myGL->ssaoGaussN.tex2_64);
     myWin.myGLWidgetSh->glUseProgram2("pGauss");
-    myGL->ssaoGaussN.tex2_64 = glGetTextureHandleARB(gaussianBlur(myGL->ssaoN, myGL->ssaoGaussN, true));
-    glMakeTextureHandleResidentARB(myGL->ssaoGaussN.tex2_64);
+    myWin.myGL->ssaoGaussN.tex2_64 = glGetTextureHandleARB(gaussianBlur(myWin.myGL->ssaoN, myWin.myGL->ssaoGaussN, true));
+    glMakeTextureHandleResidentARB(myWin.myGL->ssaoGaussN.tex2_64);
 
     //DEFERRED LIGHTING
-    glBindFramebuffer(GL_FRAMEBUFFER, myGL->deferredN.fbo1);
-    glViewport(0, 0, myGL->deferredN.width, myGL->deferredN.height);
+    glBindFramebuffer(GL_FRAMEBUFFER, myWin.myGL->deferredN.fbo1);
+    glViewport(0, 0, myWin.myGL->deferredN.width, myWin.myGL->deferredN.height);
     glClear(GL_COLOR_BUFFER_BIT);
 
     pDefDyn = "pDef";
     pDefDyn.append(to_string(myWin.lightCt));
     myWin.myGLWidgetSh->glUseProgram2(pDefDyn);
-    myWin.myFSQ->render(myGL);
+    myWin.myFSQ->render();
 
         /* TRANSP COMPOSITE */
         glEnable(GL_BLEND);
         glBlendEquation(GL_FUNC_ADD);
         glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
         myWin.myGLWidgetSh->glUseProgram2("pTranspComp");
-        myWin.myFSQ->render(myGL);
+        myWin.myFSQ->render();
         glDisable(GL_BLEND);
 
     //LUMA INIT
-    glBindFramebuffer(GL_FRAMEBUFFER, myGL->lumaInitN.fbo1);
-    glViewport(0, 0, myGL->lumaInitN.width, myGL->lumaInitN.height);
+    glBindFramebuffer(GL_FRAMEBUFFER, myWin.myGL->lumaInitN.fbo1);
+    glViewport(0, 0, myWin.myGL->lumaInitN.width, myWin.myGL->lumaInitN.height);
     glClear(GL_COLOR_BUFFER_BIT);
     myWin.myGLWidgetSh->glUseProgram2("pLumaInit");
-    myWin.myFSQ->render(myGL);
-    myWin.myGLWidgetSh->up64T(myGL->lumaInitN.tex1_32, myGL->lumaInitN.tex1_64, 1);
+    myWin.myFSQ->render();
+    myWin.myGLWidgetSh->up64T(myWin.myGL->lumaInitN.tex1_32, myWin.myGL->lumaInitN.tex1_64, 1);
 
     //ADAPT LUMA
-    glBindFramebuffer(GL_FRAMEBUFFER, myGL->lumaAdaptN[myGL->currLum].fbo1);
-    glViewport(0, 0, myGL->lumaAdaptN[myGL->currLum].width, myGL->lumaAdaptN[myGL->currLum].height);
+    glBindFramebuffer(GL_FRAMEBUFFER, myWin.myGL->lumaAdaptN[myWin.myGL->currLum].fbo1);
+    glViewport(0, 0, myWin.myGL->lumaAdaptN[myWin.myGL->currLum].width, myWin.myGL->lumaAdaptN[myWin.myGL->currLum].height);
     glClear(GL_COLOR_BUFFER_BIT);
     myWin.myGLWidgetSh->glUseProgram2("pLumaAdapt");
-    myWin.myFSQ->render(myGL);
-    glGenerateTextureMipmap(myGL->lumaAdaptN[myGL->currLum].tex1_32);
-    myWin.myGLWidgetSh->up64T(myGL->lumaAdaptN[myGL->currLum].tex1_32, myGL->lumaAdaptN[myGL->currLum].tex1_64, 1);
+    myWin.myFSQ->render();
+    glGenerateTextureMipmap(myWin.myGL->lumaAdaptN[myWin.myGL->currLum].tex1_32);
+    myWin.myGLWidgetSh->up64T(myWin.myGL->lumaAdaptN[myWin.myGL->currLum].tex1_32, myWin.myGL->lumaAdaptN[myWin.myGL->currLum].tex1_64, 1);
 
     //BLOOM + C
     bloomRender();
 
-    glBindFramebuffer(GL_FRAMEBUFFER, myGL->bloomCN.fbo1);
-    glViewport(0, 0, myGL->bloomCN.width, myGL->bloomCN.height);
+    glBindFramebuffer(GL_FRAMEBUFFER, myWin.myGL->bloomCN.fbo1);
+    glViewport(0, 0, myWin.myGL->bloomCN.width, myWin.myGL->bloomCN.height);
     glClear(GL_COLOR_BUFFER_BIT);
     myWin.myGLWidgetSh->glUseProgram2("pBloomC");
-    myWin.myFSQ->render(myGL);
+    myWin.myFSQ->render();
 
     //TONEMAP EXPOSURE
-    glBindFramebuffer(GL_FRAMEBUFFER, myGL->tonemapExpN.fbo1);
-    glViewport(0, 0, myGL->tonemapExpN.width, myGL->tonemapExpN.height);
+    glBindFramebuffer(GL_FRAMEBUFFER, myWin.myGL->tonemapExpN.fbo1);
+    glViewport(0, 0, myWin.myGL->tonemapExpN.width, myWin.myGL->tonemapExpN.height);
     glClear(GL_COLOR_BUFFER_BIT);
     myWin.myGLWidgetSh->glUseProgram2("pLumaAdapt_viz");
-    myWin.myFSQ->render(myGL);
+    myWin.myFSQ->render();
 
     //TONEMAP
-    glBindFramebuffer(GL_FRAMEBUFFER, myGL->tonemapN.fbo1);
-    glViewport(0, 0, myGL->tonemapN.width, myGL->tonemapN.height);
+    glBindFramebuffer(GL_FRAMEBUFFER, myWin.myGL->tonemapN.fbo1);
+    glViewport(0, 0, myWin.myGL->tonemapN.width, myWin.myGL->tonemapN.height);
     glClear(GL_COLOR_BUFFER_BIT);
     myWin.myGLWidgetSh->glUseProgram2("pTonemap");
-    myWin.myFSQ->render(myGL);
+    myWin.myFSQ->render();
 
     //SSR
-    glBindFramebuffer(GL_FRAMEBUFFER, myGL->ssrN.fbo1);
-    glViewport(0, 0, myGL->ssrN.width, myGL->ssrN.height);
+    glBindFramebuffer(GL_FRAMEBUFFER, myWin.myGL->ssrN.fbo1);
+    glViewport(0, 0, myWin.myGL->ssrN.width, myWin.myGL->ssrN.height);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //
     myWin.myGLWidgetSh->glUseProgram2("pSSR");
-    myWin.myFSQ->render(myGL);
+    myWin.myFSQ->render();
     glDisable(GL_BLEND);
 
     //FXAA
-    glBindFramebuffer(GL_FRAMEBUFFER, myGL->fxaaN.fbo1);
-    glViewport(0, 0, myGL->fxaaN.width, myGL->fxaaN.height);
+    glBindFramebuffer(GL_FRAMEBUFFER, myWin.myGL->fxaaN.fbo1);
+    glViewport(0, 0, myWin.myGL->fxaaN.width, myWin.myGL->fxaaN.height);
     glClear(GL_COLOR_BUFFER_BIT);
-    myGL->texelSize = glm::vec2(1.f / myGL->fxaaN.width, 1.f / myGL->fxaaN.height);
+    myWin.myGL->texelSize = glm::vec2(1.f / myWin.myGL->fxaaN.width, 1.f / myWin.myGL->fxaaN.height);
     myWin.myGLWidgetSh->glUseProgram2("pFxaa");
-    myWin.myFSQ->render(myGL);
+    myWin.myFSQ->render();
 
     //FINAL
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, myGL->width(), myGL->height());
+    glViewport(0, 0, myWin.myGL->width(), myWin.myGL->height());
     glClear(GL_COLOR_BUFFER_BIT);
     myWin.myGLWidgetSh->glUseProgram2("pFinal");
-    myWin.myFSQ->render(myGL);
+    myWin.myFSQ->render();
 
-    myGL->currLum = !myGL->currLum;
+    myWin.myGL->currLum = !myWin.myGL->currLum;
 }
 
-void PP::resizeTexClearMem(shared_ptr<GLWidget> myGLin)
+
+//void PP::postFX()
+//{
+//    //SSAO
+//    glBindFramebuffer(GL_FRAMEBUFFER, myWin.myGL->ssaoN.fbo1);
+//    glViewport(0, 0, myWin.myGL->ssaoN.width, myWin.myGL->ssaoN.height);
+//    glClear(GL_COLOR_BUFFER_BIT);
+//    myWin.myGLWidgetSh->glUseProgram2("pSSAO_" + myWin.myFSQ->ssaoKernel->val_s);
+//    myWin.myFSQ->render();
+
+//    glMakeTextureHandleNonResidentARB(myWin.myGL->ssaoGaussN.tex2_64);
+//    myWin.myGLWidgetSh->glUseProgram2("pGauss");
+//    myWin.myGL->ssaoGaussN.tex2_64 = glGetTextureHandleARB(gaussianBlur(myWin.myGL->ssaoN, myWin.myGL->ssaoGaussN, true));
+//    glMakeTextureHandleResidentARB(myWin.myGL->ssaoGaussN.tex2_64);
+
+//    //DEFERRED LIGHTING
+//    glBindFramebuffer(GL_FRAMEBUFFER, myWin.myGL->deferredN.fbo1);
+//    glViewport(0, 0, myWin.myGL->deferredN.width, myWin.myGL->deferredN.height);
+//    glClear(GL_COLOR_BUFFER_BIT);
+
+//    pDefDyn = "pDef";
+//    pDefDyn.append(to_string(myWin.lightCt));
+//    myWin.myGLWidgetSh->glUseProgram2(pDefDyn);
+//    myWin.myFSQ->render();
+
+//    /* TRANSP COMPOSITE */
+//    glEnable(GL_BLEND);
+//    glBlendEquation(GL_FUNC_ADD);
+//    glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
+//    myWin.myGLWidgetSh->glUseProgram2("pTranspComp");
+//    myWin.myFSQ->render();
+//    glDisable(GL_BLEND);
+
+//    //    //LUMA INIT
+//    //    glBindFramebuffer(GL_FRAMEBUFFER, myWin.myGL->lumaInitN.fbo1);
+//    //    glViewport(0, 0, myWin.myGL->lumaInitN.width, myWin.myGL->lumaInitN.height);
+//    //    glClear(GL_COLOR_BUFFER_BIT);
+//    //    myWin.myGLWidgetSh->glUseProgram2("pLumaInit");
+//    //    myWin.myFSQ->render();
+//    //    myWin.myGLWidgetSh->up64T(myWin.myGL->lumaInitN.tex1_32, myWin.myGL->lumaInitN.tex1_64, 1);
+
+//    //    //ADAPT LUMA
+//    //    glBindFramebuffer(GL_FRAMEBUFFER, myWin.myGL->lumaAdaptN[myWin.myGL->currLum].fbo1);
+//    //    glViewport(0, 0, myWin.myGL->lumaAdaptN[myWin.myGL->currLum].width, myWin.myGL->lumaAdaptN[myWin.myGL->currLum].height);
+//    //    glClear(GL_COLOR_BUFFER_BIT);
+//    //    myWin.myGLWidgetSh->glUseProgram2("pLumaAdapt");
+//    //    myWin.myFSQ->render();
+//    //    glGenerateTextureMipmap(myWin.myGL->lumaAdaptN[myWin.myGL->currLum].tex1_32);
+//    //    myWin.myGLWidgetSh->up64T(myWin.myGL->lumaAdaptN[myWin.myGL->currLum].tex1_32, myWin.myGL->lumaAdaptN[myWin.myGL->currLum].tex1_64, 1);
+
+//    //    //BLOOM + C
+//    //    bloomRender();
+
+//    //    glBindFramebuffer(GL_FRAMEBUFFER, myWin.myGL->bloomCN.fbo1);
+//    //    glViewport(0, 0, myWin.myGL->bloomCN.width, myWin.myGL->bloomCN.height);
+//    //    glClear(GL_COLOR_BUFFER_BIT);
+//    //    myWin.myGLWidgetSh->glUseProgram2("pBloomC");
+//    //    myWin.myFSQ->render();
+
+//    //    //TONEMAP EXPOSURE
+//    //    glBindFramebuffer(GL_FRAMEBUFFER, myWin.myGL->tonemapExpN.fbo1);
+//    //    glViewport(0, 0, myWin.myGL->tonemapExpN.width, myWin.myGL->tonemapExpN.height);
+//    //    glClear(GL_COLOR_BUFFER_BIT);
+//    //    myWin.myGLWidgetSh->glUseProgram2("pLumaAdapt_viz");
+//    //    myWin.myFSQ->render();
+
+//    //    //TONEMAP
+//    //    glBindFramebuffer(GL_FRAMEBUFFER, myWin.myGL->tonemapN.fbo1);
+//    //    glViewport(0, 0, myWin.myGL->tonemapN.width, myWin.myGL->tonemapN.height);
+//    //    glClear(GL_COLOR_BUFFER_BIT);
+//    //    myWin.myGLWidgetSh->glUseProgram2("pTonemap");
+//    //    myWin.myFSQ->render();
+
+//    //    //SSR
+//    //    glBindFramebuffer(GL_FRAMEBUFFER, myWin.myGL->ssrN.fbo1);
+//    //    glViewport(0, 0, myWin.myGL->ssrN.width, myWin.myGL->ssrN.height);
+//    //    glClear(GL_COLOR_BUFFER_BIT);
+
+//    //    glEnable(GL_BLEND);
+//    //    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //
+//    //    myWin.myGLWidgetSh->glUseProgram2("pSSR");
+//    //    myWin.myFSQ->render();
+//    //    glDisable(GL_BLEND);
+
+//    //    //FXAA
+//    //    glBindFramebuffer(GL_FRAMEBUFFER, myWin.myGL->fxaaN.fbo1);
+//    //    glViewport(0, 0, myWin.myGL->fxaaN.width, myWin.myGL->fxaaN.height);
+//    //    glClear(GL_COLOR_BUFFER_BIT);
+//    //    myWin.myGL->texelSize = glm::vec2(1.f / myWin.myGL->fxaaN.width, 1.f / myWin.myGL->fxaaN.height);
+//    //    myWin.myGLWidgetSh->glUseProgram2("pFxaa");
+//    //    myWin.myFSQ->render();
+
+//    //FINAL
+//    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//    glViewport(0, 0, myWin.myGL->width(), myWin.myGL->height());
+//    glClear(GL_COLOR_BUFFER_BIT);
+//    myWin.myGLWidgetSh->glUseProgram2("pFinal");
+//    myWin.myFSQ->render();
+
+//    myWin.myGL->currLum = !myWin.myGL->currLum;
+//}
+
+void PP::resizeTexClearMem()
 {
-    myGL = myGLin;
-
     //GBUF FBO
-    myWin.myGLWidgetSh->up64T(myGL->gBuf0_32, myGL->gBuf0_64, 0);
-    myWin.myGLWidgetSh->up64T(myGL->gBuf1_32, myGL->gBuf1_64, 0);
-    myWin.myGLWidgetSh->up64T(myGL->gBuf2_32, myGL->gBuf2_64, 0);
-    myWin.myGLWidgetSh->up64T(myGL->gBuf3_32, myGL->gBuf3_64, 0);
-    myWin.myGLWidgetSh->up64T(myGL->gBuf4_32, myGL->gBuf4_64, 0);
-    myWin.myGLWidgetSh->up64T(myGL->gBuf5_32, myGL->gBuf5_64, 0);
-    myWin.myGLWidgetSh->up64T(myGL->gBuf6_32, myGL->gBuf6_64, 0);
-    myWin.myGLWidgetSh->up64T(myGL->gBuf7_32, myGL->gBuf7_64, 0);
-    myWin.myGLWidgetSh->up64T(myGL->gBuf_DS_32, myGL->gBuf_DS_64, 0);
-    glDeleteFramebuffers(1, &myGL->gBufN.fbo1);
+    myWin.myGLWidgetSh->up64T(myWin.myGL->gBuf0_32, myWin.myGL->gBuf0_64, 0);
+    myWin.myGLWidgetSh->up64T(myWin.myGL->gBuf1_32, myWin.myGL->gBuf1_64, 0);
+    myWin.myGLWidgetSh->up64T(myWin.myGL->gBuf2_32, myWin.myGL->gBuf2_64, 0);
+    myWin.myGLWidgetSh->up64T(myWin.myGL->gBuf3_32, myWin.myGL->gBuf3_64, 0);
+    myWin.myGLWidgetSh->up64T(myWin.myGL->gBuf4_32, myWin.myGL->gBuf4_64, 0);
+    myWin.myGLWidgetSh->up64T(myWin.myGL->gBuf5_32, myWin.myGL->gBuf5_64, 0);
+    myWin.myGLWidgetSh->up64T(myWin.myGL->gBuf6_32, myWin.myGL->gBuf6_64, 0);
+    myWin.myGLWidgetSh->up64T(myWin.myGL->gBuf7_32, myWin.myGL->gBuf7_64, 0);
+    myWin.myGLWidgetSh->up64T(myWin.myGL->gBuf_DS_32, myWin.myGL->gBuf_DS_64, 0);
+    glDeleteFramebuffers(1, &myWin.myGL->gBufN.fbo1);
 
-    myWin.myGLWidgetSh->up64N(myGL->alphaGaussN, 0);
-    myWin.myGLWidgetSh->up64N(myGL->bgN, 0);
-    myWin.myGLWidgetSh->up64N(myGL->bloomN, 0);
-    myWin.myGLWidgetSh->up64N(myGL->bloomCN, 0);
-    myWin.myGLWidgetSh->up64N(myGL->deferredN, 0);
-    myWin.myGLWidgetSh->up64N(myGL->fxaaN, 0);
-    myWin.myGLWidgetSh->up64N(myGL->brushN, 0);
-    myWin.myGLWidgetSh->up64N(myGL->brushBGN, 0);
-    myWin.myGLWidgetSh->up64N(myGL->brushTempN, 0);
-    myWin.myGLWidgetSh->up64N(myGL->sobelN, 0);
-    myWin.myGLWidgetSh->up64N(myGL->eraserN, 0);
-    myWin.myGLWidgetSh->up64N(myGL->cursorN, 0);
-    myWin.myGLWidgetSh->up64N(myGL->ssaoN, 0);
-    myWin.myGLWidgetSh->up64N(myGL->ssrN, 0);
-    myWin.myGLWidgetSh->up64N(myGL->ssaoGaussN, 0);
-    myWin.myGLWidgetSh->up64N(myGL->tonemapN, 0);
-    myWin.myGLWidgetSh->up64N(myGL->tonemapExpN, 0);
+    myWin.myGLWidgetSh->up64N(myWin.myGL->alphaGaussN, 0);
+    myWin.myGLWidgetSh->up64N(myWin.myGL->bgN, 0);
+    myWin.myGLWidgetSh->up64N(myWin.myGL->bloomN, 0);
+    myWin.myGLWidgetSh->up64N(myWin.myGL->bloomCN, 0);
+    myWin.myGLWidgetSh->up64N(myWin.myGL->deferredN, 0);
+    myWin.myGLWidgetSh->up64N(myWin.myGL->fxaaN, 0);
+    myWin.myGLWidgetSh->up64N(myWin.myGL->brushN, 0);
+    myWin.myGLWidgetSh->up64N(myWin.myGL->brushBGN, 0);
+    myWin.myGLWidgetSh->up64N(myWin.myGL->brushTempN, 0);
+    myWin.myGLWidgetSh->up64N(myWin.myGL->sobelN, 0);
+    myWin.myGLWidgetSh->up64N(myWin.myGL->eraserN, 0);
+    myWin.myGLWidgetSh->up64N(myWin.myGL->cursorN, 0);
+    myWin.myGLWidgetSh->up64N(myWin.myGL->ssaoN, 0);
+    myWin.myGLWidgetSh->up64N(myWin.myGL->ssrN, 0);
+    myWin.myGLWidgetSh->up64N(myWin.myGL->ssaoGaussN, 0);
+    myWin.myGLWidgetSh->up64N(myWin.myGL->tonemapN, 0);
+    myWin.myGLWidgetSh->up64N(myWin.myGL->tonemapExpN, 0);
 
-    myWin.myGLWidgetSh->up64N(myGL->lumaInitN, 0);
+    myWin.myGLWidgetSh->up64N(myWin.myGL->lumaInitN, 0);
 
     for (int i = 0; i < 2; ++i)
-        myWin.myGLWidgetSh->up64N(myGL->lumaAdaptN[i], 0);
+        myWin.myGLWidgetSh->up64N(myWin.myGL->lumaAdaptN[i], 0);
 
-    myGL->fboReady = false;
+    myWin.myGL->fboReady = false;
 }

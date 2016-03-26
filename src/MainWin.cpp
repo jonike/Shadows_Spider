@@ -29,9 +29,7 @@ MainWin::MainWin(QWidget *parent) : QMainWindow(parent)
 
     myFocus = new FocusCtrlDel;
 
-    resize(1024, 600);
-//    resize(1400, 1000);
-
+    resize(1920, 1080);
     centerToScreen(this);
 
     loadSS();
@@ -70,34 +68,18 @@ MainWin::MainWin(QWidget *parent) : QMainWindow(parent)
     show(); // show() now to initializeGL() in myGLWidgetSh
 
     //add splitters
-    gridLay = new QSplitter(Qt::Vertical);
-    hLayU = new QSplitter(Qt::Horizontal);
-    hLayD = new QSplitter(Qt::Horizontal);
-    vLay = new QSplitter(Qt::Vertical);
-    gridLay->insertWidget(0, hLayU);
-    gridLay->insertWidget(1, hLayD);
+    blankW_main = new QWidget; // used initially when GLWidget is setting up
 
-    blankW_main = new QWidget; //
+    vLay = new QSplitter(Qt::Vertical);
+    vLay->setHandleWidth(2);
+
     stackedMain->insertWidget(1, blankW_main);
-//    stackedMain->insertWidget(2, gridLay); layoutType = "gridLay";
-    stackedMain->insertWidget(2, vLay); layoutType = "vLay";
+    stackedMain->insertWidget(2, vLay);
     stackedMain->insertWidget(3, myProgress);
     stackedMain->setCurrentIndex(3); // PROGRESSBAR
 
     progressAdd_init();
-
-//    rgb2HSV_d();
-}
-
-void MainWin::loadSS()
-{
-    QFile loadStyleSheet;
-    loadStyleSheet.setFileName("style/styleMain.stylesheet");
-    loadStyleSheet.open(QFile::ReadOnly);
-
-    myStyle = QString(QLatin1String(loadStyleSheet.readAll())).toStdString();
-    loadStyleSheet.close();
-    setStyleSheet(QString::fromStdString(myStyle)); //
+    //rgb2HSV_d();
 }
 
 void MainWin::progressAdd_init()
@@ -115,9 +97,6 @@ void MainWin::progressAdd_init()
     gizInit();
     objInit();
     glWidgetInit();
-
-    for (auto &i : allObj)
-        myGLWidgetSh->VAOup(i);
 
     myProgress->setValue(85);
     QApplication::processEvents();
@@ -138,9 +117,9 @@ void MainWin::progressAdd_init()
     stackedMain->setCurrentIndex(2); //
 
     //INITIALIZE RM FOR DIR LIGHTS
-    for (auto &i : allObj)
+    for (auto &i : allCamLi)
     {
-        if (i->type == "CAMLI" && i->camLiType->val_s == "DIR")
+        if (i->camLiType->val_s == "DIR")
             i->RM = i->rotOrderUse(i->rotOrder->val_s);
     }
 
@@ -151,34 +130,20 @@ void MainWin::progressAdd_init()
     lightCt = countLights();
 
     //SINGLE VIEW AT START
-    for (auto &i : allGL)
-    {
-        if (i->ID_GLWidget == 4)
-        {
-            blankW_main->setParent(0);
-            stackedMain->insertWidget(1, &i->mySplitV);
-            stackedMain->setCurrentIndex(1);
-            savedIdx = 1;
-        }
-    }
+    blankW_main->setParent(0);
+    stackedMain->insertWidget(1, vLay);
+    stackedMain->setCurrentIndex(1);
 }
 
-void MainWin::keyReleaseEvent(QKeyEvent *e)
+void MainWin::loadSS()
 {
-    if (e->isAutoRepeat())
-        return;
+    QFile loadStyleSheet;
+    loadStyleSheet.setFileName("style/styleMain.stylesheet");
+    loadStyleSheet.open(QFile::ReadOnly);
 
-    else if (e->key() == Qt::Key_I)
-    {
-        if (myPaintWin->stackedMain->currentIndex() == 0)
-            PaintWinTgl(0, 999);
-    }
-
-    else if (e->key() == Qt::Key_K)
-    {
-        if (myPaintWin->stackedMain->currentIndex() == 1)
-            PaintWinTgl(0, 999);
-    }
+    myStyle = QString(QLatin1String(loadStyleSheet.readAll())).toStdString();
+    loadStyleSheet.close();
+    setStyleSheet(QString::fromStdString(myStyle)); //
 }
 
 void MainWin::gridInit()
@@ -208,6 +173,7 @@ void MainWin::gridInit()
             j->r->val_3 = i.r;
             j->s->val_3 = glm::vec3(attrTable->gridSize->val_f);
             allObj.push_back(j);
+            allGrid.push_back(j);
         }
     }
 }
@@ -226,6 +192,7 @@ void MainWin::camInit()
         { "ORTHO", "top", { 0.f, 5.f, .002f } }, //
 
         { "PERSP", "persp", { 10.f, 10.f, 10.f } },
+//        { "PERSP", "persp", { 0.f, 0.f, 0.001f } },
         { "PERSP", "persp1", { -5.f, 2.f, 5.f } },
     };
 
@@ -259,49 +226,27 @@ void MainWin::camInit()
             j->v->val_b = (j->camLiType->val_s != "ORTHO") ? true : false;
 
             allObj.push_back(j);
+            allCamLi.push_back(j);
         }
     }
 }
 
 void MainWin::glWidgetInit()
 {
-    GLSetup myGL_setup[] =
-    {
-        { "top", 0, 0, *hLayU },
-        { "persp", 1, 1, *hLayU },
+    myGL = make_shared<GLWidget>(*this, myGLWidgetSh);
 
-        { "front", 0, 2, *hLayD },
-        { "left", 1, 3, *hLayD },
+    auto myCamCombo = make_shared<CamCombo>(*this);
+    allCamCombo.push_back(myCamCombo);
 
-        { "persp", 0, 4, *vLay },
-        { "persp1", 1, 5, *vLay },
-    };
+    auto camIdx = myCamCombo->findText("persp"); //find the default cam
+    myCamCombo->setCurrentIndex(camIdx);
+    myCamCombo->activated(camIdx);
 
-    //create 6 GLWidgets and add them to allGL
-    for (auto &i : myGL_setup)
-    {
-        auto *splitV = new QSplitter(Qt::Vertical);
-        splitV->setHandleWidth(2);
+    vLay->insertWidget(0, myCamCombo.get());
+    vLay->insertWidget(1, myGL.get());
 
-        auto myGL = make_shared<GLWidget>(*this, *splitV, myGLWidgetSh);
-        myGL->ID_GLWidget = i.ID;
-        allGL.push_back(myGL);
-
-        auto myCamCombo = make_shared<CamCombo>(*this, myGL);
-        allCamCombo.push_back(myCamCombo);
-
-        auto camIdx = myCamCombo->findText(QString::fromStdString(i.cam)); //find the default cam
-        myCamCombo->setCurrentIndex(camIdx);
-        myCamCombo->activated(camIdx);
-
-        splitV->insertWidget(0, myCamCombo.get());
-        splitV->insertWidget(1, myGL.get()); //
-
-        splitV->setStretchFactor(0, 0);
-        splitV->setStretchFactor(1, 1);
-
-        i.split.insertWidget(i.splitIdx, splitV);
-    }
+    vLay->setStretchFactor(0, 0);
+    vLay->setStretchFactor(1, 1);
 }
 
 void MainWin::objInit()
@@ -361,6 +306,7 @@ void MainWin::objInit()
         i->ignoreOutliner = true;
         i->selectable = false;
         allObj.push_back(i);
+        mySelRect = i;
     }
 
     newObj = myGLWidgetSh->VBOup("999", "TXT", "txt", 0);
@@ -387,8 +333,8 @@ void MainWin::objInit()
     }
 
 //    startupScene("billboard");
-    startupScene("BOIT");
-//    startupScene("teapotPlane");
+//    startupScene("BOIT");
+    startupScene("teapotPlane");
 //    startupScene("pointShadows");
 //    startupScene("lotsOfSpheres");
 
@@ -418,17 +364,17 @@ void MainWin::objInit()
         }
     }
 
-    string conc = pathTable->pathObj->val_s;
-    conc.append("cone.obj");
+//    auto conc = pathTable->pathObj->val_s;
+//    conc.append("cone.obj");
 
-    newObj = myGLWidgetSh->VBOup(conc, "VOL", "volCone", 0);
-    for (auto &i : newObj)
-    {
-        i->ignoreOutliner = true;
-        i->selectable = 0;
-        allObj.push_back(i);
-        myVolCone = i;
-    }
+//    newObj = myGLWidgetSh->VBOup(conc, "VOL", "volCone", 0);
+//    for (auto &i : newObj)
+//    {
+//        i->ignoreOutliner = true;
+//        i->selectable = 0;
+//        allObj.push_back(i);
+//        myVolCone = i;
+//    }
 
     myOutliner->refreshOutliner(1);
 }
@@ -534,6 +480,7 @@ void MainWin::startupScene(string name)
 //            i->nearShadow->val_f = 2.f;
 
 //            allObj.push_back(i);
+//            allCamLi.push_back(i);
 //        }
 
 //        newObj = myGLWidgetSh->VBOup("999", "SPOT", "light", 0);
@@ -547,6 +494,7 @@ void MainWin::startupScene(string name)
 //            i->nearShadow->val_f = 2.f;
 
 //            allObj.push_back(i);
+//            allCamLi.push_back(i);
 //        }
 
         newObj = myGLWidgetSh->VBOup("999", "POINT", "light", 0);
@@ -560,6 +508,7 @@ void MainWin::startupScene(string name)
             i->nearShadow->val_f = 1.f;
 
             allObj.push_back(i);
+            allCamLi.push_back(i);
         }
 
         newObj = myGLWidgetSh->VBOup("999", "SPOT", "light", 0);
@@ -574,6 +523,7 @@ void MainWin::startupScene(string name)
             i->nearShadow->val_f = 2.f;
 
             allObj.push_back(i);
+            allCamLi.push_back(i);
         }
 
         auto conc = pathTable->pathObj->val_s;
@@ -619,6 +569,7 @@ void MainWin::startupScene(string name)
             i->nearShadow->val_f = .6f; //
 
             allObj.push_back(i);
+            allCamLi.push_back(i);
         }
 
         auto conc = pathTable->pathObj->val_s;
@@ -733,6 +684,7 @@ void MainWin::startupScene(string name)
             i->lInten->val_f = 5.f;
 
             allObj.push_back(i);
+            allCamLi.push_back(i);
         }
 
         newObj = myGLWidgetSh->VBOup("999", "SPOT", "light", 0);
@@ -745,6 +697,7 @@ void MainWin::startupScene(string name)
             i->lSpotO->val_f = 60.f;
 
             allObj.push_back(i);
+            allCamLi.push_back(i);
         }
 
         auto conc = pathTable->pathObj->val_s;
@@ -780,20 +733,14 @@ void MainWin::camLiAdd()
 
         selB = i;
         allObj.push_back(i);
+        allCamLi.push_back(i);
     }
 
-    for (auto &i : allGL)
-    {
-        if (i->ID_GLWidget == ID_lastFocused)
-        {
-            selB->t->val_3 = i->selCamLi->t->val_3;
-            selB->piv->val_3 = i->selCamLi->t->val_3;
-            selB->setTarg(selB->targO, 0.f);
-            selB->r->val_3 = i->selCamLi->r->val_3;
-
-            i->selCamLi = selB;
-        }
-    }
+    selB->t->val_3 = myGL->selCamLi->t->val_3;
+    selB->piv->val_3 = myGL->selCamLi->t->val_3;
+    selB->setTarg(selB->targO, 0.f);
+    selB->r->val_3 = myGL->selCamLi->r->val_3;
+    myGL->selCamLi = selB;
 
     myOutliner->refreshOutliner(1);
     attrTable->refreshTable();
@@ -1002,9 +949,9 @@ void MainWin::addRenderMenu()
     renderMenu->setTearOffEnabled(1);
     renderMenu->setFont(menuSmallF);
 
-    renderMenu->addAction("deferred prefs", this, SLOT(deferredPrefs()));
+    renderMenu->addAction("deferred prefs", this, SLOT(fsqPrefs()));
     auto *deferredPrefs_s = new QShortcut(Qt::Key_F4, this);
-    connect(deferredPrefs_s, SIGNAL(activated()), this, SLOT(deferredPrefs()));
+    connect(deferredPrefs_s, SIGNAL(activated()), this, SLOT(fsqPrefs()));
 }
 
 void MainWin::quitConfirm()
@@ -1019,8 +966,7 @@ void MainWin::quitConfirm()
     delete_();
 
     //DELETE ALL FBOS AND THEIR ATTACHED TEXTURES
-    for (auto &i : allGL)
-        myPP->resizeTexClearMem(i);
+    myPP->resizeTexClearMem();
 
     //DELETE ALL SHADOWMAPS
     myGLWidgetSh->addDeleteShadows("delete");
@@ -1049,7 +995,7 @@ void MainWin::quitConfirm()
     qApp->quit();
 }
 
-void MainWin::deferredPrefs()
+void MainWin::fsqPrefs()
 {
     if (myFSQ->selected)
     {
@@ -1092,49 +1038,6 @@ void MainWin::addRigMenu()
     rigMenu->setFont(menuSmallF);
 }
 
-void MainWin::gridLayTgl()
-{
-    restoreZoomedLayout();
-
-    gridLay->setParent(0);
-    hLayU->setParent(0);
-    vLay->setParent(0);
-    gridLay->insertWidget(0, hLayU);
-
-    hLayU->show();
-    stackedMain->insertWidget(2, gridLay);
-    stackedMain->setCurrentIndex(2);
-    layoutType = "gridLay";
-}
-
-void MainWin::hLayTgl()
-{
-    restoreZoomedLayout();
-
-    gridLay->setParent(0);
-    hLayU->setParent(0);
-    vLay->setParent(0);
-
-    hLayU->show();
-    stackedMain->insertWidget(2, hLayU);
-    stackedMain->setCurrentIndex(2);
-    layoutType = "hLay";
-}
-
-void MainWin::vLayTgl()
-{
-    restoreZoomedLayout();
-
-    gridLay->setParent(0);
-    hLayU->setParent(0);
-    vLay->setParent(0);
-
-    vLay->show();
-    stackedMain->insertWidget(2, vLay);
-    stackedMain->setCurrentIndex(2);
-    layoutType = "vLay";
-}
-
 glm::vec3 MainWin::gammaCsel()
 {
     glm::vec3 gc(pow(glslTable->Csel->val_3.r, gamma), pow(glslTable->Csel->val_3.g, gamma), pow(glslTable->Csel->val_3.b, gamma));
@@ -1153,7 +1056,7 @@ void MainWin::refreshAllPaintTables()
 void MainWin::PaintWinTgl(bool open, int idx)
 {
     if (selB && !myPaintWin->isVisible() && open)
-    {        
+    {
         auto prefP = toVec2(QCursor::pos());
         glm::vec2 showPrefP(prefP.x - (myPaintWin->width() / 2), prefP.y - (myPaintWin->height() / 2));
         myPaintWin->move(toQP(showPrefP));
@@ -1166,40 +1069,6 @@ void MainWin::PaintWinTgl(bool open, int idx)
 
     else if (!open)
         myPaintWin->hide();
-}
-
-void MainWin::restoreZoomedLayout()
-{
-    for (auto &i : allGL)
-    {
-        for (int j = 0; j < stackedMain->count(); ++j)
-        {
-            if (stackedMain->widget(j) == &i->mySplitV)
-            {
-                if (layoutType == "gridLay")
-                    i->splitIdx.split->insertWidget(i->splitIdx.idx, &i->mySplitV);
-
-                else if (layoutType == "hLay")
-                    hLayU->insertWidget(i->splitIdx.idx, &i->mySplitV);
-
-                else if (layoutType == "vLay")
-                    vLay->insertWidget(i->splitIdx.idx, &i->mySplitV);
-
-                i->mySplitV.show();
-
-                for (auto &k : allCamCombo)
-                {
-                    if (k->myGL.get() == i.get())
-                         k->myGL->resize(350, 350);
-                }
-
-                stackedMain->insertWidget(1, blankW_main);
-                stackedMain->setCurrentIndex(2);
-
-                break;
-            }
-        }
-    }
 }
 
 void MainWin::clearSel()
@@ -1227,7 +1096,7 @@ int MainWin::countLights()
 {
     auto count = 0;
 
-    for (auto &i : allObj)
+    for (auto &i : allCamLi)
     {
         if (!i->ref && i->v->val_b && i->camLiTypeGet("light"))
             count += 1;
@@ -1254,7 +1123,7 @@ bool MainWin::tryAddSwitchLight(string type)
 
 void MainWin::setLightsDirty()
 {
-    for (auto &i : allObj)
+    for (auto &i : allCamLi)
     {
         if (i->v->val_b && i->type == "CAMLI" && i->camLiTypeGet("light"))
             i->setDirty();
@@ -1629,8 +1498,7 @@ bool MainWin::searchUp(shared_ptr<Object> obj)
     if (searchB)
         return true;
 
-    else
-        return false;
+    return false;
 }
 
 void MainWin::boundingBoxTgl()
@@ -1693,6 +1561,15 @@ void MainWin::delete_()
             ++it;
     }
 
+    for (auto it = allCamLi.begin(); it != allCamLi.end();)
+    {
+        if ((*it)->deletable && (*it)->selected)
+            it = allCamLi.erase(it);
+
+        else
+            ++it;
+    }
+
     if (needsShadowRefresh)
         myGLWidgetSh->addDeleteShadows("refresh");
 
@@ -1709,18 +1586,6 @@ void MainWin::dupe()
 {
     if (selB)
     {
-        shared_ptr<GLWidget> activeGL;
-
-        for (auto &i : allGL)
-        {
-            if (i->isVisible())
-            {
-                activeGL = i;
-
-                break;
-            }
-        }
-
         auto gizWasOn = false;
 
         if (myGizNull->v->val_b)
@@ -1757,7 +1622,10 @@ void MainWin::dupe()
 
             allObj.push_back(newObj[0]);
 
-            newObj[0]->loadVAO(activeGL);
+            if (i->type == "CAMLI")
+                allCamLi.push_back(i);
+
+            newObj[0]->VAO_load();
 
             selB = newObj[0];
             i->selected = false;
@@ -1995,4 +1863,22 @@ void MainWin::rgb2HSV_d()
 
     auto myRGB = glm::rgbColor(rgb2HSV0_glmConv);
     cout << "myRGB = " << glm::to_string(myRGB) << endl;
+}
+
+void MainWin::keyReleaseEvent(QKeyEvent *e)
+{
+    if (e->isAutoRepeat())
+        return;
+
+    else if (e->key() == Qt::Key_I)
+    {
+        if (myPaintWin->stackedMain->currentIndex() == 0)
+            PaintWinTgl(0, 999);
+    }
+
+    else if (e->key() == Qt::Key_K)
+    {
+        if (myPaintWin->stackedMain->currentIndex() == 1)
+            PaintWinTgl(0, 999);
+    }
 }

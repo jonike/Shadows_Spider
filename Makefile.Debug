@@ -415,6 +415,8 @@ debug\moc_Attrs.cpp: src\MainWin.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -742,6 +744,8 @@ debug\moc_CamCombo.cpp: src\MainWin.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -1069,6 +1073,8 @@ debug\moc_CPop.cpp: src\MainWin.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -1396,6 +1402,8 @@ debug\moc_GLWidget.cpp: src\MainWin.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -1723,6 +1731,8 @@ debug\moc_GLWidgetSh.cpp: src\MainWin.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -2049,6 +2059,8 @@ debug\moc_MainWin.cpp: C:\glew-1.11.0\include\GL\glew.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -2377,6 +2389,8 @@ debug\moc_Outliner.cpp: src\MainWin.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -2704,6 +2718,8 @@ debug\moc_Prefs.cpp: src\MainWin.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -3031,6 +3047,8 @@ debug\moc_PrefWin.cpp: src\MainWin.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -3358,6 +3376,8 @@ debug\moc_RadPop.cpp: src\MainWin.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -3685,6 +3705,8 @@ debug\moc_PaintWin.cpp: src\MainWin.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -4012,6 +4034,8 @@ debug\moc_LayerSel.cpp: src\MainWin.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -4356,6 +4380,8 @@ debug\Anim.obj: src\Anim.cpp src\Anim.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -4681,6 +4707,8 @@ debug\Attrs.obj: src\Attrs.cpp src\Attrs.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -5006,6 +5034,8 @@ debug\CamCombo.obj: src\CamCombo.cpp src\CamCombo.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -5331,6 +5361,8 @@ debug\CPop.obj: src\CPop.cpp src\CPop.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -5656,6 +5688,8 @@ debug\Gizmo.obj: src\Gizmo.cpp src\Gizmo.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -5981,6 +6015,8 @@ debug\GLWidget.obj: src\GLWidget.cpp src\GLWidget.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -6306,6 +6342,8 @@ debug\GLWidgetSh.obj: src\GLWidgetSh.cpp src\GLWidgetSh.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -6631,6 +6669,8 @@ debug\main.obj: src\main.cpp src\MainWin.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -6956,6 +6996,8 @@ debug\MainWin.obj: src\MainWin.cpp src\MainWin.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -7282,6 +7324,8 @@ debug\Object.obj: src\Object.cpp src\Object.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -7607,6 +7651,8 @@ debug\Outliner.obj: src\Outliner.cpp src\Outliner.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -7932,6 +7978,8 @@ debug\PP.obj: src\PP.cpp src\PP.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -8257,6 +8305,8 @@ debug\Prefs.obj: src\Prefs.cpp src\Prefs.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -8582,6 +8632,8 @@ debug\PrefWin.obj: src\PrefWin.cpp src\PrefWin.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -8907,6 +8959,8 @@ debug\RadPop.obj: src\RadPop.cpp src\RadPop.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -9232,6 +9286,8 @@ debug\PaintWin.obj: src\PaintWin.cpp src\PaintWin.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \
@@ -9557,6 +9613,8 @@ debug\LayerSel.obj: src\LayerSel.cpp src\LayerSel.h \
 		C:\glm_972\gtx\compatibility.inl \
 		C:\glm_972\gtx\color_space.hpp \
 		C:\glm_972\gtx\color_space.inl \
+		C:\glm_972\gtx\component_wise.hpp \
+		C:\glm_972\gtx\component_wise.inl \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\QApplication \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtWidgets\qapplication.h \
 		C:\Qt\Qt5.4.0\5.4\msvc2013_64_opengl\include\QtCore\qcoreapplication.h \

@@ -78,7 +78,7 @@ layout(bindless_sampler, location = 0) uniform usampler2D gBuf1; //N_VS;
 layout(bindless_sampler, location = 1) uniform usampler2D gBuf2; //ruffM
 layout(binding = 2) uniform sampler2D gBuf_DS;
 layout(bindless_sampler, location = 3) uniform sampler2D depthRev_DS;
-layout(bindless_sampler, location = 4) uniform sampler2D tonemap_noGiz;
+layout(bindless_sampler, location = 4) uniform sampler2D tonemap;
 
 layout(location = 0) out vec4 Ci;
 
@@ -298,5 +298,6 @@ void main()
     float alpha = calculateAlphaForIntersect(intersect, iterCt, hitPix, hitPt, P_VS, R_VS);
 
     hitPix = mix(v.uv, hitPix, intersect);
-    Ci = vec4(texture(tonemap_noGiz, hitPix).rgb, alpha);
+
+    Ci = vec4(texture(tonemap, hitPix).rgb, alpha);
 }

@@ -23,15 +23,13 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 Gizmo::Gizmo(MainWin &myWinTemp) : myWin(myWinTemp) { }
 
-string Gizmo::hover(shared_ptr<GLWidget> myGLin)
+string Gizmo::hover()
 {
-    myGL = myGLin;
-
     auto gizType = myWin.myGizNull->gizType;
 
     //BUILD INITIAL RAY
-    myGL->giz_rayDir = rayCast(myGL->pMouseNew);
-    myGL->giz_rayOrigin = glm::vec3(myGL->selCamLi->t->val_3);
+    myWin.myGL->giz_rayDir = rayCast(myWin.myGL->pMouseNew);
+    myWin.myGL->giz_rayOrigin = glm::vec3(myWin.myGL->selCamLi->t->val_3);
 
     if (gizType == "R")
     {
@@ -46,9 +44,9 @@ string Gizmo::hover(shared_ptr<GLWidget> myGLin)
             axZ = glm::normalize(glm::vec3(myWin.selB->MM * glm::vec4(axZ, 0.f)));
         }
 
-        if (rotatePlane(axX, myGL->gizHoverCheckX)) return "X";
-        else if (rotatePlane(axY, myGL->gizHoverCheckY)) return "Y";
-        else if (rotatePlane(axZ, myGL->gizHoverCheckZ)) return "Z";
+        if (rotatePlane(axX, myWin.myGL->gizHoverCheckX)) return "X";
+        else if (rotatePlane(axY, myWin.myGL->gizHoverCheckY)) return "Y";
+        else if (rotatePlane(axZ, myWin.myGL->gizHoverCheckZ)) return "Z";
     }
 
     else if (gizType == "T" || gizType == "S")
@@ -88,20 +86,18 @@ string Gizmo::hover(shared_ptr<GLWidget> myGLin)
     return "NONE";
 }
 
-void Gizmo::transform(shared_ptr<GLWidget> myGLin)
+void Gizmo::transform()
 {
-    myGL = myGLin;
-
     //BUILD NEW RAY FOR DRAG
-    myGL->giz_rayDir = rayCast(myGL->pMouseNew);
-    myGL->giz_rayOrigin = glm::vec3(myGL->selCamLi->t->val_3);
+    myWin.myGL->giz_rayDir = rayCast(myWin.myGL->pMouseNew);
+    myWin.myGL->giz_rayOrigin = glm::vec3(myWin.myGL->selCamLi->t->val_3);
 
     //RAY INTERSECT
     glm::vec3 axX(1.f, 0.f, 0.f);
     glm::vec3 axY(0.f, 1.f, 0.f);
     glm::vec3 axZ(0.f, 0.f, 1.f);
 
-    auto df = rayInter(myGL->gizN, 0, "inter") - myGL->gizMouseDown;
+    auto df = rayInter(myWin.myGL->gizN, 0, "inter") - myWin.myGL->gizMouseDown;
     glm::vec3 adf;
 
     if (myWin.myGizNull->gizType == "T")
@@ -113,7 +109,7 @@ void Gizmo::transform(shared_ptr<GLWidget> myGLin)
             axZ = glm::normalize(glm::vec3(myWin.selB->MM * glm::vec4(axZ, 0.f)));
         }
 
-        df = dotInterAx(myGL->pMouseDiff, df, axX, axY, axZ, myGL->gizTransType);
+        df = dotInterAx(df, axX, axY, axZ);
         adf = df.x * axX + df.y * axY + df.z * axZ;
 
         for (auto &i: myWin.allObj)
@@ -125,25 +121,25 @@ void Gizmo::transform(shared_ptr<GLWidget> myGLin)
 
     else if (myWin.myGizNull->gizType == "R")
     {
-        auto clipP = myGL->selCamLi->PM * (myGL->selCamLi->VM * glm::vec4(myWin.selB->t->val_3, 1.f));
+        auto clipP = myWin.myGL->selCamLi->PM * (myWin.myGL->selCamLi->VM * glm::vec4(myWin.selB->t->val_3, 1.f));
 
         auto ndcP = glm::vec3(clipP.x, clipP.y, clipP.z)  / clipP.w;
         auto viewOffset = 0.f;
-        auto ssP = ((glm::vec2(ndcP.x, ndcP.y) + 1.f) / 2.f) * glm::vec2(myGL->width(), myGL->height()) + viewOffset;
+        auto ssP = ((glm::vec2(ndcP.x, ndcP.y) + 1.f) / 2.f) * glm::vec2(myWin.myGL->width(), myWin.myGL->height()) + viewOffset;
 
-        auto camFor = glm::vec3(myGL->selCamLi->MM * glm::vec4(0.f, 0.f, 1.f, 0.f));
+        auto camFor = glm::vec3(myWin.myGL->selCamLi->MM * glm::vec4(0.f, 0.f, 1.f, 0.f));
 
         //get screen space direction of mouse move vs mouse xy delta
-        auto sign = glm::sign(glm::dot(camFor, myGL->gizN));
+        auto sign = glm::sign(glm::dot(camFor, myWin.myGL->gizN));
         if (sign == 0.f) sign = 1.f; // looking for 1 or -1
 
-        auto mouseDelta = glm::normalize(myGL->pMouseNew - ssP);
+        auto mouseDelta = glm::normalize(myWin.myGL->pMouseNew - ssP);
         auto screenDir = glm::normalize(sign * glm::vec3(-glm::sign(mouseDelta.y), glm::sign(mouseDelta.x), 0.f));
 
-        glm::vec3 pDiff(myGL->pMouseDiff.x, myGL->pMouseDiff.y, 0.f);
+        glm::vec3 pDiff(myWin.myGL->pMouseDiff.x, myWin.myGL->pMouseDiff.y, 0.f);
         auto mouseDeltaInAxisDir = glm::dot(screenDir, pDiff); //
 
-        glm::vec2 pOld2(myGL->pMouseOld.x, myGL->pMouseOld.y);
+        glm::vec2 pOld2(myWin.myGL->pMouseOld.x, myWin.myGL->pMouseOld.y);
         auto rayDirAfter = rayCast(pOld2 + mouseDeltaInAxisDir * glm::vec2(screenDir));
         auto rayDirBefore = rayCast(pOld2);
 
@@ -153,13 +149,13 @@ void Gizmo::transform(shared_ptr<GLWidget> myGLin)
         {
             if (i->selected)
             {
-                if (myGL->gizTransType == "X")
+                if (myWin.myGL->gizTransType == "X")
                     i->r->val_3.x += -gotEditDelta;
 
-                if (myGL->gizTransType == "Y")
+                if (myWin.myGL->gizTransType == "Y")
                     i->r->val_3.y += -gotEditDelta;
 
-                if (myGL->gizTransType == "Z")
+                if (myWin.myGL->gizTransType == "Z")
                     i->r->val_3.z += -gotEditDelta;
             }
         }
@@ -174,24 +170,24 @@ void Gizmo::transform(shared_ptr<GLWidget> myGLin)
 //            axZ = glm::normalize(glm::vec3(myWin.selB->MM * glm::vec4(axZ, 0.f)));
 //        }
 
-        adf = dotInterAx(myGL->pMouseDiff, df, axX, axY, axZ, myGL->gizTransType);
+        adf = dotInterAx(df, axX, axY, axZ);
 
         auto dualSpeed = 25.f;
         float dualAdd;
 
-        if (myGL->gizTransType == "XZ")
+        if (myWin.myGL->gizTransType == "XZ")
         {
             dualAdd = int(df.x + df.z * dualSpeed) / dualSpeed;
             adf = glm::vec3(dualAdd, 0.f, dualAdd);
         }
 
-        else if (myGL->gizTransType == "XY")
+        else if (myWin.myGL->gizTransType == "XY")
         {
             dualAdd = int(df.x + df.y * dualSpeed) / dualSpeed;
             adf = glm::vec3(dualAdd, dualAdd, 0.f);
         }
 
-        else if (myGL->gizTransType == "YZ")
+        else if (myWin.myGL->gizTransType == "YZ")
         {
             dualAdd = int(df.y + df.z * dualSpeed) / dualSpeed;
             adf = glm::vec3(0.f, dualAdd, dualAdd);
@@ -204,14 +200,16 @@ void Gizmo::transform(shared_ptr<GLWidget> myGLin)
         }
     }
 
-    myGL->gizMouseDown += adf;
+    myWin.myGL->gizMouseDown += adf;
 
     myWin.setLightsDirty();
 }
 
-glm::vec3 Gizmo::dotInterAx(glm::vec2 pMouseDiff, glm::vec3 df, glm::vec3 axX, glm::vec3 axY, glm::vec3 axZ, string type)
+glm::vec3 Gizmo::dotInterAx(glm::vec3 df, glm::vec3 axX, glm::vec3 axY, glm::vec3 axZ)
 {
-    if (type == "XYZ") return glm::vec3(pMouseDiff.x * .01f);
+    string type = myWin.myGL->gizTransType;
+
+    if (type == "XYZ") return glm::vec3(myWin.myGL->pMouseDiff.x * .01f);
     else if (type == "X") return glm::vec3(glm::dot(df, axX), 0.f, 0.f);
     else if (type == "Y") return glm::vec3(0.f, glm::dot(df, axY), 0.f);
     else if (type == "Z") return glm::vec3(0.f, 0.f, glm::dot(df, axZ));
@@ -224,19 +222,19 @@ glm::vec3 Gizmo::dotInterAx(glm::vec2 pMouseDiff, glm::vec3 df, glm::vec3 axX, g
 
 glm::vec3 Gizmo::rayCast(glm::vec2 XYin)
 {
-    glm::vec4 lRayEnd_NDC((XYin.x / myGL->width() - .5f) * 2.f, (XYin.y / myGL->height() - .5f) * -2.f, 0.f, 1.f);
+    glm::vec4 lRayEnd_NDC((XYin.x / myWin.myGL->width() - .5f) * 2.f, (XYin.y / myWin.myGL->height() - .5f) * -2.f, 0.f, 1.f);
 
-    glm::vec4 lRayEnd_world = glm::inverse(myGL->selCamLi->PM * myGL->selCamLi->VM) * lRayEnd_NDC;
+    glm::vec4 lRayEnd_world = glm::inverse(myWin.myGL->selCamLi->PM * myWin.myGL->selCamLi->VM) * lRayEnd_NDC;
     lRayEnd_world /= lRayEnd_world.w;
 
-    glm::vec3 lRayDir_world(lRayEnd_world - glm::vec4(myGL->selCamLi->t->val_3, 1.f));
+    glm::vec3 lRayDir_world(lRayEnd_world - glm::vec4(myWin.myGL->selCamLi->t->val_3, 1.f));
 
     return glm::normalize(lRayDir_world);
 
-//    if (myGL->selCamLi->camLiTypeGet("dirOrtho")) // DEBUG ORTHO RAYCAST
+//    if (myWin.myGL->selCamLi->camLiTypeGet("dirOrtho")) // DEBUG ORTHO RAYCAST
 //    {
-//        auto dirN = myGL->giz_rayDir - myGL->giz_rayOrigin;
-//        myGL->giz_rayDir = glm::normalize(dirN);
+//        auto dirN = myWin.myGL->giz_rayDir - myWin.myGL->giz_rayOrigin;
+//        myWin.myGL->giz_rayDir = glm::normalize(dirN);
 //    }
 }
 
@@ -248,18 +246,18 @@ glm::vec3 Gizmo::rayInter(glm::vec3 normal, bool getTrueNormal, string mode)
         normal = glm::vec3(normalAdjusted);
     }
 
-    myGL->gizN = normal;
+    myWin.myGL->gizN = normal;
 
     //RAY INTERSECT
     auto gizPlane = glm::vec4(normal, glm::dot(myWin.myGizNull->parentTo->t->val_3, normal));
-    auto tmp = (normal * gizPlane.w) - myGL->giz_rayOrigin;
-    auto den = glm::dot(normal, myGL->giz_rayDir);
-    auto inter = myGL->giz_rayOrigin + (glm::dot(normal, tmp) / den) * myGL->giz_rayDir;
+    auto tmp = (normal * gizPlane.w) - myWin.myGL->giz_rayOrigin;
+    auto den = glm::dot(normal, myWin.myGL->giz_rayDir);
+    auto inter = myWin.myGL->giz_rayOrigin + (glm::dot(normal, tmp) / den) * myWin.myGL->giz_rayDir;
 
     if (mode == "inter")
         return inter;
 
-    myGL->gizMouseDown = inter; // only set on the full vers
+    myWin.myGL->gizMouseDown = inter; // only set on the full vers
 
     return glm::vec3(glm::inverse(myWin.myGizNull->MM) * glm::vec4(inter, 1.f)) / myWin.gizScale; //TRANSFORM PT
 }
@@ -267,7 +265,7 @@ glm::vec3 Gizmo::rayInter(glm::vec3 normal, bool getTrueNormal, string mode)
 bool Gizmo::rotatePlane(glm::vec3 normal, glm::vec3 hoverCheck)
 {
     auto inter = rayInter(normal, 0, "inter");
-    myGL->gizMouseDown = inter;
+    myWin.myGL->gizMouseDown = inter;
 
     auto df = (inter - myWin.myGizNull->parentTo->t->val_3);
 

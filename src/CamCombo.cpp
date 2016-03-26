@@ -21,7 +21,7 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "CamCombo.h"
 
-CamCombo::CamCombo(MainWin &myWinTemp, shared_ptr<GLWidget> myGLTemp, QWidget *parent) : QComboBox(parent), myWin(myWinTemp), myGL(myGLTemp)
+CamCombo::CamCombo(MainWin &myWinTemp, QWidget *parent) : QComboBox(parent), myWin(myWinTemp)
 {
     setItemDelegate(myWin.myFocus);
     setFont(QFont("DejaVu Sans Mono", 11, 75));
@@ -31,7 +31,7 @@ CamCombo::CamCombo(MainWin &myWinTemp, shared_ptr<GLWidget> myGLTemp, QWidget *p
 
     clear();
 
-    for (auto &i : myWin.allObj)
+    for (auto &i : myWin.allCamLi)
     {
         if (i->selectable)
         {
@@ -69,7 +69,7 @@ void CamCombo::selActiveCam()
 {
     myWin.clearSel();
 
-    for (auto &i : myWin.allObj)
+    for (auto &i : myWin.allCamLi)
     {
         if (i->name->val_s == currentText().toStdString())
         {
@@ -86,25 +86,25 @@ void CamCombo::selActiveCam()
 
 void CamCombo::changeCam()
 {
-    for (auto &i : myWin.allObj)
+    for (auto &i : myWin.allCamLi)
     {
         if (i->name->val_s == currentText().toStdString())
         {
-            myGL->selCamLi = i;
-            myGL->selCamLi->setDirty();
+            myWin.myGL->selCamLi = i;
+            myWin.myGL->selCamLi->setDirty();
 
             myWin.setLightsDirty();
         }
     }
 
-    myGL->resizeGL(myGL->width(), myGL->height());
+    myWin.myGL->resizeGL(myWin.myGL->width(), myWin.myGL->height());
 }
 
 void CamCombo::refresh()
 {
     clear();
 
-    for (auto &i : myWin.allObj)
+    for (auto &i : myWin.allCamLi)
     {
         if (i->selectable)
         {
@@ -120,7 +120,7 @@ void CamCombo::refresh()
 
     for (int i = 0; i < count(); ++i)
     {
-        if (itemText(i).toStdString() == myGL->selCamLi->name->val_s)
+        if (itemText(i).toStdString() == myWin.myGL->selCamLi->name->val_s)
         {
             match = 1;
             setCurrentIndex(i); //set the index back to stored val
@@ -131,12 +131,12 @@ void CamCombo::refresh()
 
     if (!match)
     {
-        for (auto &i : myWin.allObj)
+        for (auto &i : myWin.allCamLi)
         {
             if (i->name->val_s == "persp") //set persp by default
-                myGL->selCamLi = i;
+                myWin.myGL->selCamLi = i;
         }
     }
 
-    myGL->resizeGL(myGL->width(), myGL->height());
+    myWin.myGL->resizeGL(myWin.myGL->width(), myWin.myGL->height());
 }

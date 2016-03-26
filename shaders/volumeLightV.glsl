@@ -28,7 +28,7 @@ layout(location = 3) in vec3 nE;
 
 uniform mat3 NM;
 uniform mat4 MVP, MV;
-uniform vec3 parentCl;
+uniform vec4 parentCl;
 
 out Vert
 {
@@ -43,7 +43,7 @@ void main()
 
     v.n = normalize(NM * nE);
 
-    v.parentCl = parentCl;
+    v.parentCl = parentCl.rgb;
     v.uv = uvE;
 
     v.i = vec3(MV * vec4(pE, 1.f));

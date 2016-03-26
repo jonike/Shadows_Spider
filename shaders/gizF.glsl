@@ -23,9 +23,9 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(location = 0) out vec4 rttGiz;
 
-uniform vec3 Cgiz;
+uniform vec4 Cgiz;
 
 void main()
 {
-    rttGiz = vec4(Cgiz, 1.f);
+    rttGiz = Cgiz;
 }

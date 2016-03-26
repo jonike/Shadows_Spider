@@ -38,6 +38,7 @@ along with Shadow's Spider.  If not, see <http://www.gnu.org/licenses/>.
 #include <gtx/euler_angles.hpp>
 #include <gtx/compatibility.hpp>
 #include <gtx/color_space.hpp>
+#include <gtx/component_wise.hpp>
 
 #include <QApplication>
 #include <QMainWindow>
@@ -105,7 +106,7 @@ public:
     MainWin(QWidget *parent = 0);
     FocusCtrlDel *myFocus;
     Qt::WindowFlags framelessWin, framedWin;
-    QSplitter *gridLay, *hLayU, *hLayD, *vLay;
+    QSplitter *vLay;
     QStackedLayout *stackedMain, *stackedAttrTable;
     QIcon myIconCam, myIconLight;
     QProgressBar *myProgress;
@@ -114,8 +115,9 @@ public:
     QDockWidget *dock_attrTable, *dock_outliner;
     QWidget *dock_attrTable_holder, *attrTable_holder, *dock_outliner_holder;
     QFont menuSmallF;
+    shared_ptr<GLWidget> myGL;
 
-    shared_ptr<Object> selB, myBB, myTxt, myFSQ, myPivot, myGizNull, myAreaLight, myDirLight, myPointLight, mySpotLight, myVolCone, paintStroke;
+    shared_ptr<Object> selB, myBB, myTxt, myFSQ, myPivot, myGizNull, myAreaLight, myDirLight, myPointLight, mySpotLight, myVolCone, paintStroke, mySelRect;
 
     float gamma = 1.f / 2.2f;
     string gizSpace = "world";
@@ -123,8 +125,8 @@ public:
     int lightCt = 0;
 
     vector<shared_ptr<CamCombo>> allCamCombo;
-    vector<shared_ptr<GLWidget>> allGL;
-    vector<shared_ptr<Object>> allObj, allGiz, allGizSide, newObj;
+    vector<shared_ptr<Object>> allCamLi, allGiz, allGizSide, allGrid, allObj, newObj;
+    vector<string> frustumNames;
 
     MenuBarTop *myMenuBar_top;
     Anim *myAnim;
@@ -140,11 +142,9 @@ public:
     GLuint cubeM_specular_32, cubeM_irradiance_32;
 
     bool searchB;
-    int savedIdx = 2;
-    int ID_lastFocused = 0;
     bool isTyping = false;
 
-    string lastScene, oldSelB, layoutType, myStyle;
+    string lastScene, oldSelB, myStyle;
     string selMode = "OBJ";
 
     int brushSize = 10;
@@ -182,9 +182,6 @@ public slots:
     void invertSel();
     void parent();
     void parentWorld();
-    void hLayTgl();
-    void vLayTgl();
-    void gridLayTgl();
 
     void camLiAdd();
     void objAdd(string, string);
@@ -210,7 +207,7 @@ public slots:
     void pivMatchTest();
     glm::vec3 gammaCsel();
 
-    void deferredPrefs();
+    void fsqPrefs();
     void gridInit();
 
 protected:
@@ -224,7 +221,6 @@ protected:
     void gizInit();
     void objInit();
     void glWidgetInit();
-    void restoreZoomedLayout();
     void loadSS();
 };
 
@@ -250,6 +246,11 @@ typedef struct
 
 typedef struct
 {
+    glm::vec3 v1, v2, v3;
+} FPlane;
+
+typedef struct
+{
     string name;
     glm::vec3 r;
 } GridSetup;
@@ -270,26 +271,6 @@ typedef struct
     string attr;
     float attrVal;
 } DynSelCamAttrs;
-
-typedef struct
-{
-    shared_ptr<GLWidget> GL;
-    bool loaded;
-    GLuint VAO;
-} DynVAO;
-
-typedef struct
-{
-    int idx;
-    QSplitter *split;
-} FourGrid_idx;
-
-typedef struct
-{
-    string cam;
-    int splitIdx, ID;
-    QSplitter &split;
-} GLSetup;
 
 typedef struct
 {
