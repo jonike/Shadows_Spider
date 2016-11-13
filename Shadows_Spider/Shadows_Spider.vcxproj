@@ -1,0 +1,177 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\frustumCull.cpp" />
+    <ClCompile Include="src\GL_render.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Input.cpp" />
+    <ClCompile Include="src\Object.cpp" />
+    <ClCompile Include="src\Setup_obj.cpp" />
+    <ClCompile Include="src\Setup_texShaders.cpp" />
+    <ClCompile Include="src\StringManip.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="shaders\Core_glsl.h" />
+    <ClInclude Include="src\Core_typedefs.h" />
+    <ClInclude Include="src\GL_render.h" />
+    <ClInclude Include="src\Input.h" />
+    <ClInclude Include="src\Core.h" />
+    <ClInclude Include="src\Object.h" />
+    <ClInclude Include="src\Setup_obj.h" />
+    <ClInclude Include="src\Setup_texShaders.h" />
+    <ClInclude Include="src\stb_image.h" />
+    <ClInclude Include="src\StringManip.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="icons\ABJ.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="icons\winIcon.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="glew32d.dll" />
+    <None Include="shaders\alphaAsRGBAF.glsl" />
+    <None Include="shaders\bbF.glsl" />
+    <None Include="shaders\bbV.glsl" />
+    <None Include="shaders\blendModeF.glsl" />
+    <None Include="shaders\bloomCF.glsl" />
+    <None Include="shaders\bloomF.glsl" />
+    <None Include="shaders\copyTexF.glsl" />
+    <None Include="shaders\defF.glsl" />
+    <None Include="shaders\depthRevF.glsl" />
+    <None Include="shaders\depthRevV.glsl" />
+    <None Include="shaders\downF.glsl" />
+    <None Include="shaders\downV.glsl" />
+    <None Include="shaders\edgeDetectF.glsl" />
+    <None Include="shaders\eraseMixF.glsl" />
+    <None Include="shaders\fboV.glsl" />
+    <None Include="shaders\finalF.glsl" />
+    <None Include="shaders\final_fastF.glsl" />
+    <None Include="shaders\fxaaF.glsl" />
+    <None Include="shaders\gaussF.glsl" />
+    <None Include="shaders\gBufferF.glsl" />
+    <None Include="shaders\gBufferV.glsl" />
+    <None Include="shaders\gizF.glsl" />
+    <None Include="shaders\gizV.glsl" />
+    <None Include="shaders\giz_circV.glsl" />
+    <None Include="shaders\gridF.glsl" />
+    <None Include="shaders\lumaAdaptF.glsl" />
+    <None Include="shaders\lumaInitF.glsl" />
+    <None Include="shaders\paintProjF.glsl" />
+    <None Include="shaders\paintProjV.glsl" />
+    <None Include="shaders\paintStrokeF.glsl" />
+    <None Include="shaders\selRectF.glsl" />
+    <None Include="shaders\selRectV.glsl" />
+    <None Include="shaders\shadowF.glsl" />
+    <None Include="shaders\shadowV.glsl" />
+    <None Include="shaders\skyF.glsl" />
+    <None Include="shaders\skyV.glsl" />
+    <None Include="shaders\ssao_32F.glsl" />
+    <None Include="shaders\ssao_64F.glsl" />
+    <None Include="shaders\ssrF.glsl" />
+    <None Include="shaders\stencilGeoF.glsl" />
+    <None Include="shaders\stencilGeoV.glsl" />
+    <None Include="shaders\stencilHiF.glsl" />
+    <None Include="shaders\stencilHiV.glsl" />
+    <None Include="shaders\tonemapF.glsl" />
+    <None Include="shaders\transpCompF.glsl" />
+    <None Include="shaders\transpF.glsl" />
+    <None Include="shaders\transpV.glsl" />
+    <None Include="shaders\txtF.glsl" />
+    <None Include="shaders\txtG.glsl" />
+    <None Include="shaders\txtV.glsl" />
+    <None Include="shaders\volumeLightF.glsl" />
+    <None Include="shaders\volumeLightV.glsl" />
+    <None Include="shaders\wireframeF.glsl" />
+    <None Include="shaders\wireframeV.glsl" />
+    <None Include="shaders\wsQuadV.glsl" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{412611F3-A5A8-46C5-9FA5-DD6A0506CEFB}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>Shadows_Spider</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NOMINMAX;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\openGL_middleware\glew-1.13.0\include;C:\openGL_middleware\glm\glm;C:\openGL_middleware\glfw-3.2.1.bin.WIN64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>opengl32.lib;glew32.lib;glfw3.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\openGL_middleware\glew-1.13.0\lib\Release\x64;C:\openGL_middleware\glfw-3.2.1.bin.WIN64\lib-vc2015;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\openGL_middleware\glew-1.13.0\include;C:\openGL_middleware\glm\glm;C:\openGL_middleware\glfw-3.2.1.bin.WIN64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>No</GenerateDebugInformation>
+      <AdditionalDependencies>opengl32.lib;glew32.lib;glfw3.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\openGL_middleware\glew-1.13.0\lib\Release\x64;C:\openGL_middleware\glfw-3.2.1.bin.WIN64\lib-vc2015;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

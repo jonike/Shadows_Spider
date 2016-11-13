@@ -1,18 +1,18 @@
-Shadow's Spider is a realtime 3d rendering application built around OpenGL 4.5 and Qt.
+Shadows Spider is a realtime 3d rendering engine built around OpenGL 4.5 and GLFW.
 
 FEATURES:
-- intuitive interface with multiple page attribute editor and radial popups
-- transform gizmos
-- frustum culling
-- defferred shading, PBR, SSR
+- intuitive ui (NOT PUT BACK IN YET)
+- transform gizmos (NOT PUT BACK IN YET)
+- frustum culling (NOT PUT BACK IN YET)
+- deferred shading, PBR, SSR, BOIT
 - C++11
 - obj and texture files located at https://drive.google.com/file/d/0B5Eg0nuMXxh9b0ZPWWxQR1VneFE/view?usp=sharing
 - Windows
 
 HOW TO BUILD:
-- Qt Creator 3.4.82
-- glew 1.11
-- glm 972
-- search for pathObj->val_s / pathTex->val_s and change path to your name
+- GLFW 3.2.1
+- glew 1.13.0
+- GLM
 
-Demonstration at https://youtu.be/ll6h43GsIdM
+Demo vid at https://youtu.be/ll6h43GsIdM
+

@@ -1,0 +1,9 @@
+﻿  StringManip.cpp
+  Setup_texShaders.cpp
+  Setup_obj.cpp
+  Object.cpp
+  Input.cpp
+  main.cpp
+  GL_render.cpp
+  Generating Code...
+  Shadows_Spider.vcxproj -> C:\Users\aleks\Documents\Visual Studio 2015\Projects\Shadows_Spider\x64\Debug\Shadows_Spider.exe
